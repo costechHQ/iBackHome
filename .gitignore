@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets
+.env
+*.pem
+*.jks
+*.keystore
+google-services.json
+
+# Web
+web/node_modules/
+web/dist/
+
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

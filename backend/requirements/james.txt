@@ -1,0 +1,4 @@
+# James's extra packages (image hashing, reports, AI). Add the chosen LLM SDK here.
+imagehash>=4.3
+pillow>=10.4
+weasyprint>=62

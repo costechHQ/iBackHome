@@ -1,0 +1,8 @@
+# Everything the app needs at runtime. Each person adds packages ONLY to their own file
+# under requirements/ so nobody edits the same file.
+-r requirements/base.txt
+-r requirements/christopher.txt
+-r requirements/abigail.txt
+-r requirements/lilian.txt
+-r requirements/james.txt
+-r requirements/gabriel.txt

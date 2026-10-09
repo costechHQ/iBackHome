@@ -1,0 +1,4 @@
+# Abigail's extra packages (geofences, signatures, storage).
+geoalchemy2>=0.15
+cryptography>=43
+boto3>=1.35

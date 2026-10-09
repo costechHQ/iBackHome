@@ -1,0 +1,3 @@
+# Gabriel's extra packages (payments, quote checker).
+stripe>=10.0
+pypdf>=5.0
