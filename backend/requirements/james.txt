@@ -4,3 +4,5 @@ pillow>=10.4
 weasyprint>=62
 # Reads video keyframes for video_phashes(); the headless build needs no system GUI libraries.
 opencv-python-headless>=4.10
+# LLM provider: Google Gemini (agents/llm.py). Key from aistudio.google.com goes in LLM_API_KEY.
+google-genai>=2.0,<3
