@@ -2,3 +2,5 @@
 imagehash>=4.3
 pillow>=10.4
 weasyprint>=62
+# Reads video keyframes for video_phashes(); the headless build needs no system GUI libraries.
+opencv-python-headless>=4.10
