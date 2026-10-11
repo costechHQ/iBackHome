@@ -1,11 +1,11 @@
-"""Request and response shapes for supervisor vetting and assignment. Owner: James."""
+"""Request and response shapes for supervisor vetting, assignment and spot checks. Owner: James."""
 
 import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
 
 from app.features.supervision.models import VettingStatus
 
@@ -63,3 +63,23 @@ class SupervisorProfileOut(BaseModel):
 
 class AssignSupervisor(BaseModel):
     supervisor_id: uuid.UUID
+
+
+class SpotCheckCreate(BaseModel):
+    supervisor_id: uuid.UUID
+    scheduled_for: AwareDatetime  # must carry a timezone; stored in UTC
+
+
+class SpotCheckComplete(BaseModel):
+    findings: str = Field(min_length=10, max_length=5000)
+
+
+class SpotCheckOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    project_id: uuid.UUID
+    supervisor_id: uuid.UUID
+    scheduled_for: datetime
+    completed_at: datetime | None
+    findings: str | None
