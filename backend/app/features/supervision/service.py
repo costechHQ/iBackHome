@@ -1,4 +1,4 @@
-"""Supervisor vetting and assignment rules. Owner: James.
+"""Supervisor vetting, assignment and spot-check rules. Owner: James.
 
 Every function takes the database session first and does NOT commit: the caller commits,
 so a vetting decision and its audit entry land together or not at all.
@@ -15,7 +15,7 @@ from sqlalchemy import delete, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppError
-from app.features.supervision.models import SupervisorProfile, SupervisorRelation, VettingStatus
+from app.features.supervision.models import SpotCheck, SupervisorProfile, SupervisorRelation, VettingStatus
 from app.features.supervision.schemas import SupervisorApplication, VettingDecision
 
 CHECKS = ("registration_verified", "nin_verified", "guarantor_1_verified", "guarantor_2_verified")
@@ -143,3 +143,87 @@ async def ensure_assignable(
             "This supervisor declared a relationship with the project's contractor.",
             409,
         )
+
+
+# Spot checks: unannounced visits (PRD FR-11). Only ops schedules them and sees a project's list;
+# the visiting supervisor sees their own. The contractor never sees them, or they wouldn't be unannounced.
+
+
+async def schedule_spot_check(
+    session: AsyncSession,
+    project_id: uuid.UUID,
+    supervisor_id: uuid.UUID,
+    scheduled_for: datetime,
+    scheduled_by: uuid.UUID,
+    *,
+    assigned_supervisor_id: uuid.UUID | None = None,
+    contractor_phone: str | None = None,
+) -> SpotCheck:
+    """Schedule a visit by a vetted supervisor other than the project's own.
+
+    - 422 spot_check_in_past: `scheduled_for` is not in the future
+    - 409 spot_check_by_assigned_supervisor: a spot check also checks the project's supervisor
+    - 409 supervisor_not_vetted / supervisor_related_to_contractor (same rules as assignment)
+    """
+    if scheduled_for <= datetime.now(UTC):
+        raise AppError("spot_check_in_past", "A spot check must be scheduled in the future.", 422)
+    if supervisor_id == assigned_supervisor_id:
+        raise AppError(
+            "spot_check_by_assigned_supervisor",
+            "Choose a different supervisor from the one assigned to this project.",
+            409,
+        )
+    await ensure_assignable(session, supervisor_id, contractor_phone)
+
+    spot_check = SpotCheck(
+        project_id=project_id,
+        supervisor_id=supervisor_id,
+        scheduled_by=scheduled_by,
+        scheduled_for=scheduled_for.astimezone(UTC),
+    )
+    session.add(spot_check)
+    await session.flush()
+    return spot_check
+
+
+async def list_project_spot_checks(
+    session: AsyncSession, project_id: uuid.UUID, viewer_role: str
+) -> list[SpotCheck]:
+    """Every spot check on a project, soonest first. Ops only (403 spot_checks_hidden otherwise)."""
+    if viewer_role != "ops":
+        raise AppError("spot_checks_hidden", "Only ops can see a project's spot checks.", 403)
+    result = await session.scalars(
+        select(SpotCheck).where(SpotCheck.project_id == project_id).order_by(SpotCheck.scheduled_for)
+    )
+    return list(result)
+
+
+async def list_my_spot_checks(session: AsyncSession, supervisor_id: uuid.UUID) -> list[SpotCheck]:
+    """The visits a supervisor still has to make, soonest first."""
+    result = await session.scalars(
+        select(SpotCheck)
+        .where(SpotCheck.supervisor_id == supervisor_id, SpotCheck.completed_at.is_(None))
+        .order_by(SpotCheck.scheduled_for)
+    )
+    return list(result)
+
+
+async def complete_spot_check(
+    session: AsyncSession, spot_check_id: uuid.UUID, supervisor_id: uuid.UUID, findings: str
+) -> SpotCheck:
+    """The visiting supervisor records what they found.
+
+    - 404 spot_check_not_found (also when it belongs to another supervisor, so ids don't leak)
+    - 409 spot_check_already_completed
+    """
+    spot_check = await session.scalar(
+        select(SpotCheck).where(SpotCheck.id == spot_check_id).with_for_update()
+    )
+    if spot_check is None or spot_check.supervisor_id != supervisor_id:
+        raise AppError("spot_check_not_found", "Spot check not found.", 404)
+    if spot_check.completed_at is not None:
+        raise AppError("spot_check_already_completed", "This spot check has already been completed.", 409)
+    spot_check.findings = findings
+    spot_check.completed_at = datetime.now(UTC)
+    await session.flush()
+    return spot_check
