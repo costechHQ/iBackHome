@@ -1,3 +1,7 @@
 # Gabriel's extra packages (payments, quote checker).
+# httpx is already in base.txt (Christopher); Stripe and Paystack calls use it.
 stripe>=10.0
 pypdf>=5.0
+pdfplumber>=0.11
+# Test-only: mocks Paystack / escrow partner HTTP calls (days 3-4).
+respx>=0.21
