@@ -1,7 +1,7 @@
-"""Supervisor vetting tables. Owner: James.
+"""Supervisor vetting and spot-check tables. Owner: James.
 
-`user_id` and `vetted_by` have no database foreign key yet because the `users` table
-(Christopher) does not exist on day 2. Add the foreign keys in a migration once `users` lands.
+User and project columns have no database foreign key yet because the `users` and `projects`
+tables (Christopher) don't exist yet. Add the foreign keys in a migration once they land.
 
 A supervisor can only be assigned once ops has passed all four checks (PRD FR-02):
 professional registration, NIN, and both guarantors.
@@ -69,3 +69,16 @@ class SupervisorRelation(TimestampedBase):
     supervisor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True, nullable=False)
     contractor_phone: Mapped[str] = mapped_column(String(20), nullable=False)  # E.164, e.g. +2348012345678
     relationship: Mapped[str] = mapped_column(String(60), nullable=False)
+
+
+class SpotCheck(TimestampedBase):
+    """An unannounced visit scheduled by ops. Never shown to the contractor (PRD FR-11)."""
+
+    __tablename__ = "spot_checks"
+
+    project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True, nullable=False)
+    supervisor_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True, nullable=False)
+    scheduled_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    scheduled_for: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    findings: Mapped[str | None] = mapped_column(Text)
