@@ -1,6 +1,7 @@
 """Alembic environment (async). Picks up every table through models_registry."""
 
 import asyncio
+import sys
 from logging.config import fileConfig
 from typing import Any
 
@@ -60,4 +61,6 @@ async def run_migrations_online() -> None:
 if context.is_offline_mode():
     run_migrations_offline()
 else:
-    asyncio.run(run_migrations_online())
+    # Async psycopg can't use Windows' default Proactor loop; Linux (Docker, CI) is unaffected.
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    asyncio.run(run_migrations_online(), loop_factory=loop_factory)

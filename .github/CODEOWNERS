@@ -1,39 +1,40 @@
-# Who reviews what. Replace each @name with the real GitHub username.
+# Who reviews what. Handles are GitHub usernames: costechHQ = Christopher, Abigail56 = Abigail,
+# Lilianezeh = Lilian, JaOnwude = James, gabrielnjoku = Gabriel.
 # GitHub asks the owner to review any pull request that touches their folder.
 
 # Christopher: core, repo setup, login, projects
-/backend/app/core/                    @christopher
-/backend/app/main.py                  @christopher
-/backend/app/workers/                 @christopher
-/backend/app/base/users/              @christopher
-/backend/app/features/projects/       @christopher
-/backend/tests/                       @christopher
-/backend/alembic/env.py               @christopher
-/docker-compose.yml                   @christopher
-/.github/                             @christopher
-/.env.example                         @christopher
+/backend/app/core/                    @costechHQ
+/backend/app/main.py                  @costechHQ
+/backend/app/workers/                 @costechHQ
+/backend/app/base/users/              @costechHQ
+/backend/app/features/projects/       @costechHQ
+/backend/tests/                       @costechHQ
+/backend/alembic/env.py               @costechHQ
+/docker-compose.yml                   @costechHQ
+/.github/                             @costechHQ
+/.env.example                         @costechHQ
 
 # Abigail: geofences, evidence, supplier orders, ops queue
-/backend/app/base/geo/                @abigail
-/backend/app/features/evidence/       @abigail
-/backend/app/features/suppliers/      @abigail
-/backend/app/features/ops/            @abigail
+/backend/app/base/geo/                @Abigail56
+/backend/app/features/evidence/       @Abigail56
+/backend/app/features/suppliers/      @Abigail56
+/backend/app/features/ops/            @Abigail56
 
 # Lilian: milestones, audit log, price index, notifications
-/backend/app/features/milestones/     @lilian
-/backend/app/base/audit/              @lilian
-/backend/app/base/notifications/      @lilian
-/backend/app/features/price_index/    @lilian
+/backend/app/features/milestones/     @Lilianezeh
+/backend/app/base/audit/              @Lilianezeh
+/backend/app/base/notifications/      @Lilianezeh
+/backend/app/features/price_index/    @Lilianezeh
 
 # James: hashing, supervision, AI agents, reports, reconciliation, seed data
-/backend/app/features/evidence/hashing.py  @james
-/backend/app/features/supervision/    @james
-/backend/app/features/agents/         @james
-/backend/app/features/reports/        @james
-/backend/app/features/reconcile/      @james
-/backend/scripts/                     @james
+/backend/app/features/evidence/hashing.py  @JaOnwude
+/backend/app/features/supervision/    @JaOnwude
+/backend/app/features/agents/         @JaOnwude
+/backend/app/features/reports/        @JaOnwude
+/backend/app/features/reconcile/      @JaOnwude
+/backend/scripts/                     @JaOnwude
 
 # Gabriel: money. Anything here needs two approvals (set in branch protection).
-/backend/app/base/payments/           @gabriel @christopher
-/backend/app/features/escrow/         @gabriel @christopher
-/backend/app/features/quotes/         @gabriel
+/backend/app/base/payments/           @gabrielnjoku @costechHQ
+/backend/app/features/escrow/         @gabrielnjoku @costechHQ
+/backend/app/features/quotes/         @gabrielnjoku
