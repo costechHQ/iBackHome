@@ -3,19 +3,16 @@
 Prices here are made-up round numbers for testing only, not survey data.
 """
 
-from collections.abc import AsyncIterator
 from datetime import date
 from pathlib import Path
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.db import get_session
 from app.core.errors import AppError
 from app.features.price_index import service
 from app.features.price_index.schemas import SurveyRow
-from app.main import app
 
 TEMPLATE = Path(__file__).parents[1] / "data" / "survey_template.csv"
 TODAY = date(2026, 10, 10)
@@ -134,19 +131,6 @@ async def test_old_prices_are_marked_stale(db_session: AsyncSession) -> None:
 
 
 # --- GET /price-index ------------------------------------------------------------------------
-
-
-@pytest.fixture
-async def client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    async def override() -> AsyncIterator[AsyncSession]:
-        yield db_session
-
-    app.dependency_overrides[get_session] = override
-    try:
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            yield c
-    finally:
-        app.dependency_overrides.pop(get_session, None)
 
 
 async def test_get_price_index(client: AsyncClient, db_session: AsyncSession) -> None:
