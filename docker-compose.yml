@@ -47,7 +47,9 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ibackhome"]
+      # TCP (-h 127.0.0.1), not the Unix socket: on first boot the image runs PostGIS init on a temporary
+      # socket-only server, then restarts. A socket check passes during init and the api's migration fails.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ibackhome -d ibackhome"]
       interval: 5s
       timeout: 5s
       retries: 10
