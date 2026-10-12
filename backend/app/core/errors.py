@@ -7,10 +7,28 @@ Raise it from any service:
     raise AppError("milestone_not_verified", "This milestone has not been verified yet.", 409)
 """
 
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+logger = logging.getLogger(__name__)
+
+# Codes for errors raised by FastAPI/Starlette itself (our own code raises AppError instead).
+HTTP_ERROR_CODES = {
+    400: "bad_request",
+    401: "unauthorized",
+    403: "forbidden",
+    404: "not_found",
+    405: "method_not_allowed",
+    409: "conflict",
+    413: "payload_too_large",
+    415: "unsupported_media_type",
+    422: "validation_error",
+    429: "rate_limited",
+}
 
 
 class AppError(Exception):
@@ -27,21 +45,17 @@ def error_body(code: str, message: str) -> dict[str, dict[str, str]]:
 
 async def _app_error_handler(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)
-    return JSONResponse(
-        status_code=exc.status_code, content=error_body(exc.code, exc.message)
-    )
+    return JSONResponse(status_code=exc.status_code, content=error_body(exc.code, exc.message))
 
 
 async def _http_error_handler(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, StarletteHTTPException)
-    code = {
-        401: "unauthorized",
-        403: "forbidden",
-        404: "not_found",
-        405: "method_not_allowed",
-    }.get(exc.status_code, "http_error")
+    code = HTTP_ERROR_CODES.get(exc.status_code, "http_error")
+    # Keep headers such as WWW-Authenticate (401) and Retry-After (429).
     return JSONResponse(
-        status_code=exc.status_code, content=error_body(code, str(exc.detail))
+        status_code=exc.status_code,
+        content=error_body(code, str(exc.detail)),
+        headers=getattr(exc, "headers", None),
     )
 
 
@@ -49,13 +63,16 @@ async def _validation_error_handler(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, RequestValidationError)
     first = exc.errors()[0] if exc.errors() else {}
     where = ".".join(str(p) for p in first.get("loc", []))
-    message = (
-        f"{where}: {first.get('msg', 'invalid request')}"
-        if where
-        else "invalid request"
-    )
+    message = f"{where}: {first.get('msg', 'invalid request')}" if where else "invalid request"
+    return JSONResponse(status_code=422, content=error_body("validation_error", message))
+
+
+async def _unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
+    # Details go to the logs (and error tracking), never to the client.
+    logger.exception("unhandled error on %s %s", request.method, request.url.path, exc_info=exc)
     return JSONResponse(
-        status_code=422, content=error_body("validation_error", message)
+        status_code=500,
+        content=error_body("internal_error", "Something went wrong on our side. Please try again."),
     )
 
 
@@ -63,3 +80,4 @@ def register_error_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, _app_error_handler)
     app.add_exception_handler(StarletteHTTPException, _http_error_handler)
     app.add_exception_handler(RequestValidationError, _validation_error_handler)
+    app.add_exception_handler(Exception, _unhandled_error_handler)
