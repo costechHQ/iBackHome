@@ -11,11 +11,21 @@ only after supervisor verification and client approval. We are not a constructio
 - Architecture decisions live in `Docs/adr/`. Read them before changing structure.
 - If code and spec disagree, stop and ask me. Do not silently pick one.
 
-## Current state
-- Repo root has `backend/`, `web/`, `mobile/`, `Docs/`, `docker-compose.yml`, `.github/`, `.env.example`, `README.md`.
-- Backend scaffold exists in `backend/app/` (`core/`, `base/`, `features/`, `workers/`, `main.py`) with Alembic, tests, Dockerfile.
-- Done so far: core settings, database connection, error handling, health check, idempotency support.
-- Before starting any task, inspect the code and tell me what already exists. Do not rebuild it.
+## Current state (updated 2026-10-12)
+- Phase: **backend only**. Web and Flutter start after the backend gate in the team task doc (`iBackHome_Backend_Tasks.md`, kept outside the repo; ask me for it). Per-person folder ownership is in `.github/CODEOWNERS`; never edit another owner's folder.
+- Repo root has `backend/`, `web/` and `mobile/` (READMEs only), `Docs/`, `docker-compose.yml`, `.github/`, `.env.example`, `README.md`.
+- **Day 1 foundation done** (branch `christopher/day-01-foundation`):
+  - `core/`: settings, async DB session (5 s connect timeout), `TimestampedBase` (UUID id, UTC timestamps), `AppError` + one error shape (catch-all 500 included), `Idempotency-Key` helpers (key clash → 409), `/healthz` checking database, Redis and storage.
+  - `main.py` auto-mounts every feature `router.py` under `/api/v1`; `workers/celery_app.py` auto-registers every `tasks.py` (UTC, JSON).
+  - Alembic with PostGIS (`0001_base`); `docker compose up` runs api, worker, beat, PostGIS, Redis and SeaweedFS (S3 on :9000).
+  - `backend/conftest.py` gives every test `db_session` (real Postgres, rolled back) and `client`. DB tests skip locally without a database but fail in CI.
+  - CI (`.github/workflows/backend-ci.yml`): ruff, mypy, migration up/down/up, pytest, Docker image build, all via uv.
+- **Decisions:**
+  - Dependencies live in `backend/pyproject.toml`, one uv group per person (`uv add --group <name> ...`), pinned in `uv.lock`; see `Docs/adr/0002-uv-dependencies.md`. `backend/requirements/*.txt` are unused and will be deleted once open branches merge.
+  - Local object storage is SeaweedFS because MinIO no longer publishes images. Staging and production use an S3-compatible service (R2 or B2).
+  - Models use plain SQLAlchemy 2 `DeclarativeBase`, not SQLModel (ADR 0001).
+- Not started (Christopher): Day 2 login and roles (`base/users/`), Day 3 projects, sites and membership, Day 4 BoQ, approvals and logging, Day 5 end-to-end test.
+- Before starting any task, inspect the code and git branches (`git fetch`, then `git log`) and tell me what already exists. Do not rebuild it.
 
 ## Stack
 - Backend: Python 3.12, FastAPI, SQLModel/SQLAlchemy 2 (async), Alembic, PostgreSQL 16 + PostGIS, Celery + Redis
