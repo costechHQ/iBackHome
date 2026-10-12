@@ -1,0 +1,83 @@
+# iBackHome
+
+Far from home, never out of sight. Nigerians abroad build homes in Enugu: verified supervisors capture
+tamper-proof site evidence, and money is released milestone by milestone through a licensed escrow partner
+only after supervisor verification and client approval. We are not a construction company and we never hold client funds.
+
+## Source of truth
+- `Docs/spec.md` is the Technical Specification (how). Treat it as authoritative.
+- The PRD (what and why, requirement IDs FR-xx) is the file in `Docs/` whose name starts with "iBackHome — Product Requirements Document".
+- Ignore the other copy in `Docs/` named "...Technical Specification with ERD.md". It duplicates `spec.md`.
+- Architecture decisions live in `Docs/adr/`. Read them before changing structure.
+- If code and spec disagree, stop and ask me. Do not silently pick one.
+
+## Current state (updated 2026-10-12)
+- Phase: **backend only**. Web and Flutter start after the backend gate in the team task doc (`iBackHome_Backend_Tasks.md`, kept outside the repo; ask me for it). Per-person folder ownership is in `.github/CODEOWNERS`; never edit another owner's folder.
+- Repo root has `backend/`, `web/` and `mobile/` (READMEs only), `Docs/`, `docker-compose.yml`, `.github/`, `.env.example`, `README.md`.
+- **Day 1 foundation: signed off 2026-10-12**, all on `main` (head `60f04ea`):
+  - `core/`: settings, async DB session (5 s connect timeout), `TimestampedBase` (UUID id, UTC timestamps), `AppError` + one error shape (catch-all 500 included), `Idempotency-Key` helpers (key clash → 409), `/healthz` checking database, Redis and storage (200 or 503).
+  - `main.py` auto-mounts every feature `router.py` under `/api/v1`; `workers/celery_app.py` auto-registers every `tasks.py` (UTC, JSON).
+  - Alembic with PostGIS (`0001_base`); `docker compose up` runs api, worker, beat, PostGIS, Redis and SeaweedFS (S3 on :9000).
+  - `backend/conftest.py` gives every test `db_session` (real Postgres, rolled back) and `client`. DB tests skip locally without a database but fail in CI.
+  - CI (`.github/workflows/backend-ci.yml`): ruff, mypy, migration up/down/up, pytest, Docker image build, all via uv. Runs only when `backend/**` or the workflow file changes.
+- **Merged PRs:** #2 foundation (`2311c7d`); #3 audit-file formatting fix that made CI green, plus this file (`2a20a28`); #4 db healthcheck over TCP and real CODEOWNERS usernames (`60f04ea`). Merged branches are kept; do not delete them.
+- **Verified:** CI green on `main` (run 38217398596: lint, types, migrations, 20 tests, image build; no backend change since). Fresh clone + `docker compose up` → `/healthz` 200 in ~30 s. CODEOWNERS has 0 errors on GitHub.
+- **Decisions:**
+  - Dependencies live in `backend/pyproject.toml`, one uv group per person (`uv add --group <name> ...`), pinned in `uv.lock`; see `Docs/adr/0002-uv-dependencies.md`. `backend/requirements/*.txt` are unused and will be deleted once open branches merge.
+  - Local object storage is SeaweedFS because MinIO no longer publishes images. Staging and production use an S3-compatible service (R2 or B2).
+  - The db healthcheck uses TCP (`pg_isready -h 127.0.0.1`): the socket check passed during first-boot PostGIS init and the api's migration failed.
+  - Models use plain SQLAlchemy 2 `DeclarativeBase`, not SQLModel (ADR 0001).
+  - GitHub usernames: costechHQ (Christopher), Abigail56 (Abigail), Lilianezeh (Lilian), JaOnwude (James), gabrielnjoku (Gabriel).
+- **Open follow-ups (not blocking Day 1):**
+  - Idempotency key clash is tested in one session only, not under real concurrent requests.
+  - Each teammate still has to confirm `docker compose up` works on their machine.
+  - James: PR #1 open; he merges `main` and runs `uv add --group james "opencv-python-headless>=4.10" "google-genai>=2.0,<3"`. Branches `james/day-02-vetting` and `lilian/day-01-milestones` have no PR yet; both add migrations from `0001_base`, so `alembic merge heads` will be needed.
+  - Abigail (`geo.parse_polygon()`, needed for Day 3) and Gabriel have not pushed yet.
+  - `main` has no branch protection (Christopher's decision pending).
+  - On Christopher's PC `localhost` (IPv6) doesn't reach Docker ports from the terminal; use `127.0.0.1`.
+- **Not started (Christopher), wait for his go-ahead:** Day 2 login and roles (`base/users/`), Day 3 projects, sites and membership, Day 4 BoQ, approvals and logging, Day 5 end-to-end test.
+- Before starting any task, inspect the code and git branches (`git fetch`, then `git log`) and tell me what already exists. Do not rebuild it.
+
+## Stack
+- Backend: Python 3.12, FastAPI, SQLModel/SQLAlchemy 2 (async), Alembic, PostgreSQL 16 + PostGIS, Celery + Redis
+- Web: React + TypeScript (Vite). Mobile: Flutter (Android 8+, offline-first)
+- Payments: Stripe (in), Paystack (NGN payouts), licensed escrow partner behind the `EscrowProvider` interface (SimulatedEscrow until a partner signs)
+- AI: LLM API with tool calling; tools are our own REST endpoints
+
+## Tooling rules (hard)
+- JS/TS: `bun` only. Never `npm`, `npx` or `yarn`.
+- Python: `uv` only (`uv add`, `uv sync`, `uv run`), run from `backend/`. Never `pip`.
+- `backend/requirements*.txt` exist. Do not edit them by hand; tell me if they need regenerating.
+- Lint/type: `ruff`, `mypy` (backend); `eslint`, `prettier`, `tsc` (web); `dart analyze` (mobile).
+- I use Git Bash on Windows. Give commands that work in Git Bash.
+
+## Architecture rules
+1. Features talk to each other only through each other's `service.py`; never query another feature's tables.
+2. Code shared by two or more features goes in `core/` or `base/` (backend) or `common/` (web).
+3. Only `base/payments` and `features/escrow` move money. Changes there need two reviewers and tests before merge.
+4. AI agents call the REST API only, never services or the database. Agent tokens have a tool allow-list; no agent can approve, release, resolve or pay.
+5. State changes happen only in the feature's `service.py`, are checked against the allowed transitions in the spec, and write an audit log entry. Invalid transition: HTTP 409.
+6. Each feature folder has `router.py`, `schemas.py`, `models.py`, `service.py`, `tasks.py` (if needed), `tests/`.
+
+## Money and data rules (never break)
+- Money is integer minor units (`*_minor` BIGINT) plus ISO 4217 `currency`. No floats for money, ever.
+- Timestamps stored in UTC.
+- `ledger_entries` and `audit_log` are append-only (no UPDATE/DELETE grants); every `transaction_id` must balance.
+- Webhooks: verify signature first, insert into `payment_events` (unique provider+event_id), process ledger + state + audit in one transaction. Duplicate event returns 200 and does nothing.
+- Every write endpoint accepts `Idempotency-Key`. Errors use `{"error": {"code": "...", "message": "..."}}`. API under `/api/v1`.
+- Money figures in any AI output must come from a ledger result, never from the model.
+
+## Evidence integrity (the core promise)
+In-app camera only (no gallery, no `image_picker`); device-signed metadata (ECDSA P-256, Android Keystore); server checks in order:
+file hash, signature, device owner, clock (10 min drift, 72 h upload window), geofence (25 m buffer), pHash reuse (Hamming <= 8).
+The server decides; the device only warns.
+
+## How to work with me
+- One meaningful task at a time. Give exact file paths and commands.
+- Read the relevant spec section before coding. Start non-trivial work in plan mode.
+- Write tests with the code. Anything touching money, state transitions, permissions or evidence checks must have tests.
+- Commit at checkpoints with conventional commit messages (`feat:`, `fix:`, `test:`, `docs:`, `chore:`).
+- End every task with four labelled lists: Completed, Tested, Simulated, Pending.
+- Never invent endpoints, tables or states that are not in the spec. Propose them first.
+- Never put secrets in the repo; `.env.example` lists variables with no real values.
+- For run and test commands, read `README.md` and `docker-compose.yml` rather than guessing.
