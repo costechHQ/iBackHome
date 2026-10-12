@@ -81,6 +81,15 @@ def _fixed(value: float, places: int) -> str:
     return text[1:] if text.startswith("-") and float(text) == 0 else text  # no "-0.000000"
 
 
+def is_valid_public_key(public_key: str) -> bool:
+    """True if `public_key` is base64 X.509 SubjectPublicKeyInfo DER holding an ECDSA P-256 key."""
+    try:
+        key = serialization.load_der_public_key(base64.b64decode(public_key, validate=True))
+    except (ValueError, binascii.Error, TypeError):
+        return False
+    return isinstance(key, ec.EllipticCurvePublicKey) and isinstance(key.curve, ec.SECP256R1)
+
+
 def verify_signature(
     public_key: str,
     payload: bytes,
