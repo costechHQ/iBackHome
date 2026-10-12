@@ -74,7 +74,9 @@ gabriel = [
     "stripe>=10.0",
 ]
 james = [
+    "google-genai>=2.0,<3",
     "imagehash>=4.3",
+    "opencv-python-headless>=4.10",
     "pillow>=10.4",
     "weasyprint>=62",
 ]
