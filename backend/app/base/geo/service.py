@@ -1,7 +1,6 @@
-"""Geofence checks against the site polygon stored in PostGIS.
+"""Public API of geo: polygon parsing and geofence checks with PostGIS. Owner: Abigail.
 
-Every function takes the database session first. `sites` belongs to the projects feature
-(site id, `geofence` geometry(Polygon, 4326)); geo only reads it.
+Other modules call geo only through this file. Every database function takes the session first.
 """
 
 import uuid
@@ -9,7 +8,10 @@ import uuid
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base.geo.polygon import ParsedPolygon, parse_polygon
 from app.core.errors import AppError
+
+__all__ = ["ParsedPolygon", "distance_to_fence", "inside_geofence", "parse_polygon"]
 
 DEFAULT_BUFFER_M = 25.0  # GPS error allowance on top of the drawn fence
 

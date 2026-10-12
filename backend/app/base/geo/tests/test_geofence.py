@@ -3,7 +3,7 @@ import uuid
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.base import geo
+from app.base.geo import service as geo
 from app.base.geo.tests.conftest import M_PER_DEG_LAT, SITE_NE, SITE_SW
 from app.core.errors import AppError
 

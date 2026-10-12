@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 
-from app.base import geo
+from app.base.geo import service as geo
 from app.core.errors import AppError
 
 # ~100 m x 100 m square in Enugu
