@@ -1,4 +1,4 @@
-"""S3-compatible object storage for evidence files (MinIO locally, S3/R2/B2 in staging).
+"""S3-compatible object storage for evidence files (SeaweedFS locally; S3/R2/B2 in staging and production).
 
 Files are private: the app never exposes a public URL, only short-lived pre-signed ones.
 """
