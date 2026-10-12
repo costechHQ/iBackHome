@@ -1,4 +1,4 @@
-"""The milestone state machine, as a plain table. 
+"""The milestone state machine, as a plain table.
 
 A milestone may only move along a pair listed here, and only by one of the listed roles.
 Everything else is refused. The table mirrors the "State machines" section of the spec.

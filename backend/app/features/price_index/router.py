@@ -1,4 +1,4 @@
-"""HTTP endpoints for the price index. 
+"""HTTP endpoints for the price index.
 
 Add the signed-in-user check (`current_user`) once Christopher's login lands on backend day 2.
 """

@@ -1,4 +1,4 @@
-"""Price index observations. 
+"""Price index observations.
 
 One row = one supplier's price for one item on one day. The "current price" of an item is
 worked out from these rows in service.current_prices(); nothing here is overwritten except
