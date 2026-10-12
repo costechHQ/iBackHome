@@ -27,9 +27,7 @@ def error_body(code: str, message: str) -> dict[str, dict[str, str]]:
 
 async def _app_error_handler(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)
-    return JSONResponse(
-        status_code=exc.status_code, content=error_body(exc.code, exc.message)
-    )
+    return JSONResponse(status_code=exc.status_code, content=error_body(exc.code, exc.message))
 
 
 async def _http_error_handler(_: Request, exc: Exception) -> JSONResponse:
@@ -40,23 +38,15 @@ async def _http_error_handler(_: Request, exc: Exception) -> JSONResponse:
         404: "not_found",
         405: "method_not_allowed",
     }.get(exc.status_code, "http_error")
-    return JSONResponse(
-        status_code=exc.status_code, content=error_body(code, str(exc.detail))
-    )
+    return JSONResponse(status_code=exc.status_code, content=error_body(code, str(exc.detail)))
 
 
 async def _validation_error_handler(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, RequestValidationError)
     first = exc.errors()[0] if exc.errors() else {}
     where = ".".join(str(p) for p in first.get("loc", []))
-    message = (
-        f"{where}: {first.get('msg', 'invalid request')}"
-        if where
-        else "invalid request"
-    )
-    return JSONResponse(
-        status_code=422, content=error_body("validation_error", message)
-    )
+    message = f"{where}: {first.get('msg', 'invalid request')}" if where else "invalid request"
+    return JSONResponse(status_code=422, content=error_body("validation_error", message))
 
 
 def register_error_handlers(app: FastAPI) -> None:

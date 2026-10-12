@@ -31,9 +31,7 @@ from app.core.models import TimestampedBase
 
 class IdempotencyRecord(TimestampedBase):
     __tablename__ = "idempotency_keys"
-    __table_args__ = (
-        UniqueConstraint("key", "scope", name="uq_idempotency_keys_key_scope"),
-    )
+    __table_args__ = (UniqueConstraint("key", "scope", name="uq_idempotency_keys_key_scope"),)
 
     key: Mapped[str] = mapped_column(String(128), nullable=False)
     scope: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -41,21 +39,15 @@ class IdempotencyRecord(TimestampedBase):
     response: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
 
-IdempotencyKeyDep = Annotated[
-    str | None, Header(alias="Idempotency-Key", max_length=128)
-]
+IdempotencyKeyDep = Annotated[str | None, Header(alias="Idempotency-Key", max_length=128)]
 
 
-async def replay_or_none(
-    session: AsyncSession, key: str | None, scope: str
-) -> JSONResponse | None:
+async def replay_or_none(session: AsyncSession, key: str | None, scope: str) -> JSONResponse | None:
     """Return the stored response if this key was already used for this scope."""
     if not key:
         return None
     record = await session.scalar(
-        select(IdempotencyRecord).where(
-            IdempotencyRecord.key == key, IdempotencyRecord.scope == scope
-        )
+        select(IdempotencyRecord).where(IdempotencyRecord.key == key, IdempotencyRecord.scope == scope)
     )
     if record is None:
         return None
@@ -72,6 +64,4 @@ async def remember(
     """Store the response in the same transaction as the work (caller commits)."""
     if not key:
         return
-    session.add(
-        IdempotencyRecord(key=key, scope=scope, status_code=status_code, response=body)
-    )
+    session.add(IdempotencyRecord(key=key, scope=scope, status_code=status_code, response=body))
