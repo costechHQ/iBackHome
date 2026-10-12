@@ -18,11 +18,11 @@ class Settings(BaseSettings):
     # Redis (Celery broker + cache)
     redis_url: str = "redis://localhost:6379/0"
 
-    # Object storage (MinIO locally, S3-compatible in staging/production)
+    # Object storage (SeaweedFS locally via docker compose, S3-compatible R2/B2 in staging/production)
     storage_endpoint: str = "http://localhost:9000"
     storage_bucket: str = "ibackhome-evidence"
-    storage_access_key: str = "minioadmin"
-    storage_secret_key: str = "minioadmin"
+    storage_access_key: str = "ibackhome"
+    storage_secret_key: str = "ibackhome-dev-secret"
 
     # Security (Christopher, day 2)
     jwt_secret: str = "change-me"
