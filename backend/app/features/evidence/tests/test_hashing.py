@@ -4,7 +4,6 @@ import asyncio
 import io
 import sys
 import uuid
-from collections.abc import AsyncIterator
 from pathlib import Path
 
 import cv2
@@ -12,11 +11,8 @@ import numpy as np
 import pytest
 from PIL import Image, ImageDraw
 from sqlalchemy import text
-from sqlalchemy.exc import OperationalError
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import get_settings
 from app.features.evidence.hashing import (
     REUSE_MAX_DISTANCE,
     ReuseMatch,
@@ -118,7 +114,8 @@ def test_unreadable_video_is_refused(tmp_path: Path) -> None:
 
 
 # check_reuse() runs SQL, so these tests need Postgres (docker compose up db; CI has one).
-# A temporary `evidence` table shadows the real one, so they work before and after it exists.
+# They use the shared, rolled-back `db_session` from backend/conftest.py. A temporary `evidence`
+# table shadows the real one, so they work before and after it exists.
 
 
 @pytest.fixture(scope="module")
@@ -130,19 +127,10 @@ def event_loop_policy() -> asyncio.AbstractEventLoopPolicy:
 
 
 @pytest.fixture
-async def session() -> AsyncIterator[AsyncSession]:
-    engine = create_async_engine(get_settings().database_url, poolclass=NullPool)
-    try:
-        async with engine.connect() as connection:
-            await connection.execute(
-                text("CREATE TEMP TABLE evidence (id uuid PRIMARY KEY, phash bigint) ON COMMIT DROP")
-            )
-            yield AsyncSession(bind=connection)
-            await connection.rollback()
-    except OperationalError:
-        pytest.skip("Postgres is not running")
-    finally:
-        await engine.dispose()
+async def session(db_session: AsyncSession) -> AsyncSession:
+    """The shared db_session plus a temporary `evidence` table (rolled back with the test)."""
+    await db_session.execute(text("CREATE TEMP TABLE evidence (id uuid PRIMARY KEY, phash bigint)"))
+    return db_session
 
 
 async def store(session: AsyncSession, phash: int | None) -> uuid.UUID:
