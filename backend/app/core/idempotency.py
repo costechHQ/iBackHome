@@ -23,9 +23,11 @@ from typing import Annotated, Any
 from fastapi import Header
 from fastapi.responses import JSONResponse
 from sqlalchemy import JSON, Integer, String, UniqueConstraint, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.errors import AppError
 from app.core.models import TimestampedBase
 
 
@@ -61,7 +63,21 @@ async def remember(
     status_code: int,
     body: dict[str, Any],
 ) -> None:
-    """Store the response in the same transaction as the work (caller commits)."""
+    """Store the response in the same transaction as the work (caller commits).
+
+    If another request with the same key got here first (a double tap, or a retry while the first
+    is still running), raise 409 so the caller never commits its duplicate work. The client
+    retries and then gets the saved response from replay_or_none().
+    """
     if not key:
         return
-    session.add(IdempotencyRecord(key=key, scope=scope, status_code=status_code, response=body))
+    try:
+        # The savepoint makes the unique key clash surface here, not later at the caller's commit.
+        async with session.begin_nested():
+            session.add(IdempotencyRecord(key=key, scope=scope, status_code=status_code, response=body))
+    except IntegrityError as exc:
+        raise AppError(
+            "idempotency_key_in_use",
+            "A request with this Idempotency-Key is already being processed. Retry shortly.",
+            409,
+        ) from exc

@@ -17,7 +17,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.core.config import get_settings
 
-engine = create_async_engine(get_settings().database_url, pool_pre_ping=True)
+# Fail fast when the database is unreachable (otherwise a connect can hang for minutes and
+# /healthz never answers). Seconds; libpq's connect_timeout.
+CONNECT_TIMEOUT_SECONDS = 5
+
+engine = create_async_engine(
+    get_settings().database_url,
+    pool_pre_ping=True,
+    connect_args={"connect_timeout": CONNECT_TIMEOUT_SECONDS},
+)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
