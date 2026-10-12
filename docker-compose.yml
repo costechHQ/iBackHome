@@ -34,7 +34,7 @@ services:
 
   beat:
     <<: *backend
-    command: celery -A app.workers.celery_app beat --loglevel=info
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
 
   db:
     image: postgis/postgis:16-3.4
@@ -66,7 +66,8 @@ services:
   # SeaweedFS speaks the same S3 API, so boto3 code works unchanged. Staging/production use R2 or B2.
   storage:
     image: chrislusf/seaweedfs:4.48
-    command: server -dir=/data -s3 -s3.port=9000 -volume.max=0
+    # -ip gives a stable identity; without it a restart changes the container IP and the server never recovers.
+    command: server -ip=storage -ip.bind=0.0.0.0 -dir=/data -s3 -s3.port=9000 -volume.max=0
     environment:
       AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:-ibackhome}
       AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:-ibackhome-dev-secret}
@@ -74,6 +75,13 @@ services:
       - "9000:9000"
     volumes:
       - storage-data:/data
+    healthcheck:
+      # Any HTTP answer (403 without credentials) means the S3 API is up. Takes ~15 s after a restart.
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:9000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   db-data:
