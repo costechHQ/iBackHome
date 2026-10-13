@@ -19,8 +19,9 @@ router = APIRouter(tags=["users"])
 
 
 def _client_ip(request: Request) -> str:
-    # The direct peer. Behind a proxy (staging/production) uvicorn must run with --proxy-headers
-    # so this is the caller's address, not the proxy's.
+    # The direct peer, or the caller from X-Forwarded-For when the peer is a proxy listed in
+    # FORWARDED_ALLOW_IPS (uvicorn --proxy-headers). Set it on staging/production, or every caller
+    # looks like the proxy; never "*" unless the API is reachable only through the proxy.
     return request.client.host if request.client else "unknown"
 
 

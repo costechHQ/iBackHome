@@ -25,4 +25,7 @@ RUN uv sync --locked --no-install-project
 COPY . .
 
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --proxy-headers: take the caller's address from X-Forwarded-For, but only when the request comes
+# from an address in FORWARDED_ALLOW_IPS (default 127.0.0.1). Set it to the staging/production
+# proxy's range, or every caller looks like the proxy and shares one per-IP OTP limit.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
