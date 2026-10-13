@@ -1,7 +1,7 @@
 """Create the devices table.
 
 Revision ID: create_devices
-Revises: create_price_index
+Revises: create_users_and_auth
 Create Date: 2026-10-13
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "create_devices"
-down_revision: str | Sequence[str] | None = "create_price_index"
+down_revision: str | Sequence[str] | None = "create_users_and_auth"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -29,6 +29,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint("id", name="pk_devices"),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_devices_user_id_users"),
         sa.UniqueConstraint("device_id", name="uq_devices_device_id"),
     )
     op.create_index("ix_devices_user_id", "devices", ["user_id"])

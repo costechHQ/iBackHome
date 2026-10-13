@@ -6,16 +6,17 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
+from app.base.users import service as users
+from app.base.users.models import User
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.evidence import service
-from app.features.evidence.auth import Actor, require_roles
 from app.features.evidence.schemas import DeviceIn, DeviceOut
 
 router = APIRouter(tags=["evidence"])
 
-DeviceOwner = Annotated[Actor, Depends(require_roles("supervisor", "contractor"))]
-OpsUser = Annotated[Actor, Depends(require_roles("ops"))]
+DeviceOwner = Annotated[User, Depends(users.require_role("supervisor", "contractor"))]
+OpsUser = Annotated[User, Depends(users.require_role("ops"))]
 
 
 @router.post("/devices", status_code=201, response_model=DeviceOut)
@@ -23,7 +24,7 @@ async def register_device(
     body: DeviceIn,
     session: SessionDep,
     actor: DeviceOwner,
-    key: IdempotencyKeyDep = None,
+    key: IdempotencyKeyDep,
 ) -> JSONResponse:
     scope = f"POST /devices {actor.id}"
     if (saved := await replay_or_none(session, key, scope)) is not None:
@@ -41,7 +42,7 @@ async def revoke_device(
     device_pk: uuid.UUID,
     session: SessionDep,
     actor: OpsUser,
-    key: IdempotencyKeyDep = None,
+    key: IdempotencyKeyDep,
 ) -> JSONResponse:
     scope = f"POST /devices/{device_pk}/revoke {actor.id}"
     if (saved := await replay_or_none(session, key, scope)) is not None:
