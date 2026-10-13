@@ -588,7 +588,7 @@ WhatsApp messages outside the 24-hour customer-service window must use Meta-appr
 
 ## Auth, roles and permissions
 
-**Login**: OTP by SMS or WhatsApp (Nigerian numbers) or email (clients abroad). OTPs are 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and per IP. Successful login returns a 15-minute access JWT and a 30-day refresh token (rotated on use, stored hashed). Mobile keeps tokens in Android encrypted storage.
+**Login**: OTP by SMS or WhatsApp (Nigerian and international numbers, E.164) or email. OTPs are 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and per IP. Successful login returns a 15-minute access JWT and a 30-day refresh token (rotated on use, stored hashed). Mobile keeps tokens in Android encrypted storage.
 
 **Authorisation** has two layers, both checked on every request:
 
