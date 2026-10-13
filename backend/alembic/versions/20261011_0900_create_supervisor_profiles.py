@@ -1,7 +1,7 @@
 """Create the supervisor_profiles and supervisor_relations tables.
 
 Revision ID: create_supervisor_profiles
-Revises: 0001_base
+Revises: create_devices
 Create Date: 2026-10-11
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "create_supervisor_profiles"
-down_revision: str | Sequence[str] | None = "0001_base"
+down_revision: str | Sequence[str] | None = "create_devices"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -43,6 +43,8 @@ def upgrade() -> None:
         sa.CheckConstraint(
             "rating IS NULL OR rating BETWEEN 1 AND 5", name="ck_supervisor_profiles_rating_range"
         ),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], name="fk_supervisor_profiles_user_id_users"),
+        sa.ForeignKeyConstraint(["vetted_by"], ["users.id"], name="fk_supervisor_profiles_vetted_by_users"),
         sa.PrimaryKeyConstraint("id", name="pk_supervisor_profiles"),
         sa.UniqueConstraint("user_id", name="uq_supervisor_profiles_user_id"),
     )
@@ -50,10 +52,13 @@ def upgrade() -> None:
         "supervisor_relations",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("supervisor_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("contractor_phone", sa.String(20), nullable=False),
+        sa.Column("contractor_phone", sa.String(16), nullable=False),
         sa.Column("relationship", sa.String(60), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["supervisor_id"], ["users.id"], name="fk_supervisor_relations_supervisor_id_users"
+        ),
         sa.PrimaryKeyConstraint("id", name="pk_supervisor_relations"),
         sa.UniqueConstraint(
             "supervisor_id", "contractor_phone", name="uq_supervisor_relations_supervisor_phone"

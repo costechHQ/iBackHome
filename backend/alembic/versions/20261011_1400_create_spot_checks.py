@@ -29,6 +29,8 @@ def upgrade() -> None:
         sa.Column("findings", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.ForeignKeyConstraint(["supervisor_id"], ["users.id"], name="fk_spot_checks_supervisor_id_users"),
+        sa.ForeignKeyConstraint(["scheduled_by"], ["users.id"], name="fk_spot_checks_scheduled_by_users"),
         sa.PrimaryKeyConstraint("id", name="pk_spot_checks"),
     )
     op.create_index("ix_spot_checks_project_id", "spot_checks", ["project_id"])
