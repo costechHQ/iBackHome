@@ -2,7 +2,8 @@
 
 Clients (web, Flutter sync queue) send an `Idempotency-Key` header on every write.
 If the same key arrives again for the same endpoint, we return the stored response
-instead of doing the work twice. Use it like this in a router:
+instead of doing the work twice. The header is optional: without it the request just runs.
+Routes write `key: IdempotencyKeyDep` and must NOT add "= None". Use it like this in a router:
 
     from app.core.idempotency import IdempotencyKeyDep, replay_or_none, remember
 
@@ -20,7 +21,7 @@ instead of doing the work twice. Use it like this in a router:
 
 from typing import Annotated, Any
 
-from fastapi import Header
+from fastapi import Depends, Header
 from fastapi.responses import JSONResponse
 from sqlalchemy import JSON, Integer, String, UniqueConstraint, select
 from sqlalchemy.exc import IntegrityError
@@ -41,7 +42,16 @@ class IdempotencyRecord(TimestampedBase):
     response: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
 
 
-IdempotencyKeyDep = Annotated[str | None, Header(alias="Idempotency-Key", max_length=128)]
+async def _idempotency_key(
+    idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key", max_length=128)] = None,
+) -> str | None:
+    return idempotency_key
+
+
+# The header is optional: routes declare `key: IdempotencyKeyDep` and work with or without it.
+# FastAPI doesn't allow a default inside Annotated[..., Header(...)], and without one it treated the
+# header as required (422), so the default lives in this small dependency instead.
+IdempotencyKeyDep = Annotated[str | None, Depends(_idempotency_key)]
 
 
 async def replay_or_none(session: AsyncSession, key: str | None, scope: str) -> JSONResponse | None:
