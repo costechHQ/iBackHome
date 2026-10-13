@@ -10,7 +10,7 @@
 Owner: Gabriel.
 
 Revision ID: create_ledger_entries
-Revises: create_spot_checks
+Revises: create_users_and_auth
 Create Date: 2026-10-11
 """
 
@@ -24,7 +24,7 @@ from sqlalchemy.dialects import postgresql
 from app.base.payments.settings import get_payments_settings
 
 revision: str = "create_ledger_entries"
-down_revision: str | Sequence[str] | None = "create_spot_checks"
+down_revision: str | Sequence[str] | None = "create_users_and_auth"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

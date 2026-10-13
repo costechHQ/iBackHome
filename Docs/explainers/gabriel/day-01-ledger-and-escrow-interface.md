@@ -235,7 +235,7 @@ The key tests, with what each proves:
 - **`SimulatedEscrow` keeps state in memory per process.** The API and the Celery worker don't share it, and a restart forgets holds. That's fine for unit tests and a single-process demo. Day 4 (releases via the `escrow.submit_release` Celery task) needs it persisted, probably in `escrow_accounts` / `escrow_releases` or Redis.
 - **`ref` is a `str`** (we'll pass a UUID string). The spec left the types open.
 - **The simulated partner allows one currency per project** (`escrow_currency_mismatch`).
-- **The migration chains after James's `create_spot_checks`,** assuming his `day-02-vetting` branch merges first. If it doesn't, change `down_revision` to `0001_base`.
+- **The migration chains after `create_users_and_auth`,** the latest migration on `main`. A migration is only ever based on one that is already on `main`. James's `day-02-vetting` migration will need rechaining (or `alembic merge heads` by Christopher) once this merges.
 - **No HTTP endpoints today.** `GET /projects/{id}/ledger` comes later, so there are no endpoint tests yet.
 
 ## 9. What's next

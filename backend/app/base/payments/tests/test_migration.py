@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
 BACKEND = Path(__file__).parents[4]
-DOWN_REVISION = "create_spot_checks"
+DOWN_REVISION = "create_users_and_auth"
 
 # alembic's CLI, but on Windows with the selector loop async psycopg needs (no-op on Linux / CI).
 RUN_ALEMBIC = (
