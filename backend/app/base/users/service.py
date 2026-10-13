@@ -56,34 +56,81 @@ def _utcnow() -> datetime:
 # --- Identifiers -------------------------------------------------------------------------------
 
 
-def _invalid_identifier() -> AppError:
-    return AppError("invalid_identifier", "Enter a valid phone number or email address.", 422)
+PHONE_CHANNELS = frozenset({OtpChannel.SMS.value, OtpChannel.WHATSAPP.value})
+
+
+def _invalid_phone() -> AppError:
+    return AppError(
+        "invalid_phone", "This phone number isn't valid. Check the digits and the country code.", 422
+    )
+
+
+def _parsed_valid(value: str, region: str | None) -> phonenumbers.PhoneNumber | None:
+    try:
+        number = phonenumbers.parse(value, region)
+    except phonenumbers.NumberParseException:
+        return None
+    return number if phonenumbers.is_valid_number(number) else None
+
+
+def _normalise_email(value: str) -> str:
+    email = value.lower()
+    local, _, domain = email.partition("@")
+    if (
+        email.count("@") != 1
+        or not local
+        or "." not in domain
+        or domain.startswith(".")
+        or domain.endswith(".")
+        or any(c.isspace() for c in email)
+        or len(email) > 254
+    ):
+        raise AppError("invalid_email", "Enter a valid email address.", 422)
+    return email
+
+
+def _normalise_phone(value: str) -> str:
+    """Any country's number in E.164. Without a leading +, the number is read as Nigerian."""
+    if value.startswith("+"):
+        number = _parsed_valid(value, None)
+    else:
+        number = _parsed_valid(value, DEFAULT_PHONE_REGION)
+        if number is None and _parsed_valid("+" + value, None) is not None:
+            # e.g. 447400123456: a valid foreign number typed without its leading +.
+            raise AppError(
+                "phone_needs_country_code",
+                "Numbers outside Nigeria need the country code with a leading +, "
+                "for example +44 7400 123456.",
+                422,
+            )
+    if number is None:
+        raise _invalid_phone()
+    return phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
 
 
 def normalise_identifier(raw: str) -> tuple[str, str]:
-    """Return (identifier, channel): a lower-case email, or a phone number in E.164 (+234...)."""
+    """Return (identifier, default channel): a lower-case email, or any phone number in E.164.
+
+    Nigerian local numbers (0803...) become +234...; other countries need their code (+44..., +1...).
+    """
     value = raw.strip()
     if "@" in value:
-        email = value.lower()
-        local, _, domain = email.partition("@")
-        if (
-            email.count("@") != 1
-            or not local
-            or "." not in domain
-            or domain.startswith(".")
-            or domain.endswith(".")
-            or any(c.isspace() for c in email)
-            or len(email) > 254
-        ):
-            raise _invalid_identifier()
-        return email, OtpChannel.EMAIL.value
-    try:
-        number = phonenumbers.parse(value, DEFAULT_PHONE_REGION)
-    except phonenumbers.NumberParseException as exc:
-        raise _invalid_identifier() from exc
-    if not phonenumbers.is_valid_number(number):
-        raise _invalid_identifier()
-    return phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164), OtpChannel.SMS.value
+        return _normalise_email(value), OtpChannel.EMAIL.value
+    return _normalise_phone(value), OtpChannel.SMS.value
+
+
+def choose_channel(default_channel: str, requested: str | None) -> str:
+    """sms (default) or whatsapp for a phone number; email for an email address."""
+    if requested is None:
+        return default_channel
+    allowed = PHONE_CHANNELS if default_channel != OtpChannel.EMAIL.value else {OtpChannel.EMAIL.value}
+    if requested not in allowed:
+        raise AppError(
+            "channel_mismatch",
+            "Use sms or whatsapp for a phone number, and email for an email address.",
+            422,
+        )
+    return requested
 
 
 # --- Hashing -----------------------------------------------------------------------------------
@@ -134,15 +181,19 @@ async def request_otp(
     ip: str,
     sender: OtpSender,
     *,
+    channel: str | None = None,
     now: datetime | None = None,
 ) -> int:
     """Create and send a new login code; returns seconds until it expires. The caller commits.
 
-    The response is the same whether or not an account exists for the identifier.
+    `channel` is sms (default) or whatsapp for a phone, email for an email. Rate limits count every
+    code for the identifier and the IP, whatever the channel. The response is the same whether or
+    not an account exists for the identifier.
     """
     settings = get_settings()
     now = now or _utcnow()
-    identifier, channel = normalise_identifier(raw_identifier)
+    identifier, default_channel = normalise_identifier(raw_identifier)
+    channel = choose_channel(default_channel, channel)
 
     # Serialise concurrent requests for the same IP, then the same identifier (always in this order,
     # so two requests can't deadlock), so the counts below can't be raced past the limits.

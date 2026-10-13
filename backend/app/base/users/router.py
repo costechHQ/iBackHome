@@ -34,10 +34,12 @@ async def request_otp(
 ) -> Any:
     # The scope holds a hash of the identifier, never the phone or email itself.
     who = hashlib.sha256(payload.identifier.strip().lower().encode()).hexdigest()[:32]
-    scope = f"POST /auth/otp/request {who}"
+    scope = f"POST /auth/otp/request {who} {payload.channel or 'default'}"
     if (saved := await replay_or_none(session, key, scope)) is not None:
         return saved
-    expires_in = await service.request_otp(session, payload.identifier, _client_ip(request), sender)
+    expires_in = await service.request_otp(
+        session, payload.identifier, _client_ip(request), sender, channel=payload.channel
+    )
     body = OtpRequestOut(expires_in=expires_in).model_dump(mode="json")
     await remember(session, key, scope, 202, body)
     await session.commit()

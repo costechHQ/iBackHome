@@ -1,18 +1,26 @@
 """Request and response shapes (Pydantic) for users. Owner: Christopher."""
 
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 _IDENTIFIER = Field(
     min_length=3,
     max_length=254,
-    description="Phone number (Nigerian local such as 0803..., or international +...) or email address.",
+    description=(
+        "Phone number (Nigerian local such as 0803..., or any country with its code, such as +44...) "
+        "or email address."
+    ),
 )
 
 
 class OtpRequestIn(BaseModel):
     identifier: str = _IDENTIFIER
+    channel: Literal["sms", "whatsapp", "email"] | None = Field(
+        default=None,
+        description="How to send the code: sms (default) or whatsapp for a phone number, email for an email.",
+    )
 
 
 class OtpRequestOut(BaseModel):

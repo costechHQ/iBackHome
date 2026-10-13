@@ -59,7 +59,9 @@ def upgrade() -> None:
         sa.Column("consumed_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("requested_ip", sa.String(45), nullable=False),
         *_timestamps(),
-        sa.CheckConstraint("channel IN ('sms', 'email')", name=op.f("ck_otp_codes_channel_valid")),
+        sa.CheckConstraint(
+            "channel IN ('sms', 'whatsapp', 'email')", name=op.f("ck_otp_codes_channel_valid")
+        ),
         sa.CheckConstraint("attempts >= 0", name=op.f("ck_otp_codes_attempts_not_negative")),
         sa.PrimaryKeyConstraint("id", name="pk_otp_codes"),
     )

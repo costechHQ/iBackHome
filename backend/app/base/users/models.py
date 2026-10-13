@@ -30,6 +30,7 @@ class UserStatus(StrEnum):
 
 class OtpChannel(StrEnum):
     SMS = "sms"
+    WHATSAPP = "whatsapp"
     EMAIL = "email"
 
 
