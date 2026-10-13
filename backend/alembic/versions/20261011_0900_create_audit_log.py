@@ -6,7 +6,7 @@ Two protections, so an edit is refused by the database itself:
 2. UPDATE, DELETE and TRUNCATE rights removed from the app's database user and from PUBLIC.
 
 Revision ID: create_audit_log
-Revises: create_price_index
+Revises: create_users_and_auth
 Create Date: 2026-10-11
 """
 
@@ -17,7 +17,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "create_audit_log"
-down_revision: str | Sequence[str] | None = "create_price_index"
+down_revision: str | Sequence[str] | None = "create_users_and_auth"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
