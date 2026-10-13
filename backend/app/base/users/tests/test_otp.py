@@ -48,13 +48,23 @@ def test_email_is_lower_cased() -> None:
 
 
 @pytest.mark.parametrize(
-    "bad", ["12345", "0803", "not-a-phone", "a@b", "a@@b.com", "@example.com", "a b@x.com"]
+    ("bad", "code"),
+    [
+        ("12345", "invalid_phone"),
+        ("0803", "invalid_phone"),
+        ("not-a-phone", "invalid_phone"),
+        ("+44 12", "invalid_phone"),
+        ("a@b", "invalid_email"),
+        ("a@@b.com", "invalid_email"),
+        ("@example.com", "invalid_email"),
+        ("a b@x.com", "invalid_email"),
+    ],
 )
-def test_invalid_identifiers_are_refused(bad: str) -> None:
+def test_invalid_identifiers_are_refused(bad: str, code: str) -> None:
     with pytest.raises(AppError) as err:
         service.normalise_identifier(bad)
     assert err.value.status_code == 422
-    assert err.value.code == "invalid_identifier"
+    assert err.value.code == code
 
 
 # --- requesting a code ------------------------------------------------------------------------
@@ -137,7 +147,7 @@ async def test_same_idempotency_key_replays_without_a_second_code(
 async def test_invalid_identifier_is_422(client: AsyncClient, sender: CapturingSender) -> None:
     response = await client.post("/api/v1/auth/otp/request", json={"identifier": "not-a-phone"})
     assert response.status_code == 422
-    assert response.json()["error"]["code"] == "invalid_identifier"
+    assert response.json()["error"]["code"] == "invalid_phone"
     assert sender.sent == []
 
 
