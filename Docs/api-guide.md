@@ -31,7 +31,7 @@ Rules:
 - The table is insert-only. The database refuses every UPDATE, DELETE and TRUNCATE (a trigger, plus those rights removed from the app's database user), so there is no way to fix an entry. Write a new one instead.
 - Apps send the device ID in the `X-Device-Id` header on every request; it is saved on each entry.
 
-**Search (ops only):** `GET /api/v1/ops/audit`, newest first. Optional filters are `actor_id`, `action`, `object_type`, `object_id`, `since` and `until` (ISO date-times), plus `limit` (1–200, default 50) and `cursor`. The response is `{"items": [...], "next_cursor": "..."}`. To get the next page, pass `next_cursor` back as `cursor`. It is `null` on the last page.
+**Search (ops only; other roles get 403 `forbidden_role`):** `GET /api/v1/ops/audit`, newest first. Optional filters are `actor_id`, `action`, `object_type`, `object_id`, `since` and `until` (ISO date-times), plus `limit` (1–200, default 50) and `cursor`. The response is `{"items": [...], "next_cursor": "..."}`. To get the next page, pass `next_cursor` back as `cursor`. It is `null` on the last page.
 
 ## Milestones
 
@@ -43,26 +43,20 @@ Errors from claim:
 
 | Status | Code | Meaning |
 | --- | --- | --- |
-| 403 | `transition_not_allowed` | The user is not a contractor |
+| 401 | `unauthorized` | No valid sign-in token |
+| 403 | `forbidden_role` | The signed-in user is not a contractor |
+| 403 | `transition_not_allowed` | Raised by the service when a non-contractor reaches it (the route refuses them first) |
 | 403 | `not_project_contractor` | The user is a contractor, but not on this project |
 | 404 | `milestone_not_found` | No milestone has this ID |
 | 409 | `project_not_active` | The project is draft, in BoQ review, paused or completed |
 | 409 | `invalid_transition` | The milestone is not `funded` (it isn't funded yet, or it has already been claimed) |
-| 503 | `auth_not_ready` / `projects_not_ready` | Sign-in or projects are not connected yet (see below) |
+| 503 | `projects_not_ready` | Projects are not connected yet (see below) |
 
 Service functions for other features (they never commit; the caller does): `create_for_project()` (Christopher), plus `mark_funded()`, `mark_released()`, `mark_disputed()` and `mark_resolved()` (Gabriel).
 
-## Connecting sign-in
+## Sign-in
 
-`app/base/audit/actor.py` has `current_actor`, which tells the audit log and milestones who is signed in. Until Christopher's login is merged, it answers 503 `auth_not_ready`, so no endpoint can be used without signing in. Once his `current_user` is in main, replace the function with this (adjust the import to wherever his code lives):
-
-```python
-from app.base.users.deps import current_user   # Christopher's
-from app.base.users.models import User
-
-async def current_actor(user: Annotated[User, Depends(current_user)]) -> Actor:
-    return Actor(id=user.id, role=user.role)
-```
+Sign-in is connected (Christopher's `app.base.users`). `app/base/audit/actor.py` turns the signed-in user into an `Actor(id, role)` through `current_actor` / `CurrentActor`. To limit a route to one role, add `dependencies=[Depends(users.require_role("ops"))]` (`from app.base.users import service as users`). No token returns 401, a wrong role returns 403 `forbidden_role`. In tests, sign in with a real token: `users.create_access_token(user)` in an `Authorization: Bearer ...` header.
 
 ## Connecting projects
 
