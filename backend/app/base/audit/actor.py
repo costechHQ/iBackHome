@@ -1,12 +1,11 @@
 """Who is making this request.
 
-`current_actor` is the one place where the audit log and milestones learn the signed-in user.
-Until Christopher's login (`current_user`) is merged it refuses every request with
-503 `auth_not_ready`, so no endpoint is ever open by accident. Tests replace it with
-`app.dependency_overrides[current_actor]`.
+`current_actor` turns the signed-in user (Christopher's `users.CurrentUserDep`) into the small
+`Actor` that milestones and the audit log work with. A missing or bad token is refused with 401
+before the route runs. Routes that need a particular role add
+`dependencies=[Depends(users.require_role("..."))]`; a wrong role returns 403 `forbidden_role`.
 
-When Christopher's code is in main, replace the body of `current_actor` with a call to his
-`current_user` (see docs/api-guide.md, "Connecting sign-in"). Nothing else changes.
+Tests sign in with a real token (`users.create_access_token`), not a stand-in.
 """
 
 import uuid
@@ -15,7 +14,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from app.core.errors import AppError
+from app.base.users import service as users
 
 
 @dataclass(frozen=True)
@@ -24,8 +23,8 @@ class Actor:
     role: str  # client | contractor | supervisor | supplier | ops
 
 
-async def current_actor() -> Actor:
-    raise AppError("auth_not_ready", "Sign-in is not connected yet.", 503)
+async def current_actor(user: users.CurrentUserDep) -> Actor:
+    return Actor(id=user.id, role=user.role)
 
 
 CurrentActor = Annotated[Actor, Depends(current_actor)]

@@ -1,25 +1,33 @@
 """POST /milestones/{id}/claim, and the audit entry every transition writes."""
 
+import secrets
 import uuid
-from collections.abc import AsyncIterator
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.base.audit.actor import Actor, current_actor
+from app.base.audit.actor import Actor
 from app.base.audit.models import AuditEntry
-from app.core.db import get_session
+from app.base.users import service as users
+from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.milestones import project_check, service
 from app.features.milestones.models import Milestone
 from app.features.milestones.models import MilestoneStatus as S
 from app.features.milestones.project_check import ProjectInfo
 from app.features.milestones.transitions import ActorRole
-from app.main import app
 
 CONTRACTOR = Actor(id=uuid.uuid4(), role="contractor")
+
+
+async def sign_in_as(session: AsyncSession, role: str) -> tuple[User, dict[str, str]]:
+    """A real user with this role, and the Authorization header for their access token."""
+    user = User(phone=f"+234803{secrets.randbelow(10**7):07d}", role=role, status="active")
+    session.add(user)
+    await session.flush()
+    return user, {"Authorization": f"Bearer {users.create_access_token(user)}"}
 
 
 async def make_milestone(session: AsyncSession, status: S = S.FUNDED) -> Milestone:
@@ -133,30 +141,14 @@ async def test_claim_waits_for_projects_to_be_connected(db_session: AsyncSession
 # --- POST /milestones/{id}/claim ---------------------------------------------------------------
 
 
-@pytest.fixture
-async def client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    async def override_session() -> AsyncIterator[AsyncSession]:
-        yield db_session
-
-    async def override_actor() -> Actor:
-        return CONTRACTOR
-
-    app.dependency_overrides[get_session] = override_session
-    app.dependency_overrides[current_actor] = override_actor
-    try:
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            yield c
-    finally:
-        app.dependency_overrides.clear()
-
-
 async def test_claim_endpoint(
     client: AsyncClient, db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    project_is(monkeypatch)
+    contractor, headers = await sign_in_as(db_session, "contractor")
+    project_is(monkeypatch, contractor_id=contractor.id)
     milestone = await make_milestone(db_session)
     response = await client.post(
-        f"/api/v1/milestones/{milestone.id}/claim", headers={"X-Device-Id": "tecno-spark-20"}
+        f"/api/v1/milestones/{milestone.id}/claim", headers={**headers, "X-Device-Id": "tecno-spark-20"}
     )
     assert response.status_code == 200
     assert response.json()["status"] == "claimed"
@@ -164,7 +156,7 @@ async def test_claim_endpoint(
     [entry] = await audit_entries(db_session, milestone.id)
     assert (entry.action, entry.actor_id, entry.device_id) == (
         "milestone.claimed",
-        CONTRACTOR.id,
+        contractor.id,
         "tecno-spark-20",
     )
 
@@ -172,14 +164,15 @@ async def test_claim_endpoint(
 async def test_claim_retry_with_same_key_returns_first_answer(
     client: AsyncClient, db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    project_is(monkeypatch)
+    contractor, auth = await sign_in_as(db_session, "contractor")
+    project_is(monkeypatch, contractor_id=contractor.id)
     milestone = await make_milestone(db_session)
     url = f"/api/v1/milestones/{milestone.id}/claim"
-    headers = {"Idempotency-Key": str(uuid.uuid4())}
+    headers = {**auth, "Idempotency-Key": str(uuid.uuid4())}
 
     first = await client.post(url, headers=headers)
     retry = await client.post(url, headers=headers)
-    without_key = await client.post(url)
+    without_key = await client.post(url, headers=auth)
 
     assert first.status_code == retry.status_code == 200
     assert retry.json() == first.json()
@@ -187,22 +180,38 @@ async def test_claim_retry_with_same_key_returns_first_answer(
     assert without_key.status_code == 409  # a new claim on a claimed milestone is still refused
 
 
-async def test_claim_endpoint_unknown_milestone(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
-    project_is(monkeypatch)
-    response = await client.post(f"/api/v1/milestones/{uuid.uuid4()}/claim")
+async def test_claim_endpoint_unknown_milestone(
+    client: AsyncClient, db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    contractor, headers = await sign_in_as(db_session, "contractor")
+    project_is(monkeypatch, contractor_id=contractor.id)
+    response = await client.post(f"/api/v1/milestones/{uuid.uuid4()}/claim", headers=headers)
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "milestone_not_found"
 
 
-async def test_claim_endpoint_is_closed_until_sign_in_is_connected(db_session: AsyncSession) -> None:
-    async def override_session() -> AsyncIterator[AsyncSession]:
-        yield db_session
+async def test_claim_endpoint_needs_sign_in(client: AsyncClient) -> None:
+    response = await client.post(f"/api/v1/milestones/{uuid.uuid4()}/claim")
+    assert response.status_code == 401
 
-    app.dependency_overrides[get_session] = override_session
-    try:
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            response = await c.post(f"/api/v1/milestones/{uuid.uuid4()}/claim")
-    finally:
-        app.dependency_overrides.clear()
+
+@pytest.mark.parametrize("role", ["client", "supervisor", "supplier", "ops"])
+async def test_claim_endpoint_is_for_contractors_only(
+    client: AsyncClient, db_session: AsyncSession, role: str
+) -> None:
+    _, headers = await sign_in_as(db_session, role)
+    milestone = await make_milestone(db_session)
+    response = await client.post(f"/api/v1/milestones/{milestone.id}/claim", headers=headers)
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "forbidden_role"
+    assert await audit_entries(db_session, milestone.id) == []
+
+
+async def test_claim_endpoint_waits_for_projects_to_be_connected(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    _, headers = await sign_in_as(db_session, "contractor")
+    milestone = await make_milestone(db_session)
+    response = await client.post(f"/api/v1/milestones/{milestone.id}/claim", headers=headers)
     assert response.status_code == 503
-    assert response.json()["error"]["code"] == "auth_not_ready"
+    assert response.json()["error"]["code"] == "projects_not_ready"

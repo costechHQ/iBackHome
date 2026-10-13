@@ -6,7 +6,7 @@ status (it must be `active`) and who its contractor is. This file is the one pla
 Until Christopher's `projects` feature is merged (backend day 3), `get_project_info` refuses
 with 503 `projects_not_ready`, so a claim can never skip the checks. Tests replace it.
 When his code is in main, replace the body with a call to his service
-(see docs/api-guide.md, "Connecting projects"). Nothing else changes.
+(see Docs/api-guide.md, "Connecting projects"). Nothing else changes.
 """
 
 import uuid

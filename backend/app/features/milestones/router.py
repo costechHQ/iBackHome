@@ -6,10 +6,11 @@ Day 2: POST /milestones/{id}/claim. Verify and approve endpoints and the project
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from app.base.audit.actor import CurrentActor
+from app.base.users import service as users
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.milestones import service
@@ -18,13 +19,17 @@ from app.features.milestones.schemas import MilestoneOut
 router = APIRouter(tags=["milestones"])
 
 
-@router.post("/milestones/{milestone_id}/claim", response_model=MilestoneOut)
+@router.post(
+    "/milestones/{milestone_id}/claim",
+    response_model=MilestoneOut,
+    dependencies=[Depends(users.require_role("contractor"))],
+)
 async def claim_milestone(
     milestone_id: uuid.UUID,
     request: Request,
     session: SessionDep,
     actor: CurrentActor,
-    key: IdempotencyKeyDep = None,
+    key: IdempotencyKeyDep,
 ) -> Any:
     """Contractor: the work for this milestone is done. The supervisor verifies it next.
 

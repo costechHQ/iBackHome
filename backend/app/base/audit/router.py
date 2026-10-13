@@ -7,21 +7,19 @@ paginated with ?cursor=&limit= (pass back `next_cursor` to get the next page).
 import uuid
 from datetime import datetime
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from app.base.audit import service
-from app.base.audit.actor import CurrentActor
 from app.base.audit.schemas import AuditEntryOut, AuditPage
+from app.base.users import service as users
 from app.core.db import SessionDep
-from app.core.errors import AppError
 
 router = APIRouter(tags=["audit"])
 
 
-@router.get("/ops/audit", response_model=AuditPage)
+@router.get("/ops/audit", response_model=AuditPage, dependencies=[Depends(users.require_role("ops"))])
 async def search_audit_log(
     session: SessionDep,
-    actor: CurrentActor,
     actor_id: uuid.UUID | None = None,
     action: str | None = Query(default=None, max_length=80),
     object_type: str | None = Query(default=None, max_length=60),
@@ -31,8 +29,6 @@ async def search_audit_log(
     cursor: str | None = Query(default=None, max_length=200),
     limit: int = Query(default=50, ge=1, le=service.MAX_PAGE),
 ) -> AuditPage:
-    if actor.role != "ops":
-        raise AppError("forbidden", "Only ops can view the audit log.", 403)
     entries, next_cursor = await service.search(
         session,
         actor_id=actor_id,

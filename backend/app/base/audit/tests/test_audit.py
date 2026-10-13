@@ -1,10 +1,11 @@
 """Audit log: record(), the database refusing edits, and GET /ops/audit."""
 
+import secrets
 import uuid
-from collections.abc import AsyncIterator, Callable
+from collections.abc import Callable
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 from sqlalchemy import delete, select, text, update
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,12 +13,11 @@ from sqlalchemy.sql import Executable
 from starlette.requests import Request
 
 from app.base import audit
-from app.base.audit.actor import Actor, current_actor
 from app.base.audit.models import AuditEntry
-from app.core.db import get_session
+from app.base.users import service as users
+from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.milestones.models import Milestone, MilestoneStatus
-from app.main import app
 
 
 def fake_request(ip: str = "102.89.1.10", device_id: str | None = "pixel-7a-abc") -> Request:
@@ -134,32 +134,18 @@ async def test_search_rejects_a_broken_cursor(db_session: AsyncSession) -> None:
     assert error.value.code == "invalid_cursor"
 
 
-@pytest.fixture
-async def client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
-    async def override_session() -> AsyncIterator[AsyncSession]:
-        yield db_session
-
-    app.dependency_overrides[get_session] = override_session
-    try:
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-            yield c
-    finally:
-        app.dependency_overrides.clear()
-
-
-def sign_in_as(role: str) -> None:
-    actor = Actor(id=uuid.uuid4(), role=role)
-
-    async def override() -> Actor:
-        return actor
-
-    app.dependency_overrides[current_actor] = override
+async def sign_in_as(session: AsyncSession, role: str) -> dict[str, str]:
+    """A real user with this role, and the Authorization header for their access token."""
+    user = User(phone=f"+234803{secrets.randbelow(10**7):07d}", role=role, status="active")
+    session.add(user)
+    await session.flush()
+    return {"Authorization": f"Bearer {users.create_access_token(user)}"}
 
 
 async def test_ops_can_search_the_audit_log(client: AsyncClient, db_session: AsyncSession) -> None:
     entry = await add_entry(db_session, "test.searchable")
-    sign_in_as("ops")
-    response = await client.get("/api/v1/ops/audit", params={"action": "test.searchable"})
+    headers = await sign_in_as(db_session, "ops")
+    response = await client.get("/api/v1/ops/audit", params={"action": "test.searchable"}, headers=headers)
     assert response.status_code == 200
     body = response.json()
     assert [item["id"] for item in body["items"]] == [str(entry.id)]
@@ -167,20 +153,21 @@ async def test_ops_can_search_the_audit_log(client: AsyncClient, db_session: Asy
 
 
 @pytest.mark.parametrize("role", ["client", "contractor", "supervisor", "supplier"])
-async def test_only_ops_can_search_the_audit_log(client: AsyncClient, role: str) -> None:
-    sign_in_as(role)
-    response = await client.get("/api/v1/ops/audit")
+async def test_only_ops_can_search_the_audit_log(
+    client: AsyncClient, db_session: AsyncSession, role: str
+) -> None:
+    headers = await sign_in_as(db_session, role)
+    response = await client.get("/api/v1/ops/audit", headers=headers)
     assert response.status_code == 403
-    assert response.json()["error"]["code"] == "forbidden"
+    assert response.json()["error"]["code"] == "forbidden_role"
 
 
-async def test_audit_log_is_closed_until_sign_in_is_connected(client: AsyncClient) -> None:
+async def test_audit_log_needs_sign_in(client: AsyncClient) -> None:
     response = await client.get("/api/v1/ops/audit")
-    assert response.status_code == 503
-    assert response.json()["error"]["code"] == "auth_not_ready"
+    assert response.status_code == 401
 
 
-async def test_limit_is_checked(client: AsyncClient) -> None:
-    sign_in_as("ops")
-    response = await client.get("/api/v1/ops/audit", params={"limit": 500})
+async def test_limit_is_checked(client: AsyncClient, db_session: AsyncSession) -> None:
+    headers = await sign_in_as(db_session, "ops")
+    response = await client.get("/api/v1/ops/audit", params={"limit": 500}, headers=headers)
     assert response.status_code == 422
