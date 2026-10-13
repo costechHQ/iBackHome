@@ -9,12 +9,10 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validato
 
 from app.features.supervision.models import VettingStatus
 
-# E.164: a plus sign, then up to 15 digits, e.g. +2348012345678.
-E164_PATTERN = r"^\+[1-9]\d{7,14}$"
-
 
 class DeclaredRelation(BaseModel):
-    contractor_phone: str = Field(pattern=E164_PATTERN, examples=["+2348012345678"])
+    # Any form login accepts (0803..., +234803..., +44...); stored in E.164 like users.phone.
+    contractor_phone: str = Field(min_length=7, max_length=20, examples=["08031234567"])
     relationship: str = Field(min_length=2, max_length=60, examples=["brother-in-law"])
 
 

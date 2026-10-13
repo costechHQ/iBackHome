@@ -14,11 +14,20 @@ from datetime import UTC, datetime
 from sqlalchemy import delete, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base.users import service as users
 from app.core.errors import AppError
 from app.features.supervision.models import SpotCheck, SupervisorProfile, SupervisorRelation, VettingStatus
 from app.features.supervision.schemas import SupervisorApplication, VettingDecision
 
 CHECKS = ("registration_verified", "nin_verified", "guarantor_1_verified", "guarantor_2_verified")
+
+
+def _contractor_phone(raw: str) -> str:
+    """E.164 exactly as users.phone stores it, so a declared relative matches the contractor's account."""
+    phone, channel = users.normalise_identifier(raw)
+    if channel == "email":
+        raise AppError("invalid_phone", "A related contractor must be given by phone number.", 422)
+    return phone
 
 
 async def get_profile(session: AsyncSession, user_id: uuid.UUID, *, lock: bool = False) -> SupervisorProfile:
@@ -34,7 +43,14 @@ async def get_profile(session: AsyncSession, user_id: uuid.UUID, *, lock: bool =
 async def submit_application(
     session: AsyncSession, user_id: uuid.UUID, application: SupervisorApplication
 ) -> SupervisorProfile:
-    """Create or update a supervisor's application. Any change sends it back to ops as pending."""
+    """Create or update a supervisor's application. Any change sends it back to ops as pending.
+
+    - 409 supervisor_already_vetted: an approved profile can only be changed by ops
+    - 422 invalid_phone / phone_needs_country_code: a declared relative's number (same rules as login)
+    """
+    relations = {
+        _contractor_phone(r.contractor_phone): r.relationship for r in application.related_contractors
+    }
     profile = await session.scalar(
         select(SupervisorProfile).where(SupervisorProfile.user_id == user_id).with_for_update()
     )
@@ -55,10 +71,8 @@ async def submit_application(
 
     await session.execute(delete(SupervisorRelation).where(SupervisorRelation.supervisor_id == user_id))
     session.add_all(
-        SupervisorRelation(
-            supervisor_id=user_id, contractor_phone=r.contractor_phone, relationship=r.relationship
-        )
-        for r in {r.contractor_phone: r for r in application.related_contractors}.values()
+        SupervisorRelation(supervisor_id=user_id, contractor_phone=phone, relationship=relationship)
+        for phone, relationship in relations.items()
     )
     await session.flush()
     return profile
