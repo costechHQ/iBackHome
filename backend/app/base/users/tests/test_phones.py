@@ -2,8 +2,11 @@
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.users import service
+from app.base.users.models import User
 from app.base.users.tests.conftest import CapturingSender
 
 REQUEST = "/api/v1/auth/otp/request"
@@ -119,3 +122,20 @@ async def test_unknown_channel_is_422(client: AsyncClient) -> None:
     response = await client.post(REQUEST, json={"identifier": "0803 123 4567", "channel": "fax"})
     assert response.status_code == 422
     _assert_422(response.json(), "validation_error")
+
+
+async def test_whatsapp_channel_finds_and_creates_users_by_phone(db_session: AsyncSession) -> None:
+    created = await service._find_or_create_user(db_session, "+447400123456", "whatsapp")
+    assert created.phone == "+447400123456"
+    assert created.email is None
+    found = await service._find_or_create_user(db_session, "+447400123456", "whatsapp")
+    assert found.id == created.id
+
+
+async def test_whatsapp_login_creates_one_user_by_phone(
+    client: AsyncClient, sender: CapturingSender, db_session: AsyncSession
+) -> None:
+    await _sign_in(client, sender, "+44 7400 123456", channel="whatsapp")
+    users = (await db_session.scalars(select(User).where(User.phone == "+447400123456"))).all()
+    assert len(users) == 1
+    assert users[0].email is None

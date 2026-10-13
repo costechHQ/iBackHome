@@ -230,13 +230,13 @@ async def request_otp(
 
 
 async def _find_or_create_user(session: AsyncSession, identifier: str, channel: str) -> User:
-    column = User.phone if channel == OtpChannel.SMS.value else User.email
+    column = User.email if channel == OtpChannel.EMAIL.value else User.phone
     user = await session.scalar(select(User).where(column == identifier))
     if user is not None:
         return user
     # New people sign up as clients. Contractors are invited (day 3), supervisors are vetted and
     # ops accounts are seeded, so nobody can give themselves another role.
-    fields = {"phone": identifier} if channel == OtpChannel.SMS.value else {"email": identifier}
+    fields = {"email": identifier} if channel == OtpChannel.EMAIL.value else {"phone": identifier}
     try:
         async with session.begin_nested():
             user = User(role=Role.CLIENT.value, **fields)
