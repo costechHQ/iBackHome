@@ -30,7 +30,7 @@ async def request_otp(
     request: Request,
     session: SessionDep,
     sender: OtpSenderDep,
-    key: IdempotencyKeyDep = None,  # optional: the shared alias has no default, which would require it
+    key: IdempotencyKeyDep,
 ) -> Any:
     # The scope holds a hash of the identifier, never the phone or email itself.
     who = hashlib.sha256(payload.identifier.strip().lower().encode()).hexdigest()[:32]
@@ -52,7 +52,7 @@ async def request_otp(
 
 @router.post("/auth/otp/verify", response_model=TokenPair)
 async def verify_otp(
-    payload: OtpVerifyIn, response: Response, session: SessionDep, _key: IdempotencyKeyDep = None
+    payload: OtpVerifyIn, response: Response, session: SessionDep, _key: IdempotencyKeyDep
 ) -> TokenPair:
     response.headers["Cache-Control"] = "no-store"
     return await service.verify_otp(session, payload.identifier, payload.code)
@@ -60,7 +60,7 @@ async def verify_otp(
 
 @router.post("/auth/refresh", response_model=TokenPair)
 async def refresh(
-    payload: RefreshIn, response: Response, session: SessionDep, _key: IdempotencyKeyDep = None
+    payload: RefreshIn, response: Response, session: SessionDep, _key: IdempotencyKeyDep
 ) -> TokenPair:
     response.headers["Cache-Control"] = "no-store"
     return await service.rotate_refresh_token(session, payload.refresh_token)
