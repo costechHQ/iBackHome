@@ -110,7 +110,9 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 
 | Table | Feature | Key fields |
 | --- | --- | --- |
-| `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status, timezone, country |
+| `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status (`active`, `suspended`), timezone, country |
+| `otp_codes` | base/users | identifier (E.164 phone or lower-case email), channel (`sms`, `email`), code_hash (HMAC-SHA256, never the code), expires_at, attempts, consumed_at, requested_ip |
+| `refresh_tokens` | base/users | user → users, token_hash (SHA-256, unique), expires_at, used_at, revoked_at, replaced_by → refresh_tokens |
 | `supervisor_profiles` | supervision | user → users, registration_body, registration_no, nin_verified, guarantor_1, guarantor_2, vetting_status (`pending`, `approved`, `rejected`), rating |
 | `suppliers` | suppliers | name, owner → users, address, location (POINT), verified, paystack_recipient_code |
 | `projects` | projects | client → users, contractor → users, supervisor → users, title, address, status (`draft`, `boq_review`, `active`, `paused`, `completed`), currency, budget_minor |
