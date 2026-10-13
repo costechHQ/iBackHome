@@ -2,7 +2,7 @@
 # Start everything:  docker compose up --build
 # API docs:          http://localhost:8000/docs
 # Health check:      http://localhost:8000/healthz
-# MinIO console:     http://localhost:9001  (minioadmin / minioadmin)
+# Object storage:    http://localhost:9000  (S3 API, SeaweedFS; keys are STORAGE_ACCESS_KEY / STORAGE_SECRET_KEY)
 
 x-backend: &backend
   build: ./backend
@@ -12,7 +12,7 @@ x-backend: &backend
   environment:
     DATABASE_URL: postgresql+psycopg://ibackhome:ibackhome@db:5432/ibackhome
     REDIS_URL: redis://redis:6379/0
-    STORAGE_ENDPOINT: http://minio:9000
+    STORAGE_ENDPOINT: http://storage:9000
   volumes:
     - ./backend:/app
   depends_on:
@@ -34,7 +34,7 @@ services:
 
   beat:
     <<: *backend
-    command: celery -A app.workers.celery_app beat --loglevel=info
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
 
   db:
     image: postgis/postgis:16-3.4
@@ -47,7 +47,9 @@ services:
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ibackhome"]
+      # TCP (-h 127.0.0.1), not the Unix socket: on first boot the image runs PostGIS init on a temporary
+      # socket-only server, then restarts. A socket check passes during init and the api's migration fails.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ibackhome -d ibackhome"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -62,18 +64,27 @@ services:
       timeout: 5s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  # S3-compatible storage for evidence uploads. MinIO stopped publishing Docker images in 2025;
+  # SeaweedFS speaks the same S3 API, so boto3 code works unchanged. Staging/production use R2 or B2.
+  storage:
+    image: chrislusf/seaweedfs:4.48
+    # -ip gives a stable identity; without it a restart changes the container IP and the server never recovers.
+    command: server -ip=storage -ip.bind=0.0.0.0 -dir=/data -s3 -s3.port=9000 -volume.max=0
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:-ibackhome}
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:-ibackhome-dev-secret}
     ports:
       - "9000:9000"
-      - "9001:9001"
     volumes:
-      - minio-data:/data
+      - storage-data:/data
+    healthcheck:
+      # Any HTTP answer (403 without credentials) means the S3 API is up. Takes ~15 s after a restart.
+      test: ["CMD-SHELL", "curl -s -o /dev/null http://localhost:9000/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 volumes:
   db-data:
-  minio-data:
+  storage-data:
