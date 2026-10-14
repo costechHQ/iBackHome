@@ -73,6 +73,7 @@ dev = [
 ]
 gabriel = [
     "pypdf>=5.0",
+    "respx>=0.21",
     "stripe>=10.0",
 ]
 james = [
