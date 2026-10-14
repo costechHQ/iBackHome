@@ -2,6 +2,7 @@
 
 Routes parse the request, check the role, and call service.py, which checks project membership.
 POST /projects/{id}/supervisor is James's route (supervision); it calls service.set_supervisor().
+The BoQ routes (GET/PUT /projects/{id}/boq, POST /projects/{id}/boq/approve) are below the site.
 """
 
 import uuid
@@ -17,6 +18,8 @@ from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.projects import service
 from app.features.projects.schemas import (
+    BoqOut,
+    BoqSubmit,
     ProjectCreate,
     ProjectDetail,
     ProjectOut,
@@ -29,6 +32,8 @@ router = APIRouter(tags=["projects"])
 
 ClientUser = Annotated[User, Depends(users.require_role("client"))]
 ClientOrOps = Annotated[User, Depends(users.require_role("client", "ops"))]
+ContractorUser = Annotated[User, Depends(users.require_role("contractor"))]
+Approver = Annotated[User, Depends(users.require_role("client", "contractor", "ops"))]
 
 
 @router.post("/projects", response_model=ProjectOut, status_code=201)
@@ -91,6 +96,59 @@ async def set_site(
         return saved
     site = await service.set_site(session, user, project_id, data, request=request)
     body = site.model_dump(mode="json")
+    await remember(session, key, scope, 200, body)
+    await session.commit()
+    return body
+
+
+# --- Bill of quantities -------------------------------------------------------------------------
+
+
+@router.get("/projects/{project_id}/boq", response_model=BoqOut)
+async def get_boq(project_id: uuid.UUID, session: SessionDep, user: users.CurrentUserDep) -> BoqOut:
+    """The BoQ grouped by milestone, with totals, budget and approvals. Project members and ops."""
+    return await service.get_boq(session, user, project_id)
+
+
+@router.put("/projects/{project_id}/boq", response_model=BoqOut)
+async def submit_boq(
+    project_id: uuid.UUID,
+    data: BoqSubmit,
+    request: Request,
+    session: SessionDep,
+    user: ContractorUser,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """The project's contractor: submit the BoQ (lines grouped into milestones, in build order).
+
+    Line totals are computed by the server (quantity x unit price, rounded half-up). Submitting again
+    while the BoQ is in review replaces it and clears every approval.
+    """
+    scope = f"PUT /projects/{project_id}/boq by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    boq = await service.submit_boq(session, user, project_id, data, request=request)
+    body = boq.model_dump(mode="json")
+    await remember(session, key, scope, 200, body)
+    await session.commit()
+    return body
+
+
+@router.post("/projects/{project_id}/boq/approve", response_model=BoqOut)
+async def approve_boq(
+    project_id: uuid.UUID, request: Request, session: SessionDep, user: Approver, key: IdempotencyKeyDep
+) -> Any:
+    """Client, contractor or ops: approve the BoQ in review.
+
+    When all three have approved, the project becomes `active` and its milestones are created.
+    """
+    scope = f"POST /projects/{project_id}/boq/approve by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    boq = await service.approve_boq(session, user, project_id, request=request)
+    body = boq.model_dump(mode="json")
     await remember(session, key, scope, 200, body)
     await session.commit()
     return body
