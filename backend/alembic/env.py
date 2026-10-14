@@ -14,7 +14,9 @@ from app.core.models_registry import load_all_models
 
 config = context.config
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Keep loggers that already exist: with the default, running migrations inside the app or the test
+    # run (conftest upgrades to head) silenced every logger created before it, e.g. the 500 handler's.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = load_all_models()
 

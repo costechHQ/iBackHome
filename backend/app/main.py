@@ -8,7 +8,7 @@ that defines `router = APIRouter(...)` is mounted under /api/v1 automatically (c
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core import health
+from app.core import health, observability
 from app.core.config import get_settings
 from app.core.discovery import import_all
 from app.core.errors import register_error_handlers
@@ -28,6 +28,8 @@ def build_api_router() -> APIRouter:
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    observability.configure_logging(settings)
+    observability.init_sentry(settings, "api")
     # Load every table first so relationships between features resolve before the first query.
     load_all_models()
 
@@ -40,7 +42,10 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=[observability.REQUEST_ID_HEADER],  # so the web app can show it in error reports
     )
+    # Added last, so it runs first: every request (CORS preflights included) gets an ID and a log line.
+    app.add_middleware(observability.RequestIdMiddleware)
     app.include_router(health.router)
     app.include_router(build_api_router())
     return app
