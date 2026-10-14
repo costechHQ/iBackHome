@@ -37,6 +37,9 @@ from app.features.supervision import service as supervision
 
 S = ProjectStatus
 
+# A client may set or change the site only before work starts; after that, only ops.
+CLIENT_SITE_STATUSES = frozenset({S.DRAFT.value, S.BOQ_REVIEW.value})
+
 
 def _not_found() -> AppError:
     return AppError("project_not_found", "Project not found.", 404)
@@ -180,13 +183,21 @@ async def set_site(
 ) -> SiteOut:
     """Set or replace the project's pin and geofence (the project's client, or ops).
 
+    Evidence is checked against this fence, so once work is under way (project `active`, `paused`
+    or `completed`) only ops can change it. Every change is audited.
+
     - 404 project_not_found, 403 not_project_member / forbidden_role
+    - 409 site_locked: the client, after the BoQ review
     - 422 invalid_geofence (geo.parse_polygon rules), 422 pin_outside_geofence
     """
     if user.role not in (Role.CLIENT.value, Role.OPS.value):
         raise AppError("forbidden_role", "Only the project's client or ops can set the site.", 403)
     # Lock the project so two saves of a first site can't both insert one.
-    await require_project_member(session, user, project_id, lock=True)
+    project = await require_project_member(session, user, project_id, lock=True)
+    if user.role == Role.CLIENT.value and project.status not in CLIENT_SITE_STATUSES:
+        raise AppError(
+            "site_locked", "Once work is under way, only ops can change the site. Contact support.", 409
+        )
 
     fence = geo.parse_polygon(data.geofence)
     pin = data.location
