@@ -12,16 +12,20 @@ Used by:
 - Abigail (evidence checks):          get_project_geofence(), get_geofence(session, site_id)
 - James (supervisor assignment):      set_supervisor(), get_contractor_phone()
 - Lilian (milestone claims):          get_project() (status, contractor_id)
-- BoQ approval (Day 4), escrow:       transition()
+- escrow (last milestone released):   transition()
+
+The BoQ (Day 4) lives here too: get_boq(), submit_boq(), approve_boq(). The last approval creates
+the milestones through milestones.create_for_project() and makes the project active.
 """
 
 import json
 import uuid
 from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from fastapi import Request
-from sqlalchemy import func, or_, select, tuple_
+from sqlalchemy import delete, func, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
@@ -30,8 +34,30 @@ from app.base.users import service as users
 from app.base.users.models import Role, User, UserStatus
 from app.core import pagination
 from app.core.errors import AppError
-from app.features.projects.models import SRID, Project, ProjectStatus, Site
-from app.features.projects.schemas import Pin, ProjectCreate, SiteOut, SiteSet
+from app.features.milestones import service as milestones
+from app.features.milestones.schemas import MilestoneGroup
+from app.features.projects.models import (
+    SRID,
+    BoqApproval,
+    BoqApprovalRole,
+    BoqItem,
+    Project,
+    ProjectStatus,
+    Site,
+)
+from app.features.projects.schemas import (
+    MAX_AMOUNT_MINOR,
+    MAX_LINES,
+    BoqApprovalOut,
+    BoqLineOut,
+    BoqMilestoneOut,
+    BoqOut,
+    BoqSubmit,
+    Pin,
+    ProjectCreate,
+    SiteOut,
+    SiteSet,
+)
 from app.features.projects.transitions import ALLOWED_TRANSITIONS, ActorRole
 from app.features.supervision import service as supervision
 
@@ -368,3 +394,243 @@ async def transition(
         request=request,
     )
     return project
+
+
+# --- Bill of quantities (BoQ) ---------------------------------------------------------------------
+
+APPROVER_ROLES = (BoqApprovalRole.CLIENT.value, BoqApprovalRole.CONTRACTOR.value, BoqApprovalRole.OPS.value)
+BOQ_EDITABLE_STATUSES = frozenset({S.DRAFT.value, S.BOQ_REVIEW.value})
+QUANTITY_STEP = Decimal("0.001")  # Numeric(12, 3)
+
+
+def line_total(quantity: Decimal, unit_price_minor: int) -> int:
+    """quantity x unit price, rounded half-up to a whole minor unit (2.5 x 3 kobo = 8 kobo)."""
+    return int((quantity * unit_price_minor).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+
+
+async def _boq_items(session: AsyncSession, project_id: uuid.UUID) -> list[BoqItem]:
+    result = await session.scalars(
+        select(BoqItem)
+        .where(BoqItem.project_id == project_id)
+        .order_by(BoqItem.milestone_sequence, BoqItem.line_no)
+    )
+    return list(result)
+
+
+async def _boq_approvals(session: AsyncSession, project_id: uuid.UUID) -> list[BoqApproval]:
+    result = await session.scalars(
+        select(BoqApproval).where(BoqApproval.project_id == project_id).order_by(BoqApproval.approved_at)
+    )
+    return list(result)
+
+
+def _group(items: list[BoqItem]) -> list[BoqMilestoneOut]:
+    groups: dict[int, BoqMilestoneOut] = {}
+    for item in items:
+        group = groups.setdefault(
+            item.milestone_sequence,
+            BoqMilestoneOut(
+                sequence=item.milestone_sequence,
+                name=item.milestone_name,
+                amount_minor=0,
+                milestone_id=item.milestone_id,
+                items=[],
+            ),
+        )
+        group.amount_minor += item.total_minor
+        group.items.append(BoqLineOut.model_validate(item))
+    return [groups[sequence] for sequence in sorted(groups)]
+
+
+async def _boq_view(session: AsyncSession, project: Project) -> BoqOut:
+    groups = _group(await _boq_items(session, project.id))
+    approvals = await _boq_approvals(session, project.id)
+    approved = {a.role for a in approvals}
+    return BoqOut(
+        project_id=project.id,
+        project_status=project.status,
+        currency=project.currency,
+        budget_minor=project.budget_minor,
+        boq_total_minor=sum(g.amount_minor for g in groups),
+        milestones=groups,
+        approvals=[BoqApprovalOut.model_validate(a) for a in approvals],
+        approvals_missing=[role for role in APPROVER_ROLES if role not in approved],
+    )
+
+
+def _summary(view: BoqOut) -> dict[str, Any]:
+    """What the audit log keeps of a BoQ version: the milestone amounts and the total."""
+    return {
+        "boq_total_minor": view.boq_total_minor,
+        "currency": view.currency,
+        "milestones": [
+            {"sequence": g.sequence, "name": g.name, "amount_minor": g.amount_minor, "lines": len(g.items)}
+            for g in view.milestones
+        ],
+    }
+
+
+async def get_boq(session: AsyncSession, user: User, project_id: uuid.UUID) -> BoqOut:
+    """The BoQ grouped by milestone, with totals and approvals. Any project member, or ops.
+
+    A project with no BoQ yet returns no milestones and a total of 0.
+    """
+    project = await require_project_member(session, user, project_id)
+    return await _boq_view(session, project)
+
+
+async def submit_boq(
+    session: AsyncSession,
+    user: User,
+    project_id: uuid.UUID,
+    data: BoqSubmit,
+    *,
+    request: Request | None = None,
+) -> BoqOut:
+    """The project's contractor submits the BoQ, or replaces it while it is in review.
+
+    From `draft` the project moves to `boq_review`. In `boq_review` the lines are replaced and every
+    approval is cleared, so client, contractor and ops all approve the new version.
+
+    - 403 forbidden_role / not_project_member / not_project_contractor
+    - 409 boq_locked: the project is past the BoQ review
+    - 422 too_many_milestones / too_many_boq_lines / boq_total_mismatch / boq_line_total_zero /
+      boq_total_too_large
+    """
+    if user.role != Role.CONTRACTOR.value:
+        raise AppError("forbidden_role", "Only the project's contractor can submit the BoQ.", 403)
+    project = await require_project_member(session, user, project_id, lock=True)
+    if project.contractor_id != user.id:
+        raise AppError("not_project_contractor", "You are not the contractor on this project.", 403)
+    if project.status not in BOQ_EDITABLE_STATUSES:
+        raise AppError("boq_locked", f"The BoQ can't change once the project is '{project.status}'.", 409)
+    if len(data.milestones) > milestones.MAX_MILESTONES:
+        raise AppError(
+            "too_many_milestones", f"At most {milestones.MAX_MILESTONES} milestones per project.", 422
+        )
+    if sum(len(m.items) for m in data.milestones) > MAX_LINES:
+        raise AppError("too_many_boq_lines", f"At most {MAX_LINES} lines per BoQ.", 422)
+
+    new_items: list[BoqItem] = []
+    for sequence, group in enumerate(data.milestones, start=1):
+        for line_no, line in enumerate(group.items, start=1):
+            total = line_total(line.quantity, line.unit_price_minor)
+            if total <= 0:
+                raise AppError(
+                    "boq_line_total_zero",
+                    f"Milestone {sequence} line {line_no}: total rounds to 0; check quantity and unit.",
+                    422,
+                )
+            if line.total_minor is not None and line.total_minor != total:
+                raise AppError(
+                    "boq_total_mismatch",
+                    f"Milestone {sequence} line {line_no}: total_minor should be {total} "
+                    f"({line.quantity} x {line.unit_price_minor}, rounded), not {line.total_minor}.",
+                    422,
+                )
+            new_items.append(
+                BoqItem(
+                    project_id=project.id,
+                    milestone_sequence=sequence,
+                    milestone_name=group.name,
+                    line_no=line_no,
+                    description=line.description,
+                    unit=line.unit,
+                    quantity=line.quantity.quantize(QUANTITY_STEP),  # 12.5 -> 12.500, as stored
+                    unit_price_minor=line.unit_price_minor,
+                    total_minor=total,
+                    currency=project.currency,
+                )
+            )
+
+    if sum(item.total_minor for item in new_items) > MAX_AMOUNT_MINOR:
+        raise AppError(
+            "boq_total_too_large", f"The BoQ total can't exceed {MAX_AMOUNT_MINOR} minor units.", 422
+        )
+
+    previous = await _boq_view(session, project)
+    await session.execute(delete(BoqApproval).where(BoqApproval.project_id == project.id))
+    await session.execute(delete(BoqItem).where(BoqItem.project_id == project.id))
+    session.add_all(new_items)
+    await session.flush()
+
+    if project.status == S.DRAFT.value:
+        project = await transition(
+            session, project.id, S.BOQ_REVIEW, ActorRole.CONTRACTOR, user.id, request=request
+        )
+    view = await _boq_view(session, project)
+    before = None
+    if previous.milestones:
+        before = {**_summary(previous), "approvals": [a.role for a in previous.approvals]}
+    await audit.record(
+        session,
+        user.id,
+        "boq.submitted",
+        "project",
+        project.id,
+        before=before,
+        after=_summary(view),
+        request=request,
+    )
+    return view
+
+
+async def approve_boq(
+    session: AsyncSession, user: User, project_id: uuid.UUID, *, request: Request | None = None
+) -> BoqOut:
+    """Client, contractor or ops approves the BoQ in review.
+
+    The last of the three approvals makes the project `active` and creates its milestones from the
+    BoQ groups (milestones.create_for_project), all in this transaction.
+
+    - 403 forbidden_role / not_project_member
+    - 409 boq_not_in_review: the project is not in `boq_review`
+    - 409 boq_already_approved: this role has already approved this version
+    - 409 site_not_set: the last approval, but the site (geofence) is not set yet; nothing is saved
+    """
+    if user.role not in APPROVER_ROLES:
+        raise AppError("forbidden_role", "Only the client, the contractor or ops can approve the BoQ.", 403)
+    project = await require_project_member(session, user, project_id, lock=True)
+    if project.status != S.BOQ_REVIEW.value:
+        raise AppError(
+            "boq_not_in_review", f"There is no BoQ in review (project is '{project.status}').", 409
+        )
+    approved = {a.role for a in await _boq_approvals(session, project.id)}
+    if user.role in approved:
+        raise AppError("boq_already_approved", f"The {user.role} has already approved this BoQ.", 409)
+    completes = approved | {user.role} == set(APPROVER_ROLES)
+    if completes and await _site_row(session, project.id) is None:
+        raise AppError(
+            "site_not_set", "Set the site and geofence before the final BoQ approval starts the project.", 409
+        )
+
+    session.add(BoqApproval(project_id=project.id, user_id=user.id, role=user.role))
+    await session.flush()
+    await audit.record(
+        session,
+        user.id,
+        "boq.approved",
+        "project",
+        project.id,
+        after={"role": user.role, "approvals": sorted(approved | {user.role})},
+        request=request,
+    )
+    if completes:
+        project = await _activate(session, project, request=request)
+    return await _boq_view(session, project)
+
+
+async def _activate(session: AsyncSession, project: Project, *, request: Request | None) -> Project:
+    """All three approved: create the milestones, link the BoQ lines to them, start the project."""
+    items = await _boq_items(session, project.id)
+    created = await milestones.create_for_project(
+        session,
+        project.id,
+        [MilestoneGroup(name=g.name, amount_minor=g.amount_minor) for g in _group(items)],
+        project.currency,
+    )
+    by_sequence = {m.sequence: m.id for m in created}
+    for item in items:
+        item.milestone_id = by_sequence[item.milestone_sequence]
+    await session.flush()
+    return await transition(session, project.id, S.ACTIVE, ActorRole.SYSTEM, request=request)

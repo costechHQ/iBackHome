@@ -17,13 +17,36 @@ this file to add a job. In your own tasks.py:
     }
 """
 
-from celery import Celery
+from typing import Any
 
+from celery import Celery
+from celery.signals import before_task_publish, setup_logging, task_prerun, worker_init
+
+from app.core import observability
 from app.core.config import get_settings
 from app.core.discovery import module_names
 from app.core.models_registry import load_all_models
 
 settings = get_settings()
+
+# The request ID that queued a task follows it into the worker's logs (core/observability.py).
+before_task_publish.connect(observability.add_request_id_to_task, weak=False)
+task_prerun.connect(observability.restore_request_id_in_task, weak=False)
+
+
+def _json_logs(**_: Any) -> None:
+    """Worker and Beat log JSON like the API (connecting here stops Celery's own log setup)."""
+    observability.configure_logging(settings)
+
+
+def _error_tracking(**_: Any) -> None:
+    """Sentry in the worker only; the API process turns it on itself as "api"."""
+    observability.init_sentry(settings, "worker")
+
+
+setup_logging.connect(_json_logs, weak=False)
+worker_init.connect(_error_tracking, weak=False)
+
 
 celery_app = Celery(
     "ibackhome",

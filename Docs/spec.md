@@ -117,8 +117,8 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `suppliers` | suppliers | name, owner → users, address, location (POINT), verified, paystack_recipient_code |
 | `projects` | projects | client → users, contractor → users, supervisor → users, title, address, status (`draft`, `boq_review`, `active`, `paused`, `completed`), currency, budget_minor |
 | `sites` | projects | project → projects, location (POINT), geofence (POLYGON, SRID 4326) |
-| `boq_items` | projects | project → projects, milestone → milestones, description, unit, quantity, unit_price_minor, total_minor |
-| `boq_approvals` | projects | project → projects, user → users, role, approved_at |
+| `boq_items` | projects | project → projects, milestone → milestones (set when the BoQ is approved), milestone_sequence, milestone_name, line_no, description, unit, quantity (3 dp), unit_price_minor, total_minor, currency |
+| `boq_approvals` | projects | project → projects, user → users, role (`client`, `contractor`, `ops`; one each), approved_at |
 | `milestones` | milestones | project → projects, sequence, name, amount_minor, status (see state machines), claimed_at, verified_at, approved_at |
 | `evidence` | evidence | project → projects, milestone → milestones (nullable), captured_by → users, kind (`photo`, `video`), storage_key, captured_at, latitude, longitude, accuracy_m, device_id, signature, phash, status (`pending_checks`, `accepted`, `flagged`, `rejected`), reject_reason |
 | `devices` | evidence | user → users, device_id, public_key, registered_at, revoked_at |
@@ -408,6 +408,7 @@ stateDiagram-v2
 | `active` | `completed` | system | The last milestone has been released |
 
 The site pin set with `PUT /projects/{id}/site` must lie inside the geofence polygon (422 `pin_outside_geofence`). The client can set or change the site only while the project is `draft` or `boq_review` (409 `site_locked` after that); ops can change it at any time. Every change is audited.
+**BoQ rules**: each line's `total_minor` is computed by the server as quantity × unit_price_minor, rounded half-up to a whole minor unit (a sent `total_minor` must match, else 422 `boq_total_mismatch`). A milestone's amount is the sum of its lines; at most 20 milestones and 500 lines. A BoQ above the project's `budget_minor` is allowed and both figures are shown. The final approval needs a saved site (409 `site_not_set`); it creates the milestones (`milestones.create_for_project`), links each line to its milestone and makes the project `active`, in one transaction.
 
 ## API endpoints
 
@@ -422,7 +423,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/projects` | client | Create project, invite contractor |
 | GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
-| PUT | `/projects/{id}/boq` | contractor | Submit BoQ items grouped into milestones |
+| GET | `/projects/{id}/boq` | parties, ops | BoQ grouped by milestone, with totals, budget and approvals |
+| PUT | `/projects/{id}/boq` | contractor | Submit BoQ items grouped into milestones; again while in review replaces it and clears approvals |
 | POST | `/projects/{id}/boq/approve` | client, contractor, ops | Approve BoQ; project goes `active` when all three approve |
 | POST | `/projects/{id}/supervisor` | ops | Assign a vetted supervisor |
 | POST | `/devices` | supervisor, contractor | Register device public key |

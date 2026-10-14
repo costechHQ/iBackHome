@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     # Comma-separated list of web origins allowed to call the API
     cors_origins: str = "http://localhost:5173"
 
+    # Observability (Christopher, day 4): JSON logs with a request ID, and error tracking.
+    log_level: str = "INFO"
+    sentry_dsn: str = ""  # empty: error tracking off (local and tests)
+    sentry_traces_sample_rate: float = 0.0  # share of requests traced for performance; 0 = errors only
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
