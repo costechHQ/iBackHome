@@ -27,19 +27,22 @@ import base64
 import binascii
 import re
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Literal
+from enum import StrEnum
+from typing import Any, Literal
 
 from sqlalchemy import case, func, select, tuple_
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.base.payments.models import LedgerEntry
+from app.base.payments.models import LedgerEntry, PaymentEvent
 from app.core.errors import AppError
 
 Direction = Literal["debit", "credit"]
+Provider = Literal["stripe", "paystack", "escrow"]
 
 _CURRENCY = re.compile(r"^[A-Z]{3}$")
 MAX_PAGE_SIZE = 200
@@ -214,3 +217,52 @@ async def list_entries(
     has_more = len(rows) > limit
     items = rows[:limit]
     return EntryPage(items=items, next_cursor=_encode_cursor(items[-1]) if has_more else None)
+
+
+# --- payment_events: each webhook is processed once -----------------------------------------
+
+
+class EventResult(StrEnum):
+    NEW = "new"  # first delivery: process it
+    DUPLICATE = "duplicate"  # stored before: acknowledge and do nothing
+
+
+async def record_event(
+    session: AsyncSession,
+    provider: Provider,
+    event_id: str,
+    event_type: str,
+    payload: Mapping[str, Any],
+) -> tuple[EventResult, PaymentEvent | None]:
+    """Store a verified webhook once. Returns (NEW, event) the first time, (DUPLICATE, None) after.
+
+    INSERT ... ON CONFLICT DO NOTHING: when two deliveries race, the second waits on the unique
+    index until the first commits (then sees DUPLICATE) or rolls back (then gets NEW and processes
+    it itself). Does not commit: the caller records the event, writes ledger + state + audit, and
+    commits once, so a failed handler leaves no event row and the provider's retry is processed.
+    """
+    if not event_id or not event_type:
+        raise AppError("webhook_invalid_event", "The webhook has no event id or type.", 400)
+    inserted_id = await session.scalar(
+        insert(PaymentEvent)
+        .values(
+            id=uuid.uuid4(),
+            provider=provider,
+            event_id=event_id,
+            event_type=event_type,
+            payload=dict(payload),
+        )
+        .on_conflict_do_nothing(constraint="uq_payment_events_provider_event_id")
+        .returning(PaymentEvent.id)
+    )
+    if inserted_id is None:
+        return EventResult.DUPLICATE, None
+    event = await session.get(PaymentEvent, inserted_id)
+    assert event is not None
+    return EventResult.NEW, event
+
+
+async def mark_processed(session: AsyncSession, event: PaymentEvent) -> None:
+    """Stamp the event as handled (same transaction as the handler's work)."""
+    event.processed_at = datetime.now(UTC)
+    await session.flush()
