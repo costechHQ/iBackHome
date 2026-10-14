@@ -29,6 +29,7 @@ def _bad(message: str) -> AppError:
 def canonical_payload(
     file_sha256: str,
     captured_at: datetime,
+    gps_time: datetime,
     lat: float,
     lon: float,
     accuracy_m: float,
@@ -37,10 +38,11 @@ def canonical_payload(
 ) -> bytes:
     """The exact bytes the device signs, fields joined with "|" in this fixed order:
 
-    ibh-evidence-v1 | file_sha256 | captured_at | lat | lon | accuracy_m | project_id | device_id
+    ibh-evidence-v1 | file_sha256 | captured_at | gps_time | lat | lon | accuracy_m | project_id | device_id
 
     - file_sha256: 64 lowercase hex characters (SHA-256 of the uploaded file bytes)
-    - captured_at: UTC, ISO 8601 with milliseconds and a trailing Z, e.g. 2026-10-12T09:30:15.123Z
+    - captured_at: device time at the shutter; gps_time: the GPS fix time. Both UTC, ISO 8601 with
+      milliseconds and a trailing Z, e.g. 2026-10-12T09:30:15.123Z
     - lat, lon: fixed 6 decimals (the device rounds to 6 decimals before signing and sending)
     - accuracy_m: fixed 1 decimal
     - project_id: lowercase hyphenated UUID
@@ -48,8 +50,8 @@ def canonical_payload(
     """
     if not _SHA256_HEX.fullmatch(file_sha256):
         raise _bad("file_sha256 must be 64 lowercase hex characters.")
-    if captured_at.tzinfo is None:
-        raise _bad("captured_at must include a timezone.")
+    if captured_at.tzinfo is None or gps_time.tzinfo is None:
+        raise _bad("captured_at and gps_time must include a timezone.")
     if not (-90 <= lat <= 90 and -180 <= lon <= 180):
         raise _bad("Latitude or longitude is out of range.")
     if accuracy_m < 0:
@@ -61,12 +63,11 @@ def canonical_payload(
     except ValueError:
         raise _bad("project_id must be a UUID.") from None
 
-    utc = captured_at.astimezone(UTC)
-    when = utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}Z"
     fields = [
         PAYLOAD_VERSION,
         file_sha256,
-        when,
+        _utc_text(captured_at),
+        _utc_text(gps_time),
         _fixed(lat, 6),
         _fixed(lon, 6),
         _fixed(accuracy_m, 1),
@@ -74,6 +75,11 @@ def canonical_payload(
         device_id,
     ]
     return SEPARATOR.join(fields).encode("utf-8")
+
+
+def _utc_text(moment: datetime) -> str:
+    utc = moment.astimezone(UTC)
+    return utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}Z"
 
 
 def _fixed(value: float, places: int) -> str:

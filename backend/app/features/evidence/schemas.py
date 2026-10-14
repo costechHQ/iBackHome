@@ -45,6 +45,7 @@ class EvidenceIn(BaseModel):
     storage_key: str = Field(min_length=1, max_length=300)
     file_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     captured_at: AwareDatetime
+    gps_time: AwareDatetime
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
     accuracy_m: float = Field(ge=0)
@@ -66,6 +67,7 @@ class EvidenceOut(BaseModel):
     size_bytes: int
     file_sha256: str
     captured_at: datetime
+    gps_time: datetime
     latitude: float
     longitude: float
     accuracy_m: float

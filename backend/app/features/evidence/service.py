@@ -157,6 +157,7 @@ async def submit_evidence(
         size_bytes=size,
         file_sha256=data.file_sha256,
         captured_at=data.captured_at,
+        gps_time=data.gps_time,
         latitude=data.latitude,
         longitude=data.longitude,
         accuracy_m=data.accuracy_m,

@@ -13,23 +13,24 @@ Code: `signing.py`. Tests: `tests/test_signing.py`.
 
 ## 2. The payload
 
-Join these 8 fields with `|` (pipe), in this order, as UTF-8 text with no trailing newline:
+Join these 9 fields with `|` (pipe), in this order, as UTF-8 text with no trailing newline:
 
 | # | Field | Format |
 |---|-------|--------|
 | 1 | version | the literal `ibh-evidence-v1` |
 | 2 | `file_sha256` | SHA-256 of the **exact file bytes you upload**, 64 lowercase hex characters |
-| 3 | `captured_at` | UTC, ISO 8601, milliseconds, trailing `Z`: `2026-10-12T09:30:15.123Z` |
-| 4 | `lat` | fixed 6 decimals: `6.459500` |
-| 5 | `lon` | fixed 6 decimals: `7.500450` |
-| 6 | `accuracy_m` | fixed 1 decimal: `8.5` |
-| 7 | `project_id` | lowercase hyphenated UUID |
-| 8 | `device_id` | the id used at registration (must not contain `\|` or line breaks) |
+| 3 | `captured_at` | the phone's clock at the shutter. UTC, ISO 8601, milliseconds, trailing `Z`: `2026-10-12T09:30:15.123Z` |
+| 4 | `gps_time` | the GPS fix time at the shutter, same format: `2026-10-12T09:30:14.900Z` |
+| 5 | `lat` | fixed 6 decimals: `6.459500` |
+| 6 | `lon` | fixed 6 decimals: `7.500450` |
+| 7 | `accuracy_m` | fixed 1 decimal: `8.5` |
+| 8 | `project_id` | lowercase hyphenated UUID |
+| 9 | `device_id` | the id used at registration (must not contain `\|` or line breaks) |
 
 Rules:
 - **Round lat, lon and accuracy yourself** (6, 6 and 1 decimals) before signing, and send those same rounded values to `POST /evidence`. The server formats what you send, so the strings match exactly.
 - Compress the photo (about 1600 px, JPEG quality 80) **before** hashing and signing, so the signed file is exactly the uploaded file.
-- `captured_at` is the device capture time, converted to UTC. Offline captures keep their original time.
+- `captured_at` and `gps_time` are read at the shutter and converted to UTC. Offline captures keep their original times. The server rejects the capture if they differ by more than 10 minutes.
 - No `-0.000000`: write `0.000000`.
 
 ## 3. The signature
@@ -44,6 +45,7 @@ Use it to check your Dart or Kotlin code builds the same payload.
 ```
 file_sha256 = aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 captured_at = 2026-10-12T09:30:15.123Z
+gps_time = 2026-10-12T09:30:14.900Z
 lat = 6.4595   lon = 7.50045   accuracy_m = 8.5
 project_id = 11111111-2222-3333-4444-555555555555
 device_id = device-abc
@@ -51,17 +53,17 @@ device_id = device-abc
 
 Payload:
 ```
-ibh-evidence-v1|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|2026-10-12T09:30:15.123Z|6.459500|7.500450|8.5|11111111-2222-3333-4444-555555555555|device-abc
+ibh-evidence-v1|aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa|2026-10-12T09:30:15.123Z|2026-10-12T09:30:14.900Z|6.459500|7.500450|8.5|11111111-2222-3333-4444-555555555555|device-abc
 ```
 
 Public key (base64):
 ```
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE09/F+zVmvjraWb3AGIxoKXh8b0seh1E/nYwfXjRJTNw95cTyHdqezjjq9weoKcx9jzH399/8mn27HGM2EW4KBQ==
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9IrFmcVSdNmjuoJRI4im7R54NCLHk7pRij3SkCrTwKoqDb22YkZgbaF4ZkmK4/W5uMRNHzkzeu3GDGYynKPJEA==
 ```
 
 A valid signature (base64) of that payload with that key. The server must accept it:
 ```
-MEQCIHdipaiBUfxQjuwTK67nuRTZo8yqV/wxVDyFNNMv3GHXAiBj98avFkjoopKzPpn4DKvnJiayGdbuf4w5VhComvRtqA==
+MEQCIBAxdJmFKYDGJpYNWPEQJy9B5PQAWMfH/ifm0uPsn4XHAiBLIQavipASpeM2WEH7BMlgYvtLtFQtYZ43t8oeGTovAg==
 ```
 
 Your own signatures will differ every time, because ECDSA is randomised. Only the payload is deterministic.
@@ -71,6 +73,6 @@ Your own signatures will differ every time, because ECDSA is randomised. Only th
 1. The file hash matches field 2.
 2. The signature is valid for the registered, **non-revoked** device key.
 3. The device belongs to the user, who is a party to the project.
-4. Then the clock, geofence and reuse checks.
+4. The clock (`captured_at` within 10 minutes of `gps_time`, uploaded within 72 hours of capture), the geofence and the reuse checks.
 
 A revoked key never verifies.

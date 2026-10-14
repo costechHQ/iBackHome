@@ -375,6 +375,7 @@ async def add_evidence(
         size_bytes=10,
         file_sha256="a" * 64,
         captured_at=datetime(2026, 10, 14, 9, n, tzinfo=UTC),
+        gps_time=datetime(2026, 10, 14, 9, n, tzinfo=UTC),
         latitude=6.4483,
         longitude=7.5139,
         accuracy_m=5,
