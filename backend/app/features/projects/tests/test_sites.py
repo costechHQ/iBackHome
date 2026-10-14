@@ -220,3 +220,29 @@ async def test_service_checks_role_and_membership_itself(db_session: AsyncSessio
     with pytest.raises(AppError) as caught:
         await service.set_site(db_session, stranger, project.id, data)
     assert caught.value.code == "not_project_member"
+
+
+@pytest.mark.parametrize(
+    ("status", "client_allowed"),
+    [("draft", True), ("boq_review", True), ("active", False), ("paused", False), ("completed", False)],
+)
+async def test_client_can_change_the_site_only_before_work_starts(
+    client: AsyncClient, db_session: AsyncSession, status: str, client_allowed: bool
+) -> None:
+    owner = await make_user(db_session, "client")
+    ops = await make_user(db_session, "ops")
+    project = await make_project(db_session, client=owner)
+    project.status = status
+    await db_session.flush()
+    body = {"location": INSIDE, "geofence": FENCE}
+
+    response = await _put(client, project.id, bearer(owner), body)
+    if client_allowed:
+        assert response.status_code == 200, response.text
+    else:
+        assert response.status_code == 409
+        assert response.json()["error"]["code"] == "site_locked"
+        assert await service.get_site(db_session, project.id) is None
+
+    # Ops can always set or correct it (and it is audited like any change).
+    assert (await _put(client, project.id, bearer(ops), body)).status_code == 200

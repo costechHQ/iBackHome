@@ -40,20 +40,20 @@ only after supervisor verification and client approval. We are not a constructio
   - Milestones: `create_for_project(session, project_id, groups, currency)`, `mark_funded/released/disputed/resolved`, `POST /milestones/{id}/claim`.
   - Supervision: `is_vetted()`, `ensure_assignable()`, spot-check functions. Evidence: `register_device()`, `signing.verify_signature()`, `hashing.check_reuse()`. Payments: `post_transaction()`, `balance()`. Escrow: `request_release()` (stub), `EscrowProvider` / `SimulatedEscrow`. Agents: `llm.LLMClient`.
 - **Decisions:**
-  - Dependencies live in `backend/pyproject.toml`, one uv group per person (`uv add --group <name> ...`), pinned in `uv.lock`; see `Docs/adr/0002-uv-dependencies.md`. `backend/requirements/*.txt` are unused and can now be deleted (no open branches left).
+  - Dependencies live in `backend/pyproject.toml`, one uv group per person (`uv add --group <name> ...`), pinned in `uv.lock`; see `Docs/adr/0002-uv-dependencies.md`. The old `backend/requirements*.txt` files were deleted on 2026-10-14; never use `pip` or requirements files.
   - Local object storage is SeaweedFS because MinIO no longer publishes images. Staging and production use an S3-compatible service (R2 or B2).
   - The db healthcheck uses TCP (`pg_isready -h 127.0.0.1`): the socket check passed during first-boot PostGIS init and the api's migration failed.
   - Models use plain SQLAlchemy 2 `DeclarativeBase`, not SQLModel (ADR 0001). Geometry columns use `geoalchemy2`.
   - Login: phone numbers from any country, stored as E.164 (no leading + means Nigerian, `0803...` → `+234803...`), or email. New people sign up as `client`; other roles come from invites, vetting or seeding. User status is `active` or `suspended`. Refresh tokens rotate once (one conditional UPDATE). Reusing a refresh token revokes all of that user's tokens, so mobile must not blindly retry `/auth/refresh` (a retry after a lost response logs the user out). OTP codes and refresh tokens are stored only as hashes; verify/refresh never store responses for `Idempotency-Key`. The development OTP sender logs codes only when `ENVIRONMENT=local`; outside local the app refuses a placeholder `JWT_SECRET`.
   - `Idempotency-Key` is optional by default (fixed in #14): routes write `key: IdempotencyKeyDep` and must NOT add `= None`. `IdempotencyKeyDep` is a small dependency because FastAPI forbids a default inside `Annotated[..., Header(...)]`.
   - Projects (agreed 2026-10-14): a contractor invite for a new number creates an active contractor (their first OTP login lands on it); a number of another role → 409 `role_conflict`, role unchanged. A contractor is optional at creation, required before the BoQ. Suspended accounts can't be invited or assigned; a completed project can't get a new supervisor.
+  - Site lock (decided 2026-10-14): a client can set or change the site only while the project is `draft` or `boq_review` (else 409 `site_locked`); ops can change it at any time; every change is audited.
   - GitHub usernames: costechHQ (Christopher), Abigail56 (Abigail), Lilianezeh (Lilian), JaOnwude (James), gabrielnjoku (Gabriel).
 - **Open follow-ups:**
   - James: wire `POST /projects/{id}/supervisor` (his route) and `POST /projects/{id}/spot-checks` to `projects.service`; add FK `spot_checks.project_id → projects`.
   - Lilian: replace `milestones/project_check.py` (returns 503 `projects_not_ready` until then, so claims fail) with `projects.get_project()`; add FK `milestones.project_id → projects`. Doubled check-constraint names (`ck_milestones_ck_...`), cosmetic.
   - Abigail: evidence checks call `projects.get_project_geofence()`.
   - Gabriel: doubled check-constraint names in `create_ledger_entries` (use `op.f`), cosmetic.
-  - Christopher to decide: may a client change the site geofence once the project is `active`? (Today: client or ops, any time, audited.)
   - Each teammate still has to confirm `docker compose up` works on their machine.
   - Staging: set `FORWARDED_ALLOW_IPS` to the proxy's range, or every caller shares one per-IP OTP limit.
   - Spec decision 5: choose an SMS provider that also reaches foreign numbers (Day 5, with Lilian's `notify()`). The invite SMS to a new contractor waits for it.
@@ -64,7 +64,7 @@ only after supervisor verification and client approval. We are not a constructio
 - Before starting any task, inspect the code and git branches (`git fetch`, then `git log`) and tell me what already exists. Do not rebuild it.
 
 ## Stack
-- Backend: Python 3.12, FastAPI, SQLModel/SQLAlchemy 2 (async), Alembic, PostgreSQL 16 + PostGIS, Celery + Redis
+- Backend: Python 3.12, FastAPI, SQLAlchemy 2 (async, plain `DeclarativeBase`; ADR 0001), Alembic, PostgreSQL 16 + PostGIS, Celery + Redis
 - Web: React + TypeScript (Vite). Mobile: Flutter (Android 8+, offline-first)
 - Payments: Stripe (in), Paystack (NGN payouts), licensed escrow partner behind the `EscrowProvider` interface (SimulatedEscrow until a partner signs)
 - AI: LLM API with tool calling; tools are our own REST endpoints
@@ -72,7 +72,7 @@ only after supervisor verification and client approval. We are not a constructio
 ## Tooling rules (hard)
 - JS/TS: `bun` only. Never `npm`, `npx` or `yarn`.
 - Python: `uv` only (`uv add`, `uv sync`, `uv run`), run from `backend/`. Never `pip`.
-- `backend/requirements*.txt` exist. Do not edit them by hand; tell me if they need regenerating.
+- Dependencies: only `backend/pyproject.toml` + `uv.lock` (ADR 0002). There are no requirements files.
 - Lint/type: `ruff`, `mypy` (backend); `eslint`, `prettier`, `tsc` (web); `dart analyze` (mobile).
 - I use Git Bash on Windows. Give commands that work in Git Bash.
 

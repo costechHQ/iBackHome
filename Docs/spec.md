@@ -8,7 +8,7 @@ iBackHome is a web app, an Android app and a set of AI agents on one FastAPI bac
 
 | Layer | Choice | Notes |
 | --- | --- | --- |
-| Backend | Python 3.12, FastAPI, SQLModel/SQLAlchemy 2 (async), Alembic | One service, feature-based modules |
+| Backend | Python 3.12, FastAPI, SQLAlchemy 2 (async), Alembic | One service, feature-based modules |
 | Database | PostgreSQL 16 + PostGIS | Geofences, point-in-polygon, ledger |
 | Jobs | Celery + Redis, Celery Beat | Reports, reminders, hash indexing, reconciliation |
 | File storage | S3-compatible object storage | Photos and video, private, signed URLs |
@@ -407,7 +407,7 @@ stateDiagram-v2
 | `paused` | `active` | ops | Ops resumes the work |
 | `active` | `completed` | system | The last milestone has been released |
 
-The site pin set with `PUT /projects/{id}/site` must lie inside the geofence polygon (422 `pin_outside_geofence`).
+The site pin set with `PUT /projects/{id}/site` must lie inside the geofence polygon (422 `pin_outside_geofence`). The client can set or change the site only while the project is `draft` or `boq_review` (409 `site_locked` after that); ops can change it at any time. Every change is audited.
 
 ## API endpoints
 
