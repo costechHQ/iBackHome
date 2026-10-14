@@ -16,7 +16,7 @@ The scaffold installed packages with `pip install -r requirements-dev.txt` from 
 - `[tool.uv] default-groups = "all"`, so `uv sync` and `uv run` always give the full environment.
 - Python is pinned to 3.12 (`.python-version`, `requires-python = ">=3.12,<3.13"`).
 - Docker and CI install with `uv sync --locked`, which fails if `uv.lock` is out of date with `pyproject.toml`. In the image the virtualenv is `/opt/venv`, because docker compose mounts the source over `/app`.
-- `backend/requirements/*.txt` stay in place, unused, until the open branches that edit them have merged, and are then removed in a separate PR.
+- `backend/requirements/*.txt` stay in place, unused, until the open branches that edit them have merged, and are then removed in a separate PR. (Done 2026-10-14: every package was checked to be in `pyproject.toml`, then the files were deleted.)
 
 ## Consequences
 

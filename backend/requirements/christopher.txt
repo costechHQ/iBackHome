@@ -1,3 +1,0 @@
-# Christopher's extra packages (auth, logging).
-pyjwt>=2.9
-sentry-sdk[fastapi]>=2.14
