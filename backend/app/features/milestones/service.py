@@ -4,6 +4,9 @@ Other features call these functions; they never update the milestones table them
 Every function takes the database session first and does NOT commit: the caller commits,
 so the milestone change, ledger entries and audit entry land together or not at all.
 
+Every successful transition writes an audit entry ("milestone.<new status>") in the same
+transaction, with the milestone before and after.
+
 Used by:
 - Christopher (BoQ approval): create_for_project()
 - Gabriel (escrow):           mark_funded(), mark_released(), mark_disputed(), mark_resolved()
@@ -14,10 +17,14 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from typing import Literal
 
+from fastapi import Request
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base import audit
+from app.base.audit.actor import Actor
 from app.core.errors import AppError
+from app.features.milestones import project_check
 from app.features.milestones.models import Milestone, MilestoneStatus
 from app.features.milestones.schemas import MilestoneGroup
 from app.features.milestones.transitions import ALLOWED_TRANSITIONS, ActorRole
@@ -40,7 +47,8 @@ async def get_milestone(session: AsyncSession, milestone_id: uuid.UUID, *, lock:
     query = select(Milestone).where(Milestone.id == milestone_id)
     if lock:
         # Row lock: two requests can't both move the same milestone at once.
-        query = query.with_for_update()
+        # populate_existing re-reads the row after the lock, so we never act on a stale status.
+        query = query.with_for_update().execution_options(populate_existing=True)
     milestone = await session.scalar(query)
     if milestone is None:
         raise AppError("milestone_not_found", "Milestone not found.", 404)
@@ -60,14 +68,17 @@ async def transition(
     to_status: MilestoneStatus,
     actor_role: ActorRole,
     actor_id: uuid.UUID | None = None,
+    *,
+    request: Request | None = None,
 ) -> Milestone:
-    """Move a milestone to `to_status`, or raise.
+    """Move a milestone to `to_status` and write the audit entry, or raise.
 
     - 404 milestone_not_found
     - 409 invalid_transition: this move is not in the state machine (including "stay where you are")
     - 403 transition_not_allowed: the move exists but this role may not make it
 
-    `actor_id` is kept for the audit entry (added once `audit.record()` exists on backend day 2).
+    `actor_id` is None for the system (escrow webhooks). Pass `request` from an endpoint so the
+    audit entry records the IP and device.
     """
     milestone = await get_milestone(session, milestone_id, lock=True)
     current = milestone.status
@@ -86,6 +97,7 @@ async def transition(
             403,
         )
 
+    before = audit.snapshot(milestone)
     now = datetime.now(UTC)
     milestone.status = to_status
     if to_status in _STAMP:
@@ -96,8 +108,45 @@ async def transition(
         milestone.verified_at = None
         milestone.approved_at = None
 
+    after = audit.snapshot(milestone)
     await session.flush()
+    await audit.record(
+        session,
+        actor_id,
+        f"milestone.{to_status.value}",
+        "milestone",
+        milestone.id,
+        before=before,
+        after={**after, "actor_role": actor_role.value},
+        request=request,
+    )
     return milestone
+
+
+async def claim(
+    session: AsyncSession, milestone_id: uuid.UUID, actor: Actor, *, request: Request | None = None
+) -> Milestone:
+    """The project's contractor says the work for this milestone is done.
+
+    - 403 transition_not_allowed: the user is not a contractor
+    - 404 milestone_not_found
+    - 403 not_project_contractor: a contractor, but not this project's contractor
+    - 409 project_not_active: the project is draft, in BoQ review, paused or completed
+    - 409 invalid_transition: the milestone is not `funded` (e.g. not yet funded, or already claimed)
+    """
+    if actor.role != ActorRole.CONTRACTOR:
+        raise AppError("transition_not_allowed", "Only the project's contractor can claim a milestone.", 403)
+    milestone = await get_milestone(session, milestone_id, lock=True)
+    project = await project_check.get_project_info(session, milestone.project_id)
+    if project.contractor_id != actor.id:
+        raise AppError("not_project_contractor", "You are not the contractor on this project.", 403)
+    if project.status != "active":
+        raise AppError(
+            "project_not_active",
+            f"Milestones can only be claimed on an active project (this one is '{project.status}').",
+            409,
+        )
+    return await transition(session, milestone_id, S.CLAIMED, ActorRole.CONTRACTOR, actor.id, request=request)
 
 
 async def create_for_project(
