@@ -11,12 +11,13 @@ from app.base.users.models import User
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.suppliers import service
-from app.features.suppliers.schemas import OrderOut, OrderRequest
+from app.features.suppliers.schemas import DeliveryIn, DeliveryOut, OrderOut, OrderRequest
 
 router = APIRouter(tags=["suppliers"])
 
 ContractorUser = Annotated[User, Depends(users.require_role("contractor"))]
 ClientUser = Annotated[User, Depends(users.require_role("client"))]
+SupervisorUser = Annotated[User, Depends(users.require_role("supervisor"))]
 
 
 @router.post("/projects/{project_id}/orders", status_code=201, response_model=OrderOut)
@@ -56,3 +57,28 @@ async def approve_order(
     await remember(session, key, scope, 200, out)
     await session.commit()
     return JSONResponse(status_code=200, content=out)
+
+
+@router.post("/orders/{order_id}/delivery", status_code=201, response_model=DeliveryOut)
+async def confirm_delivery(
+    order_id: uuid.UUID,
+    body: DeliveryIn,
+    request: Request,
+    session: SessionDep,
+    user: SupervisorUser,
+    key: IdempotencyKeyDep,
+) -> JSONResponse:
+    """Supervisor: confirm an approved order arrived, with the quantities counted and photo evidence.
+
+    This starts the supplier payment, so it only succeeds when the payment can be started.
+    """
+    scope = f"POST /orders/{order_id}/delivery {user.id}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    delivery, _ = await service.confirm_delivery(
+        session, user, order_id, body.quantities, body.evidence_ids, request
+    )
+    out = DeliveryOut.model_validate(delivery).model_dump(mode="json")
+    await remember(session, key, scope, 201, out)
+    await session.commit()
+    return JSONResponse(status_code=201, content=out)

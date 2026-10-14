@@ -3,28 +3,34 @@
 Other features call the functions in this file; they never query this feature's tables directly.
 Every function takes the database session as its first argument.
 
-An order is requested by the project's contractor and approved by the project's client:
-requested -> approved. (delivered and paid come with deliveries and escrow.pay_supplier, Day 5.)
+An order moves requested -> approved (the project's client) -> delivered (the project's supervisor,
+with photo evidence) -> paid (the system, once the supplier's payment is confirmed).
 """
 
 import uuid
+from collections import Counter
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from fastapi import Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
 from app.base.users.models import User
 from app.core.errors import AppError
+from app.features.evidence import service as evidence
 from app.features.projects import service as projects
 from app.features.projects.models import ProjectStatus
-from app.features.suppliers.models import MaterialOrder, OrderStatus, Supplier
-from app.features.suppliers.schemas import OrderItem
+from app.features.suppliers import escrow_bridge
+from app.features.suppliers.models import Delivery, MaterialOrder, OrderStatus, Supplier
+from app.features.suppliers.schemas import DeliveryItem, OrderItem
 
 # The only moves an order can make (anything else is a 409), and who makes them.
 ALLOWED_TRANSITIONS: dict[tuple[str, str], str] = {
     (OrderStatus.REQUESTED.value, OrderStatus.APPROVED.value): "client",
+    (OrderStatus.APPROVED.value, OrderStatus.DELIVERED.value): "supervisor",
+    (OrderStatus.DELIVERED.value, OrderStatus.PAID.value): "system",
 }
 
 
@@ -87,8 +93,6 @@ async def request_order(
 
 
 async def get_order(session: AsyncSession, order_id: uuid.UUID, *, lock: bool = False) -> MaterialOrder:
-    from sqlalchemy import select
-
     query = select(MaterialOrder).where(MaterialOrder.id == order_id)
     if lock:
         # Row lock: two requests can't both move the same order, and the row is re-read after it.
@@ -127,5 +131,95 @@ async def approve_order(
         before=before,
         after=audit.snapshot(order),
         request=request,
+    )
+    return order
+
+
+def _quantity_text(value: Decimal) -> str:
+    return format(value.normalize(), "f")
+
+
+def _ordered_quantities(order: MaterialOrder) -> Counter[tuple[str, Decimal]]:
+    return Counter((str(i["item"]), Decimal(str(i["quantity"]))) for i in order.items)
+
+
+async def confirm_delivery(
+    session: AsyncSession,
+    user: User,
+    order_id: uuid.UUID,
+    quantities: list[DeliveryItem],
+    evidence_ids: list[uuid.UUID],
+    request: Request | None = None,
+) -> tuple[Delivery, MaterialOrder]:
+    """The project supervisor confirms an approved order arrived, then the supplier payment starts.
+
+    - The quantities counted must match the order exactly (partial deliveries are not supported yet).
+    - Every evidence id must be accepted evidence on this project taken by the supervisor.
+    - approved -> delivered, audited, and escrow.pay_supplier() is called in the same transaction, so a
+      delivery is never confirmed without the payment being started (or nothing is saved).
+    """
+    order = await get_order(session, order_id, lock=True)
+    project = await projects.require_project_member(session, user, order.project_id)
+    if project.supervisor_id != user.id:
+        raise AppError("not_project_supervisor", "Only the project supervisor can confirm a delivery.", 403)
+    if ALLOWED_TRANSITIONS.get((order.status, OrderStatus.DELIVERED.value)) != "supervisor":
+        raise AppError(
+            "invalid_order_transition", f"An order that is {order.status} cannot be delivered.", 409
+        )
+
+    counted = Counter((q.item, q.quantity) for q in quantities)
+    if counted != _ordered_quantities(order):
+        raise AppError(
+            "quantity_mismatch",
+            "The quantities must match the order exactly; partial deliveries are not supported yet.",
+            422,
+        )
+    unique_ids = list(dict.fromkeys(evidence_ids))
+    found = await evidence.accepted_supervisor_evidence_count(session, order.project_id, unique_ids)
+    if found != len(unique_ids):
+        raise AppError(
+            "evidence_not_accepted",
+            "Every photo must be accepted evidence on this project taken by its supervisor.",
+            422,
+        )
+
+    before = audit.snapshot(order)
+    delivery = Delivery(
+        order_id=order.id,
+        confirmed_by=user.id,
+        quantities=[{"item": q.item, "quantity": _quantity_text(q.quantity)} for q in quantities],
+        evidence_ids=[str(e) for e in unique_ids],
+        confirmed_at=datetime.now(UTC),
+    )
+    session.add(delivery)
+    order.status = OrderStatus.DELIVERED.value
+    await session.flush()
+    await session.refresh(delivery)
+    await session.refresh(order)
+    await audit.record(
+        session,
+        user.id,
+        "order.delivered",
+        "order",
+        order.id,
+        before=before,
+        after={**audit.snapshot(order), "delivery_id": str(delivery.id)},
+        request=request,
+    )
+    await escrow_bridge.pay_supplier(session, order.id)
+    return delivery, order
+
+
+async def mark_paid(session: AsyncSession, order_id: uuid.UUID) -> MaterialOrder:
+    """The supplier payment was confirmed: delivered -> paid. For Gabriel's escrow and payments code."""
+    order = await get_order(session, order_id, lock=True)
+    if ALLOWED_TRANSITIONS.get((order.status, OrderStatus.PAID.value)) != "system":
+        raise AppError("invalid_order_transition", f"An order that is {order.status} cannot be paid.", 409)
+    before = audit.snapshot(order)
+    order.status = OrderStatus.PAID.value
+    await session.flush()
+    await session.refresh(order)
+    await audit.record(
+        session, None, "order.paid", "order", order.id, before=before, after=audit.snapshot(order)
     )
     return order
