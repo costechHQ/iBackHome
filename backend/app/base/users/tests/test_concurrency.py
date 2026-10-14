@@ -149,3 +149,24 @@ async def test_concurrent_requests_cannot_beat_the_rate_limit(
     assert sum(1 for r in results if isinstance(r, int)) == limit
     assert sum(1 for r in results if isinstance(r, HTTPException) and r.status_code == 429) == 2
     assert len(sender.sent) == limit
+
+
+async def test_inviting_the_same_new_number_twice_at_once_makes_one_contractor(
+    committing_sessions: CommittingSessions,
+) -> None:
+    """Two clients invite the same new contractor at the same moment: one account, both get it."""
+    phone = random_phone()
+    committing_sessions.identifiers.append(_e164(phone))
+
+    async def invite(session: AsyncSession) -> Any:
+        user = await service.invite_contractor(session, phone)
+        await session.commit()
+        return user.id
+
+    results = await asyncio.gather(*(_in_own_session(committing_sessions, invite) for _ in range(2)))
+    assert not [r for r in results if isinstance(r, Exception)]
+    assert results[0] == results[1]
+
+    async with committing_sessions.factory() as session:
+        user = await session.scalar(select(User).where(User.phone == _e164(phone)))
+        assert user is not None and user.role == "contractor"
