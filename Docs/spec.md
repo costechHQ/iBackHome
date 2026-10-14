@@ -396,6 +396,19 @@ stateDiagram-v2
 
 **Disputes**: `open` → `resolved_release` or `resolved_reject`. While a dispute is open, no release for that milestone can be requested.
 
+**Projects**: a new project starts as `draft`.
+
+| From | To | Who | Condition |
+| --- | --- | --- | --- |
+| `draft` | `boq_review` | contractor | Contractor submits the BoQ (project has a contractor) |
+| `boq_review` | `draft` | client, contractor, ops | BoQ sent back for changes |
+| `boq_review` | `active` | system | Client, contractor and ops have all approved the BoQ |
+| `active` | `paused` | ops | Ops pauses the work |
+| `paused` | `active` | ops | Ops resumes the work |
+| `active` | `completed` | system | The last milestone has been released |
+
+The site pin set with `PUT /projects/{id}/site` must lie inside the geofence polygon (422 `pin_outside_geofence`).
+
 ## API endpoints
 
 REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors follow one shape: `{"error": {"code": "milestone_not_verified", "message": "..."}}`. Every write endpoint accepts an `Idempotency-Key` header. Lists are paginated with `?cursor=&limit=`.

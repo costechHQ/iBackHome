@@ -587,6 +587,7 @@ abigail = [
     { name = "geoalchemy2" },
 ]
 christopher = [
+    { name = "geoalchemy2" },
     { name = "phonenumbers" },
     { name = "pyjwt" },
     { name = "sentry-sdk", extra = ["fastapi"] },
@@ -629,6 +630,7 @@ abigail = [
     { name = "geoalchemy2", specifier = ">=0.15" },
 ]
 christopher = [
+    { name = "geoalchemy2", specifier = ">=0.15" },
     { name = "phonenumbers", specifier = ">=9.0.41" },
     { name = "pyjwt", specifier = ">=2.9" },
     { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.14" },

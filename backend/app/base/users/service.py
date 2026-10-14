@@ -14,6 +14,7 @@ Other modules use only these names:
     OpsUser = Annotated[User, Depends(users.require_role("ops"))]      # one or more roles
 
     user = await users.get_user(session, user_id)                      # None if unknown
+    contractor = await users.invite_contractor(session, "0803...")     # projects: invite by phone
 
 Every function takes the database session first. Codes and tokens are never logged or stored in
 plain text: OTP codes are kept as HMAC-SHA256 (keyed with JWT_SECRET), refresh tokens as SHA-256.
@@ -234,7 +235,7 @@ async def _find_or_create_user(session: AsyncSession, identifier: str, channel: 
     user = await session.scalar(select(User).where(column == identifier))
     if user is not None:
         return user
-    # New people sign up as clients. Contractors are invited (day 3), supervisors are vetted and
+    # New people sign up as clients. Contractors are invited (invite_contractor), supervisors are vetted and
     # ops accounts are seeded, so nobody can give themselves another role.
     fields = {"email": identifier} if channel == OtpChannel.EMAIL.value else {"phone": identifier}
     try:
@@ -444,3 +445,37 @@ def require_role(*roles: str) -> Callable[[User], Awaitable[User]]:
 
 async def get_user(session: AsyncSession, user_id: uuid.UUID) -> User | None:
     return await session.get(User, user_id)
+
+
+async def invite_contractor(session: AsyncSession, raw_phone: str) -> User:
+    """The contractor account for this phone number, created if the number is new.
+
+    The invited person signs in later with an OTP to this number and lands on this account.
+    Does not commit.
+
+    - 422 invalid_phone / phone_needs_country_code: same rules as login; an email is refused
+    - 409 role_conflict: the number belongs to a client, supervisor, supplier or ops account
+      (their role is never changed by an invite)
+    - 409 contractor_suspended: the contractor's account is suspended
+    """
+    phone, channel = normalise_identifier(raw_phone)
+    if channel == OtpChannel.EMAIL.value:
+        raise AppError("invalid_phone", "Invite a contractor by phone number.", 422)
+    user = await session.scalar(select(User).where(User.phone == phone))
+    if user is None:
+        try:
+            async with session.begin_nested():
+                user = User(phone=phone, role=Role.CONTRACTOR.value)
+                session.add(user)
+        except IntegrityError:
+            # The same number was invited or signed up a moment ago.
+            user = await session.scalar(select(User).where(User.phone == phone))
+            if user is None:
+                raise
+    if user.role != Role.CONTRACTOR.value:
+        raise AppError(
+            "role_conflict", "This phone number belongs to an account that isn't a contractor.", 409
+        )
+    if user.status != UserStatus.ACTIVE.value:
+        raise AppError("contractor_suspended", "This contractor's account is suspended.", 409)
+    return user

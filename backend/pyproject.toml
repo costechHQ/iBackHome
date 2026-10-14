@@ -60,6 +60,7 @@ abigail = [
     "geoalchemy2>=0.15",
 ]
 christopher = [
+    "geoalchemy2>=0.15",
     "phonenumbers>=9.0.41",
     "pyjwt>=2.9",
     "sentry-sdk[fastapi]>=2.14",
