@@ -14,6 +14,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.observability import REQUEST_ID_HEADER, current_request_id
+
 logger = logging.getLogger(__name__)
 
 # Codes for errors raised by FastAPI/Starlette itself (our own code raises AppError instead).
@@ -70,9 +72,12 @@ async def _validation_error_handler(_: Request, exc: Exception) -> JSONResponse:
 async def _unhandled_error_handler(request: Request, exc: Exception) -> JSONResponse:
     # Details go to the logs (and error tracking), never to the client.
     logger.exception("unhandled error on %s %s", request.method, request.url.path, exc_info=exc)
+    # This handler runs outside RequestIdMiddleware, so it adds the ID itself: support can find the log.
+    request_id = current_request_id()
     return JSONResponse(
         status_code=500,
         content=error_body("internal_error", "Something went wrong on our side. Please try again."),
+        headers={REQUEST_ID_HEADER: request_id} if request_id else None,
     )
 
 
