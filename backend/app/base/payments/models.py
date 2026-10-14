@@ -9,6 +9,11 @@ debits and credits differ or that mixes currencies. Write rows only through
 `payment_events` stores every verified webhook once (unique provider + event_id), so a
 re-delivered event is recognised and never processed twice. Write rows only through
 `service.record_event`.
+
+`payout_recipients` and `payouts` (NOT in the spec yet; proposed in the day-3 explainer):
+a contractor's or supplier's Paystack recipient (bank account, stored MASKED: never the full
+account number), and each NGN transfer we start, keyed by our own unique `reference` so a
+retried transfer is never sent twice. Change them only through service.py.
 """
 
 import uuid
@@ -16,7 +21,16 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, Index, Numeric, String, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Numeric,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -58,3 +72,50 @@ class PaymentEvent(TimestampedBase):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class PayoutRecipient(TimestampedBase):
+    """Where a contractor's or supplier's naira goes (a Paystack transfer recipient)."""
+
+    __tablename__ = "payout_recipients"
+    __table_args__ = (
+        CheckConstraint("(user_id IS NULL) <> (supplier_id IS NULL)", name="one_owner"),
+        CheckConstraint(r"account_number_masked ~ '^\*{6}[0-9]{4}$'", name="account_number_masked"),
+        CheckConstraint("provider IN ('paystack')", name="provider_valid"),
+    )
+
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True
+    )
+    # suppliers has no table yet (features/suppliers); add the foreign key when it lands.
+    supplier_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True, nullable=True)
+    provider: Mapped[str] = mapped_column(String(20), nullable=False, default="paystack")
+    recipient_code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    bank_code: Mapped[str] = mapped_column(String(20), nullable=False)
+    bank_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    account_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    account_number_masked: Mapped[str] = mapped_column(String(10), nullable=False)  # "******6789"
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="NGN")
+
+
+class Payout(TimestampedBase):
+    """One NGN transfer to a recipient. Status follows Paystack's transfer.* webhooks."""
+
+    __tablename__ = "payouts"
+    __table_args__ = (
+        CheckConstraint("amount_minor > 0", name="amount_positive"),
+        CheckConstraint("status IN ('pending', 'success', 'failed', 'reversed')", name="status_valid"),
+    )
+
+    recipient_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("payout_recipients.id"), index=True, nullable=False
+    )
+    provider: Mapped[str] = mapped_column(String(20), nullable=False, default="paystack")
+    reference: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    amount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="NGN")
+    reason: Mapped[str] = mapped_column(String(200), nullable=False)
+    status: Mapped[str] = mapped_column(String(10), nullable=False, default="pending")
+    provider_transfer_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    failure_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

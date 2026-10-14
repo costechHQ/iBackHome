@@ -1,0 +1,144 @@
+"""Paystack API client (NGN payouts), behind one small interface. Owner: Gabriel.
+
+Only the two calls payouts need: create a transfer recipient, and start a transfer. Uses httpx
+with the secret key from PAYSTACK_SECRET_KEY (sk_test_... in test mode). Tests mock the HTTP
+layer with respx, so they never reach Paystack.
+
+    client = get_paystack_client()
+    recipient = await client.create_transfer_recipient("Chidi Okeke", "0123456789", "058")
+    transfer = await client.initiate_transfer(5_000_000, recipient.recipient_code, "rel-...", "Milestone 1")
+
+Paystack's own docs: https://paystack.com/docs/transfers/ . Transfers are idempotent on OUR
+`reference`: Paystack refuses a second transfer with a reference it has already seen.
+"""
+
+from dataclasses import dataclass
+from typing import Any, Literal, Protocol
+
+import httpx
+
+from app.base.payments.settings import get_payments_settings
+from app.core.errors import AppError
+
+TIMEOUT_SECONDS = 15.0
+
+TransferStatus = Literal["pending", "success", "failed"]
+
+
+@dataclass(frozen=True)
+class RecipientResult:
+    recipient_code: str  # RCP_...
+    bank_code: str
+    bank_name: str
+    account_name: str
+    account_last4: str  # the only part of the account number we keep
+
+
+@dataclass(frozen=True)
+class TransferResult:
+    reference: str
+    transfer_code: str  # TRF_...
+    status: TransferStatus  # "pending" until the transfer.* webhook says otherwise
+
+
+class PaystackClient(Protocol):
+    async def create_transfer_recipient(
+        self, account_name: str, account_number: str, bank_code: str
+    ) -> RecipientResult: ...
+
+    async def initiate_transfer(
+        self, amount_minor: int, recipient_code: str, reference: str, reason: str
+    ) -> TransferResult: ...
+
+
+def _transfer_status(raw: object) -> TransferStatus:
+    # Paystack also answers "otp" (OTP confirmation is switched on in the dashboard; switch it off
+    # for API transfers) and "received"/"processing"; all of them mean "not final yet".
+    if raw == "success":
+        return "success"
+    if raw in ("failed", "abandoned", "rejected"):
+        return "failed"
+    return "pending"
+
+
+class HttpPaystackClient:
+    def __init__(self, secret_key: str, base_url: str) -> None:
+        self._secret_key = secret_key
+        self._base_url = base_url.rstrip("/")
+
+    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        try:
+            async with httpx.AsyncClient(
+                base_url=self._base_url,
+                timeout=TIMEOUT_SECONDS,
+                headers={"Authorization": f"Bearer {self._secret_key}"},
+            ) as http:
+                response = await http.post(path, json=payload)
+        except httpx.HTTPError as exc:
+            raise AppError("paystack_unavailable", "Paystack could not be reached. Try again.", 502) from exc
+        if response.status_code >= 500:
+            raise AppError(
+                "paystack_unavailable", f"Paystack answered {response.status_code}. Try again.", 502
+            )
+        try:
+            body: dict[str, Any] = response.json()
+        except ValueError as exc:
+            raise AppError("paystack_unavailable", "Paystack sent an unreadable answer.", 502) from exc
+        if response.status_code >= 400 or not body.get("status"):
+            # Paystack's message is safe to show (e.g. "Account number is invalid").
+            raise AppError(
+                "paystack_refused", str(body.get("message") or "Paystack refused the request."), 422
+            )
+        data = body.get("data")
+        if not isinstance(data, dict):
+            raise AppError("paystack_unavailable", "Paystack sent no data.", 502)
+        return data
+
+    async def create_transfer_recipient(
+        self, account_name: str, account_number: str, bank_code: str
+    ) -> RecipientResult:
+        data = await self._post(
+            "/transferrecipient",
+            {
+                "type": "nuban",
+                "name": account_name,
+                "account_number": account_number,
+                "bank_code": bank_code,
+                "currency": "NGN",
+            },
+        )
+        details = data.get("details") or {}
+        return RecipientResult(
+            recipient_code=str(data["recipient_code"]),
+            bank_code=str(details.get("bank_code") or bank_code),
+            bank_name=str(details.get("bank_name") or ""),
+            account_name=str(details.get("account_name") or data.get("name") or account_name),
+            account_last4=str(details.get("account_number") or account_number)[-4:],
+        )
+
+    async def initiate_transfer(
+        self, amount_minor: int, recipient_code: str, reference: str, reason: str
+    ) -> TransferResult:
+        data = await self._post(
+            "/transfer",
+            {
+                "source": "balance",
+                "amount": amount_minor,
+                "currency": "NGN",
+                "recipient": recipient_code,
+                "reference": reference,
+                "reason": reason,
+            },
+        )
+        return TransferResult(
+            reference=str(data.get("reference") or reference),
+            transfer_code=str(data.get("transfer_code") or ""),
+            status=_transfer_status(data.get("status")),
+        )
+
+
+def get_paystack_client() -> PaystackClient:
+    settings = get_payments_settings()
+    if not settings.paystack_secret_key:
+        raise AppError("paystack_not_configured", "PAYSTACK_SECRET_KEY is not set.", 503)
+    return HttpPaystackClient(settings.paystack_secret_key, settings.paystack_base_url)
