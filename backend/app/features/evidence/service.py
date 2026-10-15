@@ -63,14 +63,29 @@ async def register_device(
     return device, True
 
 
-async def revoke_device(session: AsyncSession, device_pk: uuid.UUID) -> Device:
-    """Revoke a device (ops only, checked by the router). Revoking twice keeps the first time."""
+async def revoke_device(
+    session: AsyncSession, actor: User, device_pk: uuid.UUID, request: Request | None = None
+) -> Device:
+    """Revoke a device. Only its owner can (spec). Revoking twice keeps the first time."""
     device = await session.get(Device, device_pk)
     if device is None:
         raise AppError("device_not_found", "This device does not exist.", 404)
+    if device.user_id != actor.id:
+        raise AppError("not_device_owner", "Only the device's owner can revoke it.", 403)
     if device.revoked_at is None:
+        before = audit.snapshot(device)
         device.revoked_at = datetime.now(UTC)
         await session.flush()
+        await audit.record(
+            session,
+            actor.id,
+            "device.revoked",
+            "device",
+            device.id,
+            before=before,
+            after=audit.snapshot(device),
+            request=request,
+        )
     return device
 
 

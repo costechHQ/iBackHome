@@ -52,13 +52,14 @@ async def register_device(
 async def revoke_device(
     device_pk: uuid.UUID,
     session: SessionDep,
-    actor: OpsUser,
+    actor: DeviceOwner,
+    request: Request,
     key: IdempotencyKeyDep,
 ) -> JSONResponse:
     scope = f"POST /devices/{device_pk}/revoke {actor.id}"
     if (saved := await replay_or_none(session, key, scope)) is not None:
         return saved
-    device = await service.revoke_device(session, device_pk)
+    device = await service.revoke_device(session, actor, device_pk, request)
     out = DeviceOut.model_validate(device).model_dump(mode="json")
     await remember(session, key, scope, 200, out)
     await session.commit()
