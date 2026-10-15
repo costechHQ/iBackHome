@@ -243,7 +243,7 @@ async def test_check_2_revoked_device_is_rejected(
     evidence = await submit(db_session, world, phone, s3)
     device = await service.get_device(db_session, phone.device_id)
     assert device is not None
-    await service.revoke_device(db_session, device.id)
+    await service.revoke_device(db_session, world.supervisor, device.id)
     result = await decide(db_session, evidence)
     assert result.status == "rejected"
     assert "revoked" in (result.reject_reason or "")

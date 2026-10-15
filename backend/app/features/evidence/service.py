@@ -4,18 +4,21 @@ Other features call the functions in this file; they never query this feature's 
 Every function takes the database session as its first argument.
 """
 
+import asyncio
 import logging
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from fastapi import Request
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
 from app.base.users.models import User
+from app.core import pagination
 from app.core.errors import AppError
-from app.features.evidence import storage
+from app.features.evidence import media, storage
 from app.features.evidence.models import Device, Evidence, EvidenceKind, EvidenceStatus
 from app.features.evidence.schemas import EvidenceIn, UploadUrlOut, UploadUrlRequest
 from app.features.evidence.signing import SEPARATOR, is_valid_public_key
@@ -60,14 +63,29 @@ async def register_device(
     return device, True
 
 
-async def revoke_device(session: AsyncSession, device_pk: uuid.UUID) -> Device:
-    """Revoke a device (ops only, checked by the router). Revoking twice keeps the first time."""
+async def revoke_device(
+    session: AsyncSession, actor: User, device_pk: uuid.UUID, request: Request | None = None
+) -> Device:
+    """Revoke a device. Only its owner can (spec). Revoking twice keeps the first time."""
     device = await session.get(Device, device_pk)
     if device is None:
         raise AppError("device_not_found", "This device does not exist.", 404)
+    if device.user_id != actor.id:
+        raise AppError("not_device_owner", "Only the device's owner can revoke it.", 403)
     if device.revoked_at is None:
+        before = audit.snapshot(device)
         device.revoked_at = datetime.now(UTC)
         await session.flush()
+        await audit.record(
+            session,
+            actor.id,
+            "device.revoked",
+            "device",
+            device.id,
+            before=before,
+            after=audit.snapshot(device),
+            request=request,
+        )
     return device
 
 
@@ -93,7 +111,7 @@ async def create_upload_url(session: AsyncSession, user: User, data: UploadUrlRe
     key = f"{_key_prefix(data.project_id)}{uuid.uuid4()}.{EXTENSIONS[data.content_type]}"
     return UploadUrlOut(
         storage_key=key,
-        upload_url=storage.presign_upload(key, data.content_type),
+        upload_url=await asyncio.to_thread(storage.presign_upload, key, data.content_type),
         headers={"Content-Type": data.content_type},
         expires_in=storage.UPLOAD_URL_TTL_S,
         max_bytes=MAX_BYTES[data.kind],
@@ -134,14 +152,16 @@ async def submit_evidence(
         if milestone.project_id != data.project_id:
             raise AppError("milestone_not_in_project", "This milestone is not on this project.", 422)
 
-    stored = storage.head_object(data.storage_key)
+    stored = await asyncio.to_thread(storage.head_object, data.storage_key)
     if stored is None:
         raise AppError("file_not_uploaded", "Upload the file to the upload URL first.", 422)
     size, content_type = stored
     if content_type != CONTENT_TYPES[data.kind]:
         raise AppError("invalid_content_type", f"A {data.kind} must be {CONTENT_TYPES[data.kind]}.", 422)
     if size > MAX_BYTES[data.kind]:
-        storage.delete_object(data.storage_key)  # a presigned PUT can't cap the size, so enforce it here
+        await asyncio.to_thread(
+            storage.delete_object, data.storage_key
+        )  # a presigned PUT can't cap the size, so enforce it here
         raise AppError(
             "file_too_large", f"A {data.kind} can be at most {MAX_BYTES[data.kind] // (1024 * 1024)} MB.", 422
         )
@@ -196,3 +216,143 @@ async def accepted_for_milestone(session: AsyncSession, milestone_id: uuid.UUID)
         .order_by(Evidence.captured_at, Evidence.id)
     )
     return list(rows)
+
+
+# --- Gallery -----------------------------------------------------------------------------------
+
+READ_URL_TTL_S = storage.READ_URL_TTL_S
+
+
+@dataclass(frozen=True)
+class GalleryEntry:
+    evidence: Evidence
+    read_url: str
+    is_client_copy: bool
+
+
+def _view_url(evidence: Evidence, *, for_client: bool) -> tuple[str, bool]:
+    if for_client and evidence.kind == EvidenceKind.PHOTO.value:
+        return media.client_copy_url(evidence.storage_key), True
+    # Videos have no EXIF stripper yet, so a client gets the original video link.
+    return storage.presign_read(evidence.storage_key), False
+
+
+async def list_gallery(
+    session: AsyncSession,
+    user: User,
+    project_id: uuid.UUID,
+    *,
+    milestone_id: uuid.UUID | None = None,
+    status: str | None = None,
+    kind: str | None = None,
+    captured_by_role: str | None = None,
+    cursor: str | None = None,
+    limit: int = pagination.DEFAULT_LIMIT,
+) -> tuple[list[GalleryEntry], str | None]:
+    """A project's evidence, newest first, with 15-minute read URLs. Members and ops only.
+
+    A client sees only `accepted` evidence, as stripped copies. Everyone else sees every status.
+    """
+    await projects.require_project_member(session, user, project_id)
+    query = select(Evidence).where(Evidence.project_id == project_id)
+    for_client = user.role == "client"
+    if for_client:
+        query = query.where(Evidence.status == EvidenceStatus.ACCEPTED.value)
+    if milestone_id is not None:
+        query = query.where(Evidence.milestone_id == milestone_id)
+    if status is not None:
+        query = query.where(Evidence.status == status)
+    if kind is not None:
+        query = query.where(Evidence.kind == kind)
+    if captured_by_role is not None:
+        query = query.where(Evidence.captured_by_role == captured_by_role)
+    if cursor is not None:
+        at, row_id = pagination.decode_cursor(cursor)
+        query = query.where(tuple_(Evidence.created_at, Evidence.id) < tuple_(at, row_id))
+    rows = list(
+        await session.scalars(query.order_by(Evidence.created_at.desc(), Evidence.id.desc()).limit(limit + 1))
+    )
+    page, next_cursor = pagination.page(rows, limit, lambda e: (e.created_at, e.id))
+    entries = []
+    for evidence in page:
+        url, is_copy = await asyncio.to_thread(_view_url, evidence, for_client=for_client)
+        entries.append(GalleryEntry(evidence, url, is_copy))
+    return entries, next_cursor
+
+
+# --- Ops decisions on flagged evidence ---------------------------------------------------------
+
+# The only moves ops can make on evidence (anything else is a 409): flagged -> accepted or rejected.
+OPS_DECISIONS = {EvidenceStatus.ACCEPTED.value, EvidenceStatus.REJECTED.value}
+
+
+async def decide_flagged(
+    session: AsyncSession,
+    ops: User,
+    evidence_id: uuid.UUID,
+    decision: str,
+    notes: str,
+    request: Request | None = None,
+) -> Evidence:
+    """Ops accept or reject evidence the server flagged (a reused image, or a project with no site)."""
+    if decision not in OPS_DECISIONS:
+        raise AppError("invalid_decision", "Decide accepted or rejected.", 422)
+    notes = notes.strip()
+    if decision == EvidenceStatus.REJECTED.value and not notes:
+        raise AppError("notes_required", "Say why you are rejecting this evidence.", 422)
+    evidence = await session.scalar(
+        select(Evidence)
+        .where(Evidence.id == evidence_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if evidence is None:
+        raise AppError("evidence_not_found", "Evidence not found.", 404)
+    if evidence.status != EvidenceStatus.FLAGGED.value:
+        raise AppError(
+            "invalid_evidence_transition",
+            f"Only flagged evidence can be decided by ops; this is {evidence.status}.",
+            409,
+        )
+    before = audit.snapshot(evidence)
+    evidence.status = decision
+    evidence.reject_reason = f"Ops: {notes}" if decision == EvidenceStatus.REJECTED.value else None
+    await session.flush()
+    await session.refresh(evidence)
+    await audit.record(
+        session,
+        ops.id,
+        f"evidence.ops_{decision}",
+        "evidence",
+        evidence.id,
+        before=before,
+        after={**audit.snapshot(evidence), "ops_notes": notes},
+        request=request,
+    )
+    return evidence
+
+
+async def list_flagged(session: AsyncSession, limit: int = 100) -> list[Evidence]:
+    """Flagged evidence waiting for ops, oldest first (for the ops queue)."""
+    rows = await session.scalars(
+        select(Evidence)
+        .where(Evidence.status == EvidenceStatus.FLAGGED.value)
+        .order_by(Evidence.created_at, Evidence.id)
+        .limit(limit)
+    )
+    return list(rows)
+
+
+async def accepted_supervisor_evidence_count(
+    session: AsyncSession, project_id: uuid.UUID, evidence_ids: list[uuid.UUID]
+) -> int:
+    """How many of these ids are accepted evidence on this project taken by its supervisor."""
+    rows = await session.scalars(
+        select(Evidence.id).where(
+            Evidence.id.in_(evidence_ids),
+            Evidence.project_id == project_id,
+            Evidence.status == EvidenceStatus.ACCEPTED.value,
+            Evidence.captured_by_role == "supervisor",
+        )
+    )
+    return len(set(rows))

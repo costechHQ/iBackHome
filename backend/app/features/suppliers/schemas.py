@@ -39,3 +39,29 @@ class OrderOut(BaseModel):
     approved_by: uuid.UUID | None
     approved_at: datetime | None
     created_at: datetime
+
+
+class DeliveryItem(BaseModel):
+    item: str = Field(min_length=1, max_length=120)
+    quantity: Decimal = Field(ge=0, max_digits=12, decimal_places=3)
+
+    @field_validator("quantity", mode="before")
+    @classmethod
+    def _no_floats(cls, value: object) -> object:
+        return str(value) if isinstance(value, float) else value
+
+
+class DeliveryIn(BaseModel):
+    quantities: list[DeliveryItem] = Field(min_length=1, max_length=50)
+    evidence_ids: list[uuid.UUID] = Field(min_length=1, max_length=20)
+
+
+class DeliveryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    order_id: uuid.UUID
+    confirmed_by: uuid.UUID
+    quantities: list[dict[str, object]]
+    evidence_ids: list[str]
+    confirmed_at: datetime

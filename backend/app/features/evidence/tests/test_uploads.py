@@ -45,6 +45,17 @@ async def test_supervisor_gets_an_upload_url(client: AsyncClient, world: World) 
     assert parse_qs(urlparse(body["upload_url"]).query)["X-Amz-Expires"] == ["900"]
 
 
+async def test_the_same_idempotency_key_returns_the_same_upload_url(
+    client: AsyncClient, world: World
+) -> None:
+    body = {"project_id": str(world.project.id), "kind": "photo", "content_type": "image/jpeg"}
+    headers = bearer(world.supervisor) | {"Idempotency-Key": "url-1"}
+    first = await client.post("/api/v1/evidence/upload-url", json=body, headers=headers)
+    second = await client.post("/api/v1/evidence/upload-url", json=body, headers=headers)
+    assert first.status_code == second.status_code == 200
+    assert second.json() == first.json()
+
+
 async def test_video_url_allows_60_mb(client: AsyncClient, world: World) -> None:
     response = await client.post(
         "/api/v1/evidence/upload-url",

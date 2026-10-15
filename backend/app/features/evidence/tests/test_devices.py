@@ -7,8 +7,10 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base.audit.models import AuditEntry
 from app.base.users import service as users
 from app.base.users.models import User
 from app.core.errors import AppError
@@ -170,17 +172,26 @@ async def register(client: AsyncClient, user: User, device_id: str, key: str | N
     return created.json()  # type: ignore[no-any-return]
 
 
-async def test_ops_revokes_a_device(client: AsyncClient, supervisor: User, ops: User) -> None:
+async def test_the_owner_revokes_their_device(client: AsyncClient, supervisor: User) -> None:
     device = await register(client, supervisor, "phone-8")
-    sign_in_as(ops)
     response = await client.post(f"/api/v1/devices/{device['id']}/revoke")
     assert response.status_code == 200
     assert response.json()["revoked_at"] is not None
 
 
-async def test_revoking_twice_keeps_the_first_time(client: AsyncClient, supervisor: User, ops: User) -> None:
+async def test_revoking_is_audited(client: AsyncClient, db_session: AsyncSession, supervisor: User) -> None:
+    device = await register(client, supervisor, "phone-audit")
+    await client.post(f"/api/v1/devices/{device['id']}/revoke")
+    entry = await db_session.scalar(
+        select(AuditEntry).where(
+            AuditEntry.object_id == uuid.UUID(device["id"]), AuditEntry.action == "device.revoked"
+        )
+    )
+    assert entry is not None and entry.actor_id == supervisor.id
+
+
+async def test_revoking_twice_keeps_the_first_time(client: AsyncClient, supervisor: User) -> None:
     device = await register(client, supervisor, "phone-9")
-    sign_in_as(ops)
     url = f"/api/v1/devices/{device['id']}/revoke"
     first = await client.post(url)
     second = await client.post(url)
@@ -188,31 +199,41 @@ async def test_revoking_twice_keeps_the_first_time(client: AsyncClient, supervis
     assert second.json()["revoked_at"] == first.json()["revoked_at"]
 
 
-@pytest.mark.parametrize("role", ["supervisor", "contractor", "client"])
-async def test_only_ops_can_revoke(
+@pytest.mark.parametrize("role", ["supervisor", "contractor"])
+async def test_someone_else_cannot_revoke_a_device(
     client: AsyncClient, db_session: AsyncSession, supervisor: User, role: str
 ) -> None:
     device = await register(client, supervisor, f"phone-{role}")
     sign_in_as(await make_user(db_session, role))
     response = await client.post(f"/api/v1/devices/{device['id']}/revoke")
     assert response.status_code == 403
+    assert response.json()["error"]["code"] == "not_device_owner"
+    stored = await service.get_device(db_session, f"phone-{role}")
+    assert stored is not None and stored.revoked_at is None
 
 
-async def test_revoking_an_unknown_device_is_404(client: AsyncClient, ops: User) -> None:
-    sign_in_as(ops)
+@pytest.mark.parametrize("role", ["client", "ops"])
+async def test_other_roles_cannot_revoke(
+    client: AsyncClient, db_session: AsyncSession, supervisor: User, role: str
+) -> None:
+    device = await register(client, supervisor, f"phone-x-{role}")
+    sign_in_as(await make_user(db_session, role))
+    response = await client.post(f"/api/v1/devices/{device['id']}/revoke")
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "forbidden_role"
+
+
+async def test_revoking_an_unknown_device_is_404(client: AsyncClient, supervisor: User) -> None:
+    sign_in_as(supervisor)
     response = await client.post(f"/api/v1/devices/{uuid.uuid4()}/revoke")
     assert response.status_code == 404
     assert response.json()["error"]["code"] == "device_not_found"
 
 
-async def test_a_revoked_device_cannot_be_registered_again(
-    client: AsyncClient, supervisor: User, ops: User
-) -> None:
+async def test_a_revoked_device_cannot_be_registered_again(client: AsyncClient, supervisor: User) -> None:
     key = public_key()
     device = await register(client, supervisor, "phone-10", key)
-    sign_in_as(ops)
     await client.post(f"/api/v1/devices/{device['id']}/revoke")
-    sign_in_as(supervisor)
     response = await client.post("/api/v1/devices", json={"device_id": "phone-10", "public_key": key})
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "device_revoked"

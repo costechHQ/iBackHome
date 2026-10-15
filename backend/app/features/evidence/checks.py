@@ -175,3 +175,36 @@ async def run_checks(session: AsyncSession, evidence_id: uuid.UUID) -> Evidence:
         after=audit.snapshot(evidence),
     )
     return evidence
+
+
+async def flag_unchecked(session: AsyncSession, evidence_id: uuid.UUID, reason: str) -> Evidence:
+    """Last resort when the checks cannot run: send a still-pending capture to ops (no verdict invented)."""
+    from sqlalchemy import select
+
+    from app.base import audit
+
+    evidence = await session.scalar(
+        select(Evidence)
+        .where(Evidence.id == evidence_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if evidence is None:
+        raise AppError("evidence_not_found", "Evidence not found.", 404)
+    if evidence.status != EvidenceStatus.PENDING_CHECKS.value:
+        return evidence
+    before = audit.snapshot(evidence)
+    evidence.status = EvidenceStatus.FLAGGED.value
+    evidence.reject_reason = reason
+    await session.flush()
+    await session.refresh(evidence)
+    await audit.record(
+        session,
+        None,
+        "evidence.flagged",
+        "evidence",
+        evidence.id,
+        before=before,
+        after=audit.snapshot(evidence),
+    )
+    return evidence

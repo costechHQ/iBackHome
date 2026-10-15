@@ -67,3 +67,20 @@ class MaterialOrder(TimestampedBase):
     )
     approved_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Delivery(TimestampedBase):
+    """The supervisor's confirmation that an approved order arrived. One per order."""
+
+    __tablename__ = "deliveries"
+
+    order_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("material_orders.id"), nullable=False, unique=True
+    )
+    confirmed_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
+    # [{"item": "Cement", "quantity": "100"}, ...] as the supervisor counted them
+    quantities: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False)
+    evidence_ids: Mapped[list[str]] = mapped_column(JSONB, nullable=False)  # accepted photos of the delivery
+    confirmed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

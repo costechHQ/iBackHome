@@ -586,6 +586,7 @@ abigail = [
     { name = "cryptography" },
     { name = "geoalchemy2" },
     { name = "moto", extra = ["s3"] },
+    { name = "pillow" },
 ]
 christopher = [
     { name = "geoalchemy2" },
@@ -634,6 +635,7 @@ abigail = [
     { name = "cryptography", specifier = ">=43" },
     { name = "geoalchemy2", specifier = ">=0.15" },
     { name = "moto", extras = ["s3"], specifier = ">=5" },
+    { name = "pillow", specifier = ">=10.4" },
 ]
 christopher = [
     { name = "geoalchemy2", specifier = ">=0.15" },
