@@ -25,6 +25,7 @@ negative while money sits in them.
 
 import base64
 import binascii
+import logging
 import re
 import uuid
 from collections.abc import Mapping, Sequence
@@ -34,12 +35,18 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Any, Literal
 
+from fastapi import Request
 from sqlalchemy import case, func, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.base.payments.models import LedgerEntry, PaymentEvent
+from app.base import audit
+from app.base.payments.models import LedgerEntry, PaymentEvent, Payout, PayoutRecipient
+from app.base.payments.paystack import PaystackClient, get_paystack_client
 from app.core.errors import AppError
+
+logger = logging.getLogger(__name__)
 
 Direction = Literal["debit", "credit"]
 Provider = Literal["stripe", "paystack", "escrow"]
@@ -266,3 +273,247 @@ async def mark_processed(session: AsyncSession, event: PaymentEvent) -> None:
     """Stamp the event as handled (same transaction as the handler's work)."""
     event.processed_at = datetime.now(UTC)
     await session.flush()
+
+
+# --- Paystack payouts: recipients and transfers -----------------------------------------------
+
+PayoutStatus = Literal["pending", "success", "failed", "reversed"]
+
+_NUBAN = re.compile(r"^[0-9]{10}$")  # Nigerian bank account numbers are 10 digits
+_BANK_CODE = re.compile(r"^[0-9A-Za-z]{2,10}$")
+# Paystack's rule for transfer references: 16-50 chars of lower-case letters, digits, - and _.
+_REFERENCE = re.compile(r"^[a-z0-9_-]{16,50}$")
+
+# Paystack transfer webhooks and the payout status each one means.
+TRANSFER_EVENTS: dict[str, PayoutStatus] = {
+    "transfer.success": "success",
+    "transfer.failed": "failed",
+    "transfer.reversed": "reversed",
+}
+_PAYOUT_TRANSITIONS: set[tuple[str, str]] = {
+    ("pending", "success"),
+    ("pending", "failed"),
+    ("pending", "reversed"),
+    ("success", "reversed"),
+}
+
+
+def mask_account_number(account_number_or_last4: str) -> str:
+    """'0123456789' -> '******6789'. The only form of an account number we ever store or log."""
+    return "******" + account_number_or_last4[-4:]
+
+
+async def register_payout_recipient(
+    session: AsyncSession,
+    *,
+    account_name: str,
+    account_number: str,
+    bank_code: str,
+    actor_id: uuid.UUID | None,
+    user_id: uuid.UUID | None = None,
+    supplier_id: uuid.UUID | None = None,
+    client: PaystackClient | None = None,
+    request: Request | None = None,
+) -> PayoutRecipient:
+    """Register a contractor's (user_id) or supplier's (supplier_id) bank account with Paystack.
+
+    The full account number goes to Paystack and nowhere else: we keep the recipient_code,
+    bank name, account name and the masked number. Registering the same account again for the
+    same owner returns the existing row (Paystack returns the same recipient_code).
+
+    - 422 recipient_owner_required, invalid_account_number, invalid_bank_code, paystack_refused
+    - 409 recipient_belongs_to_another (that account is already registered to someone else)
+    - 502 paystack_unavailable; 503 paystack_not_configured
+    Writes an audit entry. Does not commit.
+    """
+    if (user_id is None) == (supplier_id is None):
+        raise AppError("recipient_owner_required", "Give exactly one of user_id or supplier_id.", 422)
+    account_number = account_number.strip()
+    if not _NUBAN.match(account_number):
+        raise AppError("invalid_account_number", "The account number must be 10 digits.", 422)
+    if not _BANK_CODE.match(bank_code):
+        raise AppError("invalid_bank_code", "The bank code is not valid.", 422)
+    account_name = account_name.strip()
+    if not account_name:
+        raise AppError("invalid_account_name", "The account name is required.", 422)
+
+    paystack = client or get_paystack_client()
+    result = await paystack.create_transfer_recipient(account_name, account_number, bank_code)
+
+    existing = await session.scalar(
+        select(PayoutRecipient).where(PayoutRecipient.recipient_code == result.recipient_code)
+    )
+    if existing is not None:
+        if (existing.user_id, existing.supplier_id) != (user_id, supplier_id):
+            raise AppError(
+                "recipient_belongs_to_another",
+                "This bank account is already registered to someone else.",
+                409,
+            )
+        return existing
+
+    recipient = PayoutRecipient(
+        user_id=user_id,
+        supplier_id=supplier_id,
+        provider="paystack",
+        recipient_code=result.recipient_code,
+        bank_code=result.bank_code,
+        bank_name=result.bank_name,
+        account_name=result.account_name,
+        account_number_masked=mask_account_number(result.account_last4),
+        currency="NGN",
+    )
+    session.add(recipient)
+    await session.flush()
+    await audit.record(
+        session,
+        actor_id,
+        "payout_recipient.created",
+        "payout_recipient",
+        recipient.id,
+        after=audit.snapshot(recipient),
+        request=request,
+    )
+    return recipient
+
+
+async def get_payout_recipient(session: AsyncSession, recipient_code: str) -> PayoutRecipient:
+    recipient = await session.scalar(
+        select(PayoutRecipient).where(PayoutRecipient.recipient_code == recipient_code)
+    )
+    if recipient is None:
+        raise AppError("recipient_not_found", "No payout recipient with that code.", 404)
+    return recipient
+
+
+async def initiate_transfer(
+    session: AsyncSession,
+    recipient_code: str,
+    amount_minor: int,
+    reference: str,
+    *,
+    reason: str,
+    actor_id: uuid.UUID | None = None,
+    client: PaystackClient | None = None,
+    request: Request | None = None,
+) -> Payout:
+    """Send `amount_minor` kobo to a recipient through Paystack, idempotent on OUR `reference`.
+
+    Calling again with the same reference and details returns the existing payout without a
+    second Paystack call; the same reference with other details is refused (409). Paystack
+    itself also refuses a reference it has seen, so even a lost answer can't pay twice.
+    The payout starts `pending` (or `success`/`failed` if Paystack answers so at once);
+    transfer.* webhooks move it on. Ledger entries for payouts come with releases (day 4).
+
+    - 404 recipient_not_found; 409 payout_reference_conflict, payout_in_progress
+    - 422 invalid_amount, invalid_reference, paystack_refused; 502 paystack_unavailable
+    Writes an audit entry. Does not commit.
+    """
+    if type(amount_minor) is not int or amount_minor <= 0:
+        raise AppError(
+            "invalid_amount", f"amount_minor must be a positive integer, got {amount_minor!r}.", 422
+        )
+    if not _REFERENCE.match(reference):
+        raise AppError("invalid_reference", "reference must be 16-50 of a-z, 0-9, hyphen or underscore.", 422)
+    recipient = await get_payout_recipient(session, recipient_code)
+
+    existing = await session.scalar(select(Payout).where(Payout.reference == reference))
+    if existing is not None:
+        if (existing.recipient_id, existing.amount_minor) != (recipient.id, amount_minor):
+            raise AppError("payout_reference_conflict", "This reference was used for another payout.", 409)
+        return existing
+
+    payout = Payout(
+        recipient_id=recipient.id,
+        provider="paystack",
+        reference=reference,
+        amount_minor=amount_minor,
+        currency="NGN",
+        reason=reason[:200],
+        status="pending",
+    )
+    try:
+        # The savepoint turns a racing duplicate (same reference, same moment) into a clean 409.
+        async with session.begin_nested():
+            session.add(payout)
+    except IntegrityError as exc:
+        raise AppError(
+            "payout_in_progress", "A payout with this reference is already being sent.", 409
+        ) from exc
+
+    paystack = client or get_paystack_client()
+    result = await paystack.initiate_transfer(
+        amount_minor, recipient.recipient_code, reference, payout.reason
+    )
+    payout.provider_transfer_code = result.transfer_code or None
+    payout.status = result.status
+    if result.status != "pending":
+        payout.completed_at = datetime.now(UTC)
+    await session.flush()
+    await audit.record(
+        session,
+        actor_id,
+        "payout.initiated",
+        "payout",
+        payout.id,
+        after=audit.snapshot(payout),
+        request=request,
+    )
+    return payout
+
+
+async def apply_transfer_event(
+    session: AsyncSession, event: PaymentEvent, request: Request | None = None
+) -> Payout | None:
+    """Move a payout on from a Paystack transfer.success / transfer.failed / transfer.reversed.
+
+    Idempotent: a status the payout already has changes nothing. An unknown reference or an
+    impossible move (e.g. reversed -> success) is logged and acknowledged, not raised: raising
+    would make Paystack retry an event we can never apply. Writes an audit entry on a change.
+    """
+    new_status = TRANSFER_EVENTS[event.event_type]
+    data: dict[str, Any] = event.payload.get("data") or {}
+    reference = str(data.get("reference") or "")
+    payout = await session.scalar(
+        select(Payout)
+        .where(Payout.reference == reference)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if payout is None:
+        logger.warning("paystack %s for unknown reference %r; ignored", event.event_type, reference)
+        return None
+    if payout.status == new_status:
+        return payout
+    if (payout.status, new_status) not in _PAYOUT_TRANSITIONS:
+        logger.warning("payout %s cannot move %s -> %s; ignored", payout.id, payout.status, new_status)
+        return payout
+    paystack_amount = data.get("amount")
+    if paystack_amount is not None and paystack_amount != payout.amount_minor:
+        logger.error(
+            "payout %s: Paystack amount %s != ours %s", payout.id, paystack_amount, payout.amount_minor
+        )
+
+    before = audit.snapshot(payout)
+    payout.status = new_status
+    payout.completed_at = datetime.now(UTC)
+    if not payout.provider_transfer_code and data.get("transfer_code"):
+        payout.provider_transfer_code = str(data["transfer_code"])
+    if new_status == "failed":
+        payout.failure_reason = str(data.get("gateway_response") or data.get("message") or "failed")[:500]
+    await session.flush()
+    await audit.record(
+        session,
+        None,
+        f"payout.{new_status}",
+        "payout",
+        payout.id,
+        before=before,
+        after={
+            **audit.snapshot(payout),
+            "paystack_event_id": event.event_id,
+            "paystack_amount": paystack_amount,
+        },
+        request=request,
+    )
+    return payout

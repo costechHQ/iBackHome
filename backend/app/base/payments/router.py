@@ -13,7 +13,7 @@ from typing import Any
 
 from fastapi import APIRouter, Request
 
-from app.base.payments import signatures, webhooks
+from app.base.payments import handlers, signatures, webhooks  # noqa: F401  (handlers: registers them)
 from app.base.payments.schemas import WebhookAck
 from app.base.payments.service import EventResult, Provider
 from app.core.db import SessionDep

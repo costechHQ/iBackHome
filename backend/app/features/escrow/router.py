@@ -1,0 +1,73 @@
+"""HTTP endpoints for escrow. Owner: Gabriel.
+
+Routes parse the request, check the role, and call service.py, which checks project membership.
+Importing `handlers` registers the Stripe funding webhook handler.
+"""
+
+import uuid
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import JSONResponse
+
+from app.base.payments.stripe_checkout import CheckoutGateway, get_checkout_gateway
+from app.base.users import service as users
+from app.base.users.models import User
+from app.core.db import SessionDep
+from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
+from app.features.escrow import handlers, service  # noqa: F401  (handlers: registers webhook handlers)
+from app.features.escrow.schemas import FundingCheckoutOut, FundingCreate
+
+router = APIRouter(tags=["escrow"])
+
+ClientUser = Annotated[User, Depends(users.require_role("client"))]
+GatewayDep = Annotated[CheckoutGateway, Depends(get_checkout_gateway)]
+
+
+@router.post("/projects/{project_id}/funding", response_model=FundingCheckoutOut, status_code=201)
+async def create_funding(
+    project_id: uuid.UUID,
+    data: FundingCreate,
+    request: Request,
+    session: SessionDep,
+    user: ClientUser,
+    key: IdempotencyKeyDep,
+    gateway: GatewayDep,
+) -> Any:
+    """Client: get a Stripe Checkout link to pay for one pending milestone (its naira amount + fee).
+
+    Nothing is recorded as paid until Stripe confirms by webhook. Send an `Idempotency-Key`:
+    a retry with the same key returns the same checkout link (also passed on to Stripe).
+    """
+    scope = f"POST /projects/{project_id}/funding by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    checkout = await service.create_funding_checkout(
+        session,
+        user,
+        project_id,
+        data.milestone_id,
+        data.currency,
+        gateway=gateway,
+        idempotency_key=key,
+        request=request,
+    )
+    quote = checkout.quote
+    body = FundingCheckoutOut(
+        project_id=checkout.project_id,
+        milestone_id=checkout.milestone_id,
+        checkout_session_id=checkout.checkout_session_id,
+        checkout_url=checkout.checkout_url,
+        currency=quote.currency,
+        amount_ngn_minor=quote.amount_ngn_minor,
+        net_minor=quote.net_minor,
+        fee_minor=quote.fee_minor,
+        fee_bps=quote.fee_bps,
+        total_minor=quote.total_minor,
+        fx_rate=quote.fx_rate,
+        fx_as_of=quote.fx_as_of,
+    ).model_dump(mode="json")
+    await remember(session, key, scope, 201, body)
+    await session.commit()
+    return body
