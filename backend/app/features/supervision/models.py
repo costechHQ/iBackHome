@@ -1,7 +1,6 @@
 """Supervisor vetting and spot-check tables. Owner: James.
 
-People columns point at `users` (Christopher). `spot_checks.project_id` has no foreign key yet
-because the `projects` table (Christopher, Day 3) doesn't exist; add it in a migration once it lands.
+People columns point at `users` and `spot_checks.project_id` at `projects` (both Christopher's tables).
 
 A supervisor can only be assigned once ops has passed all four checks (PRD FR-02):
 professional registration, NIN, and both guarantors.
@@ -90,7 +89,9 @@ class SpotCheck(TimestampedBase):
 
     __tablename__ = "spot_checks"
 
-    project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True, nullable=False)
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id"), index=True, nullable=False
+    )
     supervisor_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=False
     )

@@ -63,6 +63,11 @@ class AssignSupervisor(BaseModel):
     supervisor_id: uuid.UUID
 
 
+class ProjectSupervisorOut(BaseModel):
+    project_id: uuid.UUID
+    supervisor_id: uuid.UUID
+
+
 class SpotCheckCreate(BaseModel):
     supervisor_id: uuid.UUID
     scheduled_for: AwareDatetime  # must carry a timezone; stored in UTC
