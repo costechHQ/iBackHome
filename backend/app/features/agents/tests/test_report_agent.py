@@ -292,9 +292,9 @@ async def test_reads_go_through_the_real_api_with_the_agents_token(
 
     outcome = await ra.generate_weekly_report(db_session, project.id, MONDAY, client=llm_client)
 
-    # The project route exists on main and the agent's token reaches it; the others aren't merged yet.
+    # The project and milestone routes are on main and the agent's token reaches them; the ledger isn't.
     prompt = models.requests[0]["contents"][0].parts[-1].text
     assert str(project.id) in prompt and '"title": "Duplex"' in prompt and '"status": "draft"' in prompt
     assert outcome.used_model
-    assert "Milestone details aren't available" in outcome.report.body_md
+    assert "No milestones yet." in outcome.report.body_md
     assert "escrow ledger isn't available" in outcome.report.body_md
