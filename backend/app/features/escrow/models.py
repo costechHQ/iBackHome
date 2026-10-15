@@ -108,3 +108,47 @@ class EscrowRelease(TimestampedBase):
     )
     requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class Dispute(TimestampedBase):
+    """A client contesting a verified milestone. open -> resolved_release | resolved_reject.
+
+    Resolving needs two different ops users (spec): the first proposes an outcome
+    (`proposed_*`, NOT in the spec yet: spec addition), a second confirms the same outcome.
+    At most one open dispute per milestone (partial unique index).
+    """
+
+    __tablename__ = "disputes"
+    __table_args__ = (
+        CheckConstraint("status IN ('open', 'resolved_release', 'resolved_reject')", name="status_valid"),
+        CheckConstraint(
+            "proposed_outcome IS NULL OR proposed_outcome IN ('release', 'rework')",
+            name="proposed_outcome_valid",
+        ),
+        CheckConstraint("resolved_by IS NULL OR resolved_by <> proposed_by", name="two_ops_users"),
+        Index(
+            "uq_disputes_open_milestone",
+            "milestone_id",
+            unique=True,
+            postgresql_where=text("status = 'open'"),
+        ),
+    )
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id"), index=True, nullable=False
+    )
+    milestone_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("milestones.id"), index=True, nullable=False
+    )
+    raised_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    reason: Mapped[str] = mapped_column(String(2000), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="open")
+    proposed_outcome: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    proposed_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    proposed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    resolution_notes: Mapped[str | None] = mapped_column(String(4000), nullable=True)
+    resolved_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )

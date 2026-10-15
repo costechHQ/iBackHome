@@ -18,11 +18,21 @@ from app.core import pagination
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.escrow import handlers, service  # noqa: F401  (handlers: registers webhook handlers)
-from app.features.escrow.schemas import FundingCheckoutOut, FundingCreate, LedgerEntryOut, LedgerPage
+from app.features.escrow.schemas import (
+    DisputeCreate,
+    DisputeOut,
+    DisputeResolutionOut,
+    DisputeResolve,
+    FundingCheckoutOut,
+    FundingCreate,
+    LedgerEntryOut,
+    LedgerPage,
+)
 
 router = APIRouter(tags=["escrow"])
 
 ClientUser = Annotated[User, Depends(users.require_role("client"))]
+OpsUser = Annotated[User, Depends(users.require_role("ops"))]
 GatewayDep = Annotated[CheckoutGateway, Depends(get_checkout_gateway)]
 
 
@@ -90,3 +100,52 @@ async def project_ledger(
         session, user, project_id, since=since, until=until, cursor=cursor, limit=limit
     )
     return LedgerPage(items=[LedgerEntryOut.model_validate(e) for e in entries], next_cursor=next_cursor)
+
+
+@router.post("/milestones/{milestone_id}/disputes", response_model=DisputeOut, status_code=201)
+async def raise_dispute(
+    milestone_id: uuid.UUID,
+    data: DisputeCreate,
+    request: Request,
+    session: SessionDep,
+    user: users.CurrentUserDep,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """Client: dispute a verified milestone. It becomes `disputed`; nothing is released until resolved."""
+    scope = f"POST /milestones/{milestone_id}/disputes by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    dispute = await service.raise_dispute(session, user, milestone_id, data.reason, request)
+    body = DisputeOut.model_validate(dispute).model_dump(mode="json")
+    await remember(session, key, scope, 201, body)
+    await session.commit()
+    return body
+
+
+@router.post("/disputes/{dispute_id}/resolve", response_model=DisputeResolutionOut)
+async def resolve_dispute(
+    dispute_id: uuid.UUID,
+    data: DisputeResolve,
+    request: Request,
+    session: SessionDep,
+    user: OpsUser,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """Ops: resolve a dispute. Needs two different ops users choosing the same outcome; the first
+    call records a proposal (`resolved: false`), the second resolves it."""
+    scope = f"POST /disputes/{dispute_id}/resolve by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    result = await service.resolve_dispute(session, user, dispute_id, data.outcome, data.notes, request)
+    await session.flush()
+    await session.refresh(result.dispute)
+    body = DisputeResolutionOut(
+        dispute=DisputeOut.model_validate(result.dispute),
+        resolved=result.resolved,
+        release_id=result.release_id,
+    ).model_dump(mode="json")
+    await remember(session, key, scope, 200, body)
+    await session.commit()
+    return body

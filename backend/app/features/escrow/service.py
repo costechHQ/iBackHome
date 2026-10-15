@@ -50,11 +50,11 @@ from app.base.payments.models import LedgerEntry, PaymentEvent, Payout
 from app.base.payments.stripe_checkout import CheckoutGateway, CheckoutRequest, LineItem
 from app.base.users.models import User
 from app.core.errors import AppError
-from app.features.escrow.models import EscrowAccount, EscrowHold, EscrowRelease
+from app.features.escrow.models import Dispute, EscrowAccount, EscrowHold, EscrowRelease
 from app.features.escrow.providers import get_escrow_provider
 from app.features.escrow.settings import get_escrow_settings
 from app.features.milestones import service as milestones
-from app.features.milestones.models import MilestoneStatus
+from app.features.milestones.models import Milestone, MilestoneStatus
 from app.features.projects import service as projects
 from app.features.suppliers import service as suppliers
 
@@ -648,11 +648,14 @@ async def request_release(session: AsyncSession, milestone_id: uuid.UUID, actor:
     transition), and only then are the ledger entries written.
 
     Calling it again for the same milestone returns the existing release (even once released).
+    A disputed milestone is released only through resolve_dispute() (two ops approvals).
     - 404 milestone_not_found / project_not_found
-    - 409 milestone_not_approved, milestone_currency_unsupported, project_has_no_contractor,
-      escrow_hold_missing, escrow_insufficient_funds
+    - 409 dispute_open, milestone_not_approved, milestone_currency_unsupported,
+      project_has_no_contractor, escrow_hold_missing, escrow_insufficient_funds
     """
     milestone = await milestones.get_milestone(session, milestone_id, lock=True)
+    if await _open_dispute(session, milestone_id) is not None:
+        raise AppError("dispute_open", "This milestone has an open dispute; it can't be released.", 409)
     existing = await _open_release(session, milestone_id=milestone_id)
     if existing is not None:
         return _as_request(existing)
@@ -662,6 +665,12 @@ async def request_release(session: AsyncSession, milestone_id: uuid.UUID, actor:
             f"Only an approved milestone can be released (this one is '{milestone.status.value}').",
             409,
         )
+    return await _release_to_contractor(session, milestone, actor.id)
+
+
+async def _release_to_contractor(
+    session: AsyncSession, milestone: Milestone, actor_id: uuid.UUID
+) -> ReleaseRequest:
     if milestone.currency != ESCROW_CURRENCY:
         raise AppError("milestone_currency_unsupported", "Only naira milestones can be released.", 409)
     project = await projects.get_project(session, milestone.project_id)
@@ -678,7 +687,7 @@ async def request_release(session: AsyncSession, milestone_id: uuid.UUID, actor:
         amount_minor=milestone.amount_minor,
         currency=ESCROW_CURRENCY,
         milestone_id=milestone.id,
-        actor_id=actor.id,
+        actor_id=actor_id,
     )
     return _as_request(release)
 
@@ -808,7 +817,7 @@ async def confirm_release(
     release.provider_ref = provider_ref or release.provider_ref
     await session.flush()
     if release.milestone_id is not None:
-        await milestones.mark_released(session, release.milestone_id)
+        await _mark_milestone_released(session, release.milestone_id)
     await audit.record(
         session,
         None,
@@ -1006,6 +1015,191 @@ async def list_stale_requests(
         .where(EscrowRelease.status == "requested", EscrowRelease.updated_at < cutoff)
         .order_by(EscrowRelease.updated_at)
         .limit(limit)
+    )
+    return list(rows)
+
+
+# --- disputes (spec: open -> resolved_release | resolved_reject; two ops approvals) ------------
+
+DisputeOutcome = Literal["release", "rework"]
+_RESOLVED_STATUS: dict[str, str] = {"release": "resolved_release", "rework": "resolved_reject"}
+
+
+async def _open_dispute(session: AsyncSession, milestone_id: uuid.UUID) -> Dispute | None:
+    return await session.scalar(
+        select(Dispute).where(Dispute.milestone_id == milestone_id, Dispute.status == "open")
+    )
+
+
+async def get_dispute(session: AsyncSession, dispute_id: uuid.UUID, *, lock: bool = False) -> Dispute:
+    query = select(Dispute).where(Dispute.id == dispute_id)
+    if lock:
+        query = query.with_for_update().execution_options(populate_existing=True)
+    dispute = await session.scalar(query)
+    if dispute is None:
+        raise AppError("dispute_not_found", "Dispute not found.", 404)
+    return dispute
+
+
+async def raise_dispute(
+    session: AsyncSession, user: User, milestone_id: uuid.UUID, reason: str, request: Request | None = None
+) -> Dispute:
+    """The project's client disputes a verified milestone: verified -> disputed, dispute `open`.
+
+    The spec's API table also lists the contractor, but its milestone state machine lets only the
+    client dispute (verified -> disputed), so a contractor is refused until that is settled.
+    - 403 dispute_not_allowed (not a client), not_project_member, not_project_client
+    - 404 milestone_not_found; 409 dispute_already_open, milestone_not_verified
+    Audited (dispute.opened, plus milestone.disputed). Does not commit.
+    """
+    if user.role != "client":
+        raise AppError("dispute_not_allowed", "Only the project's client can dispute a milestone.", 403)
+    milestone = await milestones.get_milestone(session, milestone_id, lock=True)
+    project = await projects.require_project_member(session, user, milestone.project_id)
+    if project.client_id != user.id:
+        raise AppError("not_project_client", "Only the project's client can dispute a milestone.", 403)
+    if await _open_dispute(session, milestone_id) is not None:
+        raise AppError("dispute_already_open", "This milestone already has an open dispute.", 409)
+    if milestone.status != MilestoneStatus.VERIFIED:
+        raise AppError(
+            "milestone_not_verified",
+            f"Only a verified milestone can be disputed (this one is '{milestone.status.value}').",
+            409,
+        )
+    dispute = Dispute(
+        project_id=project.id,
+        milestone_id=milestone.id,
+        raised_by=user.id,
+        reason=reason.strip()[:2000],
+        status="open",
+    )
+    session.add(dispute)
+    await session.flush()
+    await milestones.mark_disputed(session, milestone.id, user.id)
+    await audit.record(
+        session,
+        user.id,
+        "dispute.opened",
+        "dispute",
+        dispute.id,
+        after=audit.snapshot(dispute),
+        request=request,
+    )
+    return dispute
+
+
+@dataclass(frozen=True)
+class DisputeResolution:
+    dispute: Dispute
+    resolved: bool  # False: the first ops approval is recorded; a second ops user must confirm
+    release_id: uuid.UUID | None = None  # set when resolved for release
+
+
+async def resolve_dispute(
+    session: AsyncSession,
+    ops_user: User,
+    dispute_id: uuid.UUID,
+    outcome: DisputeOutcome,
+    notes: str,
+    request: Request | None = None,
+) -> DisputeResolution:
+    """Two different ops users resolve a dispute: the first proposes, the second confirms.
+
+    - First call: records the proposal; the dispute stays `open`.
+    - Second call, by another ops user, same outcome:
+      - rework: dispute `resolved_reject`, milestone disputed -> funded (mark_resolved "rework");
+        the contractor fixes the work and claims again
+      - release: dispute `resolved_release`, and a release to the contractor is requested; the
+        milestone becomes released (mark_resolved "release") when escrow confirms, so `released`
+        always means the money moved
+    - 403 forbidden_role (not ops); 404 dispute_not_found
+    - 409 dispute_not_open, second_approval_required (same ops user again), resolution_mismatch
+      (the second ops user chose another outcome: the proposal stands; discuss, then confirm)
+    Audited. Does not commit.
+    """
+    if ops_user.role != "ops":
+        raise AppError("forbidden_role", "Only ops can resolve a dispute.", 403)
+    if outcome not in _RESOLVED_STATUS:
+        raise AppError("invalid_outcome", "Outcome must be 'release' or 'rework'.", 422)
+    dispute = await get_dispute(session, dispute_id, lock=True)
+    if dispute.status != "open":
+        raise AppError("dispute_not_open", f"This dispute is already {dispute.status}.", 409)
+    before = audit.snapshot(dispute)
+    notes = notes.strip()
+
+    if dispute.proposed_by is None:
+        dispute.proposed_outcome = outcome
+        dispute.proposed_by = ops_user.id
+        dispute.proposed_at = datetime.now(UTC)
+        dispute.resolution_notes = notes[:4000]
+        await session.flush()
+        await audit.record(
+            session,
+            ops_user.id,
+            "dispute.resolution_proposed",
+            "dispute",
+            dispute.id,
+            before=before,
+            after=audit.snapshot(dispute),
+            request=request,
+        )
+        return DisputeResolution(dispute, resolved=False)
+
+    if dispute.proposed_by == ops_user.id:
+        raise AppError("second_approval_required", "A different ops user must confirm this resolution.", 409)
+    if dispute.proposed_outcome != outcome:
+        raise AppError(
+            "resolution_mismatch",
+            f"The first ops approval was '{dispute.proposed_outcome}'; both approvals must agree.",
+            409,
+        )
+
+    dispute.status = _RESOLVED_STATUS[outcome]
+    dispute.resolved_by = ops_user.id
+    if notes:
+        dispute.resolution_notes = f"{dispute.resolution_notes or ''}\n---\n{notes}".strip()[:4000]
+    await session.flush()
+    release_id: uuid.UUID | None = None
+    if outcome == "rework":
+        await milestones.mark_resolved(session, dispute.milestone_id, "rework", ops_user.id)
+    else:
+        milestone = await milestones.get_milestone(session, dispute.milestone_id, lock=True)
+        release_id = (await _release_to_contractor(session, milestone, ops_user.id)).release_id
+    await audit.record(
+        session,
+        ops_user.id,
+        "dispute.resolved",
+        "dispute",
+        dispute.id,
+        before=before,
+        after={**audit.snapshot(dispute), "release_id": release_id},
+        request=request,
+    )
+    return DisputeResolution(dispute, resolved=True, release_id=release_id)
+
+
+async def _mark_milestone_released(session: AsyncSession, milestone_id: uuid.UUID) -> None:
+    """approved -> released (system), or disputed -> released for a dispute ops resolved for release."""
+    milestone = await milestones.get_milestone(session, milestone_id, lock=True)
+    if milestone.status != MilestoneStatus.DISPUTED:
+        await milestones.mark_released(session, milestone_id)
+        return
+    dispute = await session.scalar(
+        select(Dispute)
+        .where(Dispute.milestone_id == milestone_id, Dispute.status == "resolved_release")
+        .order_by(Dispute.updated_at.desc())
+        .limit(1)
+    )
+    if dispute is None or dispute.resolved_by is None:
+        raise AppError("dispute_not_resolved", "This disputed milestone was not resolved for release.", 409)
+    await milestones.mark_resolved(session, milestone_id, "release", dispute.resolved_by)
+
+
+async def list_open_disputes(session: AsyncSession, limit: int = 50) -> list[Dispute]:
+    """Open disputes, oldest first (for Abigail's /ops/queue). Each has id, project_id,
+    milestone_id, reason, created_at, and proposed_by once the first ops approval is in."""
+    rows = await session.scalars(
+        select(Dispute).where(Dispute.status == "open").order_by(Dispute.created_at, Dispute.id).limit(limit)
     )
     return list(rows)
 

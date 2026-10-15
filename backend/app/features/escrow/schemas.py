@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -53,3 +54,42 @@ class LedgerEntryOut(BaseModel):
 class LedgerPage(BaseModel):
     items: list[LedgerEntryOut]
     next_cursor: str | None
+
+
+class DisputeCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reason: str = Field(min_length=3, max_length=2000, description="What is wrong with the work")
+
+
+class DisputeResolve(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    outcome: Literal["release", "rework"] = Field(
+        description="release: the contractor is paid; rework: back to funded, the contractor fixes it"
+    )
+    notes: str = Field(min_length=1, max_length=2000)
+
+
+class DisputeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    project_id: uuid.UUID
+    milestone_id: uuid.UUID
+    raised_by: uuid.UUID
+    reason: str
+    status: str = Field(description="open, resolved_release or resolved_reject")
+    proposed_outcome: str | None = Field(description="The first ops approval's outcome")
+    proposed_by: uuid.UUID | None
+    proposed_at: datetime | None
+    resolution_notes: str | None
+    resolved_by: uuid.UUID | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class DisputeResolutionOut(BaseModel):
+    dispute: DisputeOut
+    resolved: bool = Field(description="False: first ops approval recorded; a second ops user must confirm")
+    release_id: uuid.UUID | None = Field(description="The release requested when resolved for release")
