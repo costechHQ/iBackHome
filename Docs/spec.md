@@ -111,30 +111,34 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | Table | Feature | Key fields |
 | --- | --- | --- |
 | `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status (`active`, `suspended`), timezone, country |
-| `otp_codes` | base/users | identifier (E.164 phone or lower-case email), channel (`sms`, `email`), code_hash (HMAC-SHA256, never the code), expires_at, attempts, consumed_at, requested_ip |
+| `otp_codes` | base/users | identifier (E.164 phone or lower-case email), channel (`sms`, `whatsapp`, `email`), code_hash (HMAC-SHA256, never the code), expires_at, attempts, consumed_at, requested_ip |
 | `refresh_tokens` | base/users | user → users, token_hash (SHA-256, unique), expires_at, used_at, revoked_at, replaced_by → refresh_tokens |
-| `supervisor_profiles` | supervision | user → users, registration_body, registration_no, nin_verified, guarantor_1, guarantor_2, vetting_status (`pending`, `approved`, `rejected`), rating |
+| `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating |
+| `supervisor_relations` | supervision | supervisor → users, contractor_phone (E.164), relationship (declared relatives: a related supervisor can't be assigned to, or spot-check, that contractor's projects) |
 | `suppliers` | suppliers | name, owner → users, address, location (POINT), verified, paystack_recipient_code |
 | `projects` | projects | client → users, contractor → users, supervisor → users, title, address, status (`draft`, `boq_review`, `active`, `paused`, `completed`), currency, budget_minor |
 | `sites` | projects | project → projects, location (POINT), geofence (POLYGON, SRID 4326) |
 | `boq_items` | projects | project → projects, milestone → milestones (set when the BoQ is approved), milestone_sequence, milestone_name, line_no, description, unit, quantity (3 dp), unit_price_minor, total_minor, currency |
 | `boq_approvals` | projects | project → projects, user → users, role (`client`, `contractor`, `ops`; one each), approved_at |
-| `milestones` | milestones | project → projects, sequence, name, amount_minor, status (see state machines), claimed_at, verified_at, approved_at |
-| `evidence` | evidence | project → projects, milestone → milestones (nullable), captured_by → users, kind (`photo`, `video`), storage_key, captured_at, latitude, longitude, accuracy_m, device_id, signature, phash, status (`pending_checks`, `accepted`, `flagged`, `rejected`), reject_reason |
+| `milestones` | milestones | project → projects, sequence, name, amount_minor, currency, status (see state machines), funded_at, claimed_at, verified_at, approved_at, released_at |
+| `evidence` | evidence | project → projects, milestone → milestones (nullable), captured_by → users, captured_by_role (`supervisor`, `contractor`), kind (`photo`, `video`), storage_key (unique), content_type, size_bytes, file_sha256, captured_at (phone clock), gps_time (GPS fix), latitude, longitude, accuracy_m, device_id, signature, phash, status (`pending_checks`, `accepted`, `flagged`, `rejected`), reject_reason |
 | `devices` | evidence | user → users, device_id, public_key, registered_at, revoked_at |
 | `verifications` | milestones | milestone → milestones, supervisor → users, checklist (JSONB), notes, decision (`verified`, `rejected`) |
-| `escrow_accounts` | escrow | project → projects, provider, provider_account_ref, balance_minor (cached; ledger is source of truth) |
+| `escrow_accounts` | escrow | project → projects (unique), provider, provider_account_ref, currency, balance_minor (cached; ledger is source of truth) |
 | `escrow_releases` | escrow | milestone → milestones, amount_minor, status, provider_ref, requested_at, released_at |
 | `disputes` | escrow | project → projects, milestone → milestones, raised_by → users, reason, status (`open`, `resolved_release`, `resolved_reject`), resolution_notes, resolved_by → users |
 | `ledger_entries` | base/payments | transaction_id, account (e.g. `client_funding`, `escrow`, `contractor_payable`, `supplier_payable`, `fees`), direction (`debit`, `credit`), amount_minor, currency, fx_rate, ref_type, ref_id |
-| `payment_events` | base/payments | provider (`stripe`, `paystack`, `escrow`), event_id (unique), payload (JSONB), processed_at |
-| `price_index_entries` | suppliers | item, unit, price_minor, supplier → suppliers, observed_at |
-| `material_orders` | suppliers | project → projects, supplier → suppliers, items (JSONB), total_minor, status (`requested`, `approved`, `delivered`, `paid`, `cancelled`) |
+| `payment_events` | base/payments | provider (`stripe`, `paystack`, `escrow`), event_id (unique per provider; Paystack sends none, so ours is `<event>:<data.id>`), event_type, payload (JSONB), processed_at |
+| `payout_recipients` | base/payments | user → users or supplier → suppliers (exactly one), provider (`paystack`), recipient_code (unique), bank_code, bank_name, account_name, account_number_masked (`******1234`; the full number is never stored), currency |
+| `payouts` | base/payments | recipient → payout_recipients, provider, reference (ours, unique, so a retry never pays twice), amount_minor, currency, reason, status (`pending`, `success`, `failed`, `reversed`), provider_transfer_code, failure_reason, completed_at |
+| `price_index_entries` | price_index | item_key, item, unit, price_minor, currency, supplier_name, supplier → suppliers (nullable), observed_on, source |
+| `material_orders` | suppliers | project → projects, supplier → suppliers, requested_by → users, items (JSONB; quantity as a decimal string), total_minor (computed by the server), currency, status (`requested`, `approved`, `delivered`, `paid`, `cancelled`), approved_by → users, approved_at |
 | `deliveries` | suppliers | order → material_orders, confirmed_by → users, quantities (JSONB), evidence_ids, confirmed_at |
-| `spot_checks` | supervision | project → projects, supervisor → users, scheduled_for, completed_at, findings |
-| `reports` | reports | project → projects, week_start, body_md, pdf_key, evidence_ids, status (`draft`, `reviewed`, `sent`), sent_at |
-| `agent_runs` | agents | agent, user → users, input, tool_calls (JSONB), output, created_at |
+| `spot_checks` | supervision | project → projects, supervisor → users, scheduled_by → users, scheduled_for, completed_at, findings |
+| `reports` | reports | project → projects, week_start (a Monday; one report per project per week), body_md, pdf_key, evidence_ids, status (`draft`, `reviewed`, `sent`), sent_at |
+| `agent_runs` | agents | agent, user → users (empty for scheduled runs), input (JSONB: system prompt, prompt, tools), tool_calls (JSONB), output, model (exact version), status (`succeeded`, `failed`), error, duration_ms, created_at |
 | `audit_log` | base/audit | actor → users, action, object_type, object_id, before (JSONB), after (JSONB), ip, device_id, at — insert only |
+| `idempotency_keys` | core | key, scope, status_code, response (the saved response a retried write replays) |
 | `notifications` | base/notifications | user → users, channel, template, payload, status, provider_ref, sent_at |
 
 **Indexes that matter**: GiST on `sites.geofence`; unique on `payment_events (provider, event_id)`; btree on `evidence.phash` plus a BK-tree or prefix index for near-match search (see evidence integrity); `ledger_entries (ref_type, ref_id)`.
@@ -428,6 +432,7 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/projects/{id}/boq/approve` | client, contractor, ops | Approve BoQ; project goes `active` when all three approve |
 | POST | `/projects/{id}/supervisor` | ops | Assign a vetted supervisor |
 | POST | `/devices` | supervisor, contractor | Register device public key |
+| POST | `/devices/{id}/revoke` | the device's owner | Revoke a device key; its captures no longer verify |
 | POST | `/evidence/upload-url` | supervisor, contractor | Get a pre-signed upload URL |
 | POST | `/evidence` | supervisor, contractor | Submit capture metadata + signature after upload; runs checks |
 | GET | `/projects/{id}/evidence` | parties, ops | Evidence gallery (signed read URLs) |
@@ -446,7 +451,10 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | GET | `/projects/{id}/reports` | parties, ops | Weekly reports |
 | POST | `/reports/{id}/review` | supervisor | Mark draft reviewed; queues send |
 | GET | `/ops/queue` | ops | Vetting, flagged evidence, disputes |
+| PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting; view own profile |
 | POST | `/supervisors/{id}/vetting` | ops | Approve or reject vetting |
+| GET | `/supervisors/me/spot-checks` | supervisor | Visits this supervisor still has to make |
+| POST | `/spot-checks/{id}/complete` | supervisor (the visitor) | Record findings |
 | POST | `/projects/{id}/spot-checks` | ops | Schedule an unannounced visit |
 | GET | `/ops/audit` | ops | Search audit log |
 | POST | `/webhooks/stripe`, `/webhooks/paystack`, `/webhooks/escrow` | providers | Signature-verified webhooks |
@@ -559,6 +567,7 @@ Each agent is an LLM with tool calling, where every tool is an existing iBackHom
 **Guardrails (enforced in code, not only in prompts)**
 
 - Agent service tokens carry an allow-list of tools; the API rejects any other call. No agent token can call approve, release, resolve or pay endpoints.
+- Each agent acts as its own user with the `ops` role (no separate agent role); the sign-in check (`users.current_user`) lets a service token through only to the routes on its list, and refuses one whose user isn't an active ops user. Tokens last 10 minutes.
 - The WhatsApp sender is matched to a user by phone number; tools are scoped to that user's projects.
 - Numbers about money in any agent output must come from a `get_ledger` result in the same run; the report template fills money fields from data, not from the model.
 - Each report cites the evidence IDs it used; the dashboard links them.
