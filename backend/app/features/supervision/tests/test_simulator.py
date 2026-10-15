@@ -119,7 +119,12 @@ async def test_full_run_makes_projects_active_and_every_photo_passes_the_real_ch
         )
         status = next(p["status"] for p in page.json()["items"] if p["title"] == project_seed.title)
         assert status == "active"
-    assert len(summary.done) == 3 * len(seed.PROJECTS)
+    # BoQ approval happens once; on a database a previous run already activated, it's reported as skipped.
+    boq_lines = [line for line in summary.done + summary.skipped if "BoQ" in line]
+    assert len(boq_lines) == len(seed.PROJECTS)
+    assert sum("signed photos" in line or "spot check" in line for line in summary.done) == 2 * len(
+        seed.PROJECTS
+    )
     assert any("Stripe" in line for line in summary.skipped)
 
 
