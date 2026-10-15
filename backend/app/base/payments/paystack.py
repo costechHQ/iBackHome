@@ -1,6 +1,7 @@
 """Paystack API client (NGN payouts), behind one small interface. Owner: Gabriel.
 
-Only the two calls payouts need: create a transfer recipient, and start a transfer. Uses httpx
+Only the calls payouts need: create a transfer recipient, start a transfer, and look a transfer up
+by our reference (to learn what happened when Paystack's answer to a transfer was lost). Uses httpx
 with the secret key from PAYSTACK_SECRET_KEY (sk_test_... in test mode). Tests mock the HTTP
 layer with respx, so they never reach Paystack.
 
@@ -50,6 +51,8 @@ class PaystackClient(Protocol):
         self, amount_minor: int, recipient_code: str, reference: str, reason: str
     ) -> TransferResult: ...
 
+    async def verify_transfer(self, reference: str) -> TransferResult | None: ...
+
 
 def _transfer_status(raw: object) -> TransferStatus:
     # Paystack also answers "otp" (OTP confirmation is switched on in the dashboard; switch it off
@@ -66,16 +69,22 @@ class HttpPaystackClient:
         self._secret_key = secret_key
         self._base_url = base_url.rstrip("/")
 
-    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+    async def _send(self, method: str, path: str, payload: dict[str, Any] | None = None) -> httpx.Response:
         try:
             async with httpx.AsyncClient(
                 base_url=self._base_url,
                 timeout=TIMEOUT_SECONDS,
                 headers={"Authorization": f"Bearer {self._secret_key}"},
             ) as http:
-                response = await http.post(path, json=payload)
+                return await http.request(method, path, json=payload)
         except httpx.HTTPError as exc:
             raise AppError("paystack_unavailable", "Paystack could not be reached. Try again.", 502) from exc
+
+    async def _post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._data(await self._send("POST", path, payload))
+
+    @staticmethod
+    def _data(response: httpx.Response) -> dict[str, Any]:
         if response.status_code >= 500:
             raise AppError(
                 "paystack_unavailable", f"Paystack answered {response.status_code}. Try again.", 502
@@ -130,6 +139,18 @@ class HttpPaystackClient:
                 "reason": reason,
             },
         )
+        return TransferResult(
+            reference=str(data.get("reference") or reference),
+            transfer_code=str(data.get("transfer_code") or ""),
+            status=_transfer_status(data.get("status")),
+        )
+
+    async def verify_transfer(self, reference: str) -> TransferResult | None:
+        """The transfer Paystack has under our reference, or None if it never received one."""
+        response = await self._send("GET", f"/transfer/verify/{reference}")
+        if response.status_code == 404:
+            return None
+        data = self._data(response)
         return TransferResult(
             reference=str(data.get("reference") or reference),
             transfer_code=str(data.get("transfer_code") or ""),

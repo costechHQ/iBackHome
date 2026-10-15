@@ -4,7 +4,7 @@ One row per notify() / notify_address() call: who it was for, the channel that c
 the last one tried), the provider's message id, and why earlier channels failed.
 
 Revision ID: create_notifications
-Revises: create_payouts
+Revises: create_disputes
 Create Date: 2026-10-15
 """
 
@@ -15,7 +15,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "create_notifications"
-down_revision: str | Sequence[str] | None = "create_payouts"
+down_revision: str | Sequence[str] | None = "create_disputes"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

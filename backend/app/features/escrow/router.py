@@ -5,22 +5,34 @@ Importing `handlers` registers the Stripe funding webhook handler.
 """
 
 import uuid
+from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 
 from app.base.payments.stripe_checkout import CheckoutGateway, get_checkout_gateway
 from app.base.users import service as users
 from app.base.users.models import User
+from app.core import pagination
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.escrow import handlers, service  # noqa: F401  (handlers: registers webhook handlers)
-from app.features.escrow.schemas import FundingCheckoutOut, FundingCreate
+from app.features.escrow.schemas import (
+    DisputeCreate,
+    DisputeOut,
+    DisputeResolutionOut,
+    DisputeResolve,
+    FundingCheckoutOut,
+    FundingCreate,
+    LedgerEntryOut,
+    LedgerPage,
+)
 
 router = APIRouter(tags=["escrow"])
 
 ClientUser = Annotated[User, Depends(users.require_role("client"))]
+OpsUser = Annotated[User, Depends(users.require_role("ops"))]
 GatewayDep = Annotated[CheckoutGateway, Depends(get_checkout_gateway)]
 
 
@@ -69,5 +81,71 @@ async def create_funding(
         fx_as_of=quote.fx_as_of,
     ).model_dump(mode="json")
     await remember(session, key, scope, 201, body)
+    await session.commit()
+    return body
+
+
+@router.get("/projects/{project_id}/ledger", response_model=LedgerPage)
+async def project_ledger(
+    project_id: uuid.UUID,
+    session: SessionDep,
+    user: users.CurrentUserDep,
+    since: Annotated[datetime | None, Query(description="Inclusive, ISO 8601 date or time")] = None,
+    until: Annotated[datetime | None, Query(description="Exclusive, ISO 8601")] = None,
+    cursor: str | None = Query(default=None, max_length=200),
+    limit: int = Query(default=pagination.DEFAULT_LIMIT, ge=1, le=pagination.MAX_LIMIT),
+) -> LedgerPage:
+    """The project's client or ops: funding, releases and payouts, newest first (`?cursor=&limit=`)."""
+    entries, next_cursor = await service.project_ledger(
+        session, user, project_id, since=since, until=until, cursor=cursor, limit=limit
+    )
+    return LedgerPage(items=[LedgerEntryOut.model_validate(e) for e in entries], next_cursor=next_cursor)
+
+
+@router.post("/milestones/{milestone_id}/disputes", response_model=DisputeOut, status_code=201)
+async def raise_dispute(
+    milestone_id: uuid.UUID,
+    data: DisputeCreate,
+    request: Request,
+    session: SessionDep,
+    user: users.CurrentUserDep,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """Client: dispute a verified milestone. It becomes `disputed`; nothing is released until resolved."""
+    scope = f"POST /milestones/{milestone_id}/disputes by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    dispute = await service.raise_dispute(session, user, milestone_id, data.reason, request)
+    body = DisputeOut.model_validate(dispute).model_dump(mode="json")
+    await remember(session, key, scope, 201, body)
+    await session.commit()
+    return body
+
+
+@router.post("/disputes/{dispute_id}/resolve", response_model=DisputeResolutionOut)
+async def resolve_dispute(
+    dispute_id: uuid.UUID,
+    data: DisputeResolve,
+    request: Request,
+    session: SessionDep,
+    user: OpsUser,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """Ops: resolve a dispute. Needs two different ops users choosing the same outcome; the first
+    call records a proposal (`resolved: false`), the second resolves it."""
+    scope = f"POST /disputes/{dispute_id}/resolve by {user.id}"
+    saved: JSONResponse | None = await replay_or_none(session, key, scope)
+    if saved is not None:
+        return saved
+    result = await service.resolve_dispute(session, user, dispute_id, data.outcome, data.notes, request)
+    await session.flush()
+    await session.refresh(result.dispute)
+    body = DisputeResolutionOut(
+        dispute=DisputeOut.model_validate(result.dispute),
+        resolved=result.resolved,
+        release_id=result.release_id,
+    ).model_dump(mode="json")
+    await remember(session, key, scope, 200, body)
     await session.commit()
     return body

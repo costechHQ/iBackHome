@@ -23,6 +23,7 @@ from app.base.payments.tests.webhook_helpers import PAYSTACK_SECRET, body, payst
 from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.projects.tests.factories import make_user
+from app.features.suppliers.models import Supplier
 
 API = "https://api.paystack.co"
 ACCOUNT_NUMBER = "0123456789"
@@ -252,7 +253,10 @@ async def test_paystack_down_is_a_502(db_session: AsyncSession, paystack: respx.
 
 async def test_supplier_recipient_has_no_user(db_session: AsyncSession, paystack: respx.MockRouter) -> None:
     paystack.post("/transferrecipient").mock(return_value=recipient_ok("RCP_supplier01"))
-    supplier_id = uuid.uuid4()
+    supplier = Supplier(name="Enugu Blocks Ltd", verified=True)
+    db_session.add(supplier)
+    await db_session.flush()
+    supplier_id = supplier.id
 
     recipient = await register_payout_recipient(
         db_session,
@@ -362,6 +366,10 @@ async def test_transfer_that_paystack_refuses_raises(
     _, recipient = await contractor_recipient(db_session, paystack)
     paystack.post("/transfer").mock(
         return_value=httpx.Response(400, json={"status": False, "message": "Your balance is not enough"})
+    )
+    # Refused, so we look the reference up: Paystack has no such transfer.
+    paystack.get(url__regex=r"/transfer/verify/.+").mock(
+        return_value=httpx.Response(404, json={"status": False, "message": "Transfer not found"})
     )
 
     with pytest.raises(AppError) as error:

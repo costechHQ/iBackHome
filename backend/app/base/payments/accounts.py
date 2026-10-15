@@ -58,3 +58,8 @@ def escrow_payouts(currency: str) -> str:
 def fees(currency: str) -> str:
     """iBackHome's own fee income."""
     return f"fees:{_cur(currency)}"
+
+
+def project_prefixes(project_id: uuid.UUID) -> list[str]:
+    """Prefixes of every account that belongs to one project (any currency), for ledger listings."""
+    return [f"client_funding:{project_id}:", f"escrow:{project_id}:"]

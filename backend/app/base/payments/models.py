@@ -87,8 +87,9 @@ class PayoutRecipient(TimestampedBase):
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=True
     )
-    # suppliers has no table yet (features/suppliers); add the foreign key when it lands.
-    supplier_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True, nullable=True)
+    supplier_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("suppliers.id"), index=True, nullable=True
+    )
     provider: Mapped[str] = mapped_column(String(20), nullable=False, default="paystack")
     recipient_code: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     bank_code: Mapped[str] = mapped_column(String(20), nullable=False)

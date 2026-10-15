@@ -71,6 +71,12 @@ def read_object(storage_key: str) -> bytes | None:
     return data
 
 
+def write_object(storage_key: str, data: bytes, content_type: str) -> None:
+    get_client().put_object(
+        Bucket=get_settings().storage_bucket, Key=storage_key, Body=data, ContentType=content_type
+    )
+
+
 def delete_object(storage_key: str) -> None:
     get_client().delete_object(Bucket=get_settings().storage_bucket, Key=storage_key)
 

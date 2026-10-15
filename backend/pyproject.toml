@@ -59,6 +59,7 @@ abigail = [
     "cryptography>=43",
     "geoalchemy2>=0.15",
     "moto[s3]>=5",
+    "pillow>=10.4",
 ]
 christopher = [
     "geoalchemy2>=0.15",
@@ -78,6 +79,8 @@ gabriel = [
     "stripe>=10.0",
 ]
 james = [
+    "boto3>=1.35",
+    "cryptography>=43",
     "google-genai>=2.0,<3",
     "imagehash>=4.3",
     "markdown>=3.7",

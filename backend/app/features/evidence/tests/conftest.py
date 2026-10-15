@@ -10,6 +10,7 @@ from typing import Any
 
 import boto3
 import pytest
+from botocore.client import Config
 from moto import mock_aws
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,7 +33,7 @@ def s3(monkeypatch: pytest.MonkeyPatch) -> Iterator[Any]:
     for name in ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"):
         monkeypatch.setenv(name, "test")
     with mock_aws():
-        client = boto3.client("s3", region_name="us-east-1")
+        client = boto3.client("s3", region_name="us-east-1", config=Config(signature_version="s3v4"))
         client.create_bucket(Bucket=get_settings().storage_bucket)
         monkeypatch.setattr(storage, "get_client", lambda: client)
         yield client
@@ -127,3 +128,58 @@ def evidence_body(world: World, key: str, body: bytes, **overrides: Any) -> dict
         "signature": "c2lnbmF0dXJl",
     }
     return data | overrides
+
+
+async def add_evidence(
+    session: AsyncSession,
+    world: World,
+    *,
+    role: str = "supervisor",
+    status: str = "accepted",
+    kind: str = "photo",
+    milestone: Milestone | None = None,
+    data: bytes | None = None,
+    s3: Any = None,
+    reason: str | None = None,
+    no_milestone: bool = False,
+    created_at: datetime | None = None,
+) -> Any:
+    """An evidence row saved directly (as if the checks had already run), optionally with a stored file."""
+    from app.features.evidence.models import Evidence
+
+    who = world.supervisor if role == "supervisor" else world.contractor
+    key = f"evidence/{world.project.id}/{uuid.uuid4()}.{'jpg' if kind == 'photo' else 'mp4'}"
+    if s3 is not None:
+        body = data if data is not None else secrets.token_bytes(64)
+        s3.put_object(
+            Bucket=get_settings().storage_bucket,
+            Key=key,
+            Body=body,
+            ContentType="image/jpeg" if kind == "photo" else "video/mp4",
+        )
+    row = Evidence(
+        project_id=world.project.id,
+        milestone_id=None if no_milestone else (milestone or world.milestone).id,
+        captured_by=who.id,
+        captured_by_role=role,
+        kind=kind,
+        storage_key=key,
+        content_type="image/jpeg" if kind == "photo" else "video/mp4",
+        size_bytes=64,
+        file_sha256="a" * 64,
+        captured_at=datetime(2026, 10, 14, 9, 30, tzinfo=UTC),
+        gps_time=datetime(2026, 10, 14, 9, 30, tzinfo=UTC),
+        latitude=6.4483,
+        longitude=7.5139,
+        accuracy_m=5,
+        device_id="phone-1",
+        signature="c2ln",
+        status=status,
+        reject_reason=reason,
+    )
+    if created_at is not None:
+        row.created_at = created_at  # a transaction shares one now(), so tests that need an order set it
+    session.add(row)
+    await session.flush()
+    await session.refresh(row)
+    return row

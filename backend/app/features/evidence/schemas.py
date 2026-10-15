@@ -75,3 +75,21 @@ class EvidenceOut(BaseModel):
     status: str
     reject_reason: str | None
     created_at: datetime
+
+
+class GalleryItem(EvidenceOut):
+    """A capture plus a short-lived link to view it (clients get an EXIF-stripped copy)."""
+
+    read_url: str
+    read_url_expires_in: int
+    is_client_copy: bool
+
+
+class GalleryPage(BaseModel):
+    items: list[GalleryItem]
+    next_cursor: str | None
+
+
+class DecisionIn(BaseModel):
+    decision: Literal["accepted", "rejected"]
+    notes: str = Field(default="", max_length=1000)

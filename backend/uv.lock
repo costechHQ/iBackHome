@@ -586,6 +586,7 @@ abigail = [
     { name = "cryptography" },
     { name = "geoalchemy2" },
     { name = "moto", extra = ["s3"] },
+    { name = "pillow" },
 ]
 christopher = [
     { name = "geoalchemy2" },
@@ -605,6 +606,8 @@ gabriel = [
     { name = "stripe" },
 ]
 james = [
+    { name = "boto3" },
+    { name = "cryptography" },
     { name = "google-genai" },
     { name = "imagehash" },
     { name = "markdown" },
@@ -635,6 +638,7 @@ abigail = [
     { name = "cryptography", specifier = ">=43" },
     { name = "geoalchemy2", specifier = ">=0.15" },
     { name = "moto", extras = ["s3"], specifier = ">=5" },
+    { name = "pillow", specifier = ">=10.4" },
 ]
 christopher = [
     { name = "geoalchemy2", specifier = ">=0.15" },
@@ -654,6 +658,8 @@ gabriel = [
     { name = "stripe", specifier = ">=10.0" },
 ]
 james = [
+    { name = "boto3", specifier = ">=1.35" },
+    { name = "cryptography", specifier = ">=43" },
     { name = "google-genai", specifier = ">=2.0,<3" },
     { name = "imagehash", specifier = ">=4.3" },
     { name = "markdown", specifier = ">=3.7" },
