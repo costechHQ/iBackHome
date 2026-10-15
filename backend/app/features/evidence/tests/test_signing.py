@@ -11,22 +11,23 @@ from app.features.evidence.signing import canonical_payload, verify_signature
 
 SHA = "a" * 64
 WHEN = datetime(2026, 10, 12, 9, 30, 15, 123000, tzinfo=UTC)
+GPS = datetime(2026, 10, 12, 9, 30, 14, 900000, tzinfo=UTC)
 PROJECT = "11111111-2222-3333-4444-555555555555"
 
 # Fixed test vector, also published in SIGNING.md so the Flutter side can check its own code.
 VECTOR_PAYLOAD = (
     b"ibh-evidence-v1|"
     + SHA.encode()
-    + b"|2026-10-12T09:30:15.123Z|6.459500|7.500450|8.5|"
+    + b"|2026-10-12T09:30:15.123Z|2026-10-12T09:30:14.900Z|6.459500|7.500450|8.5|"
     + PROJECT.encode()
     + b"|device-abc"
 )
 VECTOR_PUBLIC_KEY = (
-    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE09/F+zVmvjraWb3AGIxoKXh8b0seh1E/"
-    "nYwfXjRJTNw95cTyHdqezjjq9weoKcx9jzH399/8mn27HGM2EW4KBQ=="
+    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9IrFmcVSdNmjuoJRI4im7R54NCLHk7pRij"
+    "3SkCrTwKoqDb22YkZgbaF4ZkmK4/W5uMRNHzkzeu3GDGYynKPJEA=="
 )
 VECTOR_SIGNATURE = (
-    "MEQCIHdipaiBUfxQjuwTK67nuRTZo8yqV/wxVDyFNNMv3GHXAiBj98avFkjoopKzPpn4DKvnJiayGdbuf4w5VhComvRtqA=="
+    "MEQCIBAxdJmFKYDGJpYNWPEQJy9B5PQAWMfH/ifm0uPsn4XHAiBLIQavipASpeM2WEH7BMlgYvtLtFQtYZ43t8oeGTovAg=="
 )
 
 
@@ -34,6 +35,7 @@ def payload(**overrides: object) -> bytes:
     args: dict[str, object] = {
         "file_sha256": SHA,
         "captured_at": WHEN,
+        "gps_time": GPS,
         "lat": 6.4595,
         "lon": 7.50045,
         "accuracy_m": 8.5,
@@ -66,7 +68,7 @@ def test_payload_matches_documented_vector() -> None:
 def test_payload_is_deterministic_and_field_order_is_fixed() -> None:
     assert payload() == payload()
     assert payload().decode().split("|")[0] == "ibh-evidence-v1"
-    assert len(payload().decode().split("|")) == 8
+    assert len(payload().decode().split("|")) == 9
 
 
 @pytest.mark.parametrize(
@@ -74,6 +76,7 @@ def test_payload_is_deterministic_and_field_order_is_fixed() -> None:
     [
         {"file_sha256": "b" * 64},
         {"captured_at": WHEN + timedelta(milliseconds=1)},
+        {"gps_time": GPS + timedelta(milliseconds=1)},
         {"lat": 6.4596},
         {"lon": 7.50046},
         {"accuracy_m": 8.6},
@@ -105,6 +108,7 @@ def test_negative_zero_is_not_signed_as_minus_zero() -> None:
         {"file_sha256": "A" * 64},
         {"file_sha256": "abc"},
         {"captured_at": datetime(2026, 10, 12, 9, 30)},
+        {"gps_time": datetime(2026, 10, 12, 9, 30)},
         {"lat": 91.0},
         {"lon": -181.0},
         {"accuracy_m": -1.0},
