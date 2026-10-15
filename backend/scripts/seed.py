@@ -3,6 +3,10 @@
 v1 (backend Day 2): one user per role, with the supervisor already vetted.
 v2 (backend Day 3): a second vetted supervisor, and two Enugu projects with sites, geofences and
                     a supervisor each. Projects stay in `draft` (the BoQ comes from the simulator).
+v3 (backend Day 5): one active `ops` user per AI agent (agents.service.AGENTS), with the fixed id
+                    agents.service.agent_user_id() so each agent can sign in with its service token.
+
+Refuses to run when ENVIRONMENT=production.
 
 Run from backend/ after `uv run alembic upgrade head` (or inside the api container):
 
@@ -25,8 +29,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # so `app` imports
 from sqlalchemy import select  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
+from app.base.users import service as users  # noqa: E402
 from app.base.users.models import Role, User, UserStatus  # noqa: E402
+from app.core.config import get_settings  # noqa: E402
 from app.core.db import SessionLocal  # noqa: E402
+from app.features.agents import service as agents  # noqa: E402
 from app.features.projects import service as projects  # noqa: E402
 from app.features.projects.models import Project  # noqa: E402
 from app.features.projects.schemas import Pin, ProjectCreate, SiteSet  # noqa: E402
@@ -113,6 +120,21 @@ async def upsert_user(session: AsyncSession, seed: SeedUser) -> User:
     return user
 
 
+async def upsert_agent_user(session: AsyncSession, agent_name: str) -> User:
+    """The agent's own active ops user, at its fixed id. Its .invalid email can never get a login code."""
+    user = await users.get_user(session, agents.agent_user_id(agent_name))
+    if user is None:
+        user = User(id=agents.agent_user_id(agent_name), email=agents.agent_email(agent_name))
+        session.add(user)
+    user.role = Role.OPS.value
+    user.full_name = f"{agent_name.replace('_', ' ').capitalize()} agent"
+    user.country = "NG"
+    user.timezone = "Africa/Lagos"
+    user.status = UserStatus.ACTIVE.value
+    await session.flush()
+    return user
+
+
 async def vet_supervisor(session: AsyncSession, supervisor: User, ops: User, registration_no: str) -> None:
     if await supervision.is_vetted(session, supervisor.id):
         return
@@ -160,18 +182,27 @@ async def upsert_project(session: AsyncSession, seed: SeedProject, users: dict[s
     return project
 
 
+def refuse_production() -> None:
+    if get_settings().environment == "production":
+        raise SystemExit("seed.py refuses to run with ENVIRONMENT=production: it creates test accounts.")
+
+
 async def seed() -> None:
+    refuse_production()
     async with SessionLocal() as session:
-        users = {seed.key: await upsert_user(session, seed) for seed in USERS}
-        await vet_supervisor(session, users["supervisor"], users["ops"], "SEED-0001")
-        await vet_supervisor(session, users["supervisor_2"], users["ops"], "SEED-0002")
-        seeded = [await upsert_project(session, seed, users) for seed in PROJECTS]
+        people = {seed.key: await upsert_user(session, seed) for seed in USERS}
+        await vet_supervisor(session, people["supervisor"], people["ops"], "SEED-0001")
+        await vet_supervisor(session, people["supervisor_2"], people["ops"], "SEED-0002")
+        seeded = [await upsert_project(session, seed, people) for seed in PROJECTS]
+        agent_users = [await upsert_agent_user(session, name) for name in agents.AGENTS]
         await session.commit()
 
     for user_seed in USERS:
         print(f"{user_seed.role.value:<11} {user_seed.full_name:<26} {user_seed.phone or user_seed.email}")
+    for agent_user in agent_users:
+        print(f"ops (agent) {agent_user.full_name:<26} {agent_user.id}")
     for project, project_seed in zip(seeded, PROJECTS, strict=True):
-        print(f"project     {project.title:<40} supervisor: {users[project_seed.supervisor].full_name}")
+        print(f"project     {project.title:<40} supervisor: {people[project_seed.supervisor].full_name}")
 
 
 if __name__ == "__main__":
