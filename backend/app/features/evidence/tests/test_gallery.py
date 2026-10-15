@@ -21,6 +21,7 @@ def jpeg_with_exif(orientation: int = 1, size: tuple[int, int] = (120, 80)) -> b
     exif[0x0110] = "Model X"  # Model
     exif[0x013B] = "Grace Okafor"  # Artist: a person's name
     exif[0x0112] = orientation
+    exif[0x8825] = {1: "N", 2: (6.0, 27.0, 0.0), 3: "E", 4: (7.0, 29.0, 0.0)}  # GPS: where the phone was
     out = io.BytesIO()
     image.save(out, "JPEG", exif=exif)
     return out.getvalue()
@@ -43,6 +44,7 @@ def test_strip_exif_removes_every_tag() -> None:
     assert dict(Image.open(io.BytesIO(original)).getexif()), "the test photo should carry EXIF"
     stripped = media.strip_exif(original)
     assert dict(Image.open(io.BytesIO(stripped)).getexif()) == {}
+    assert not Image.open(io.BytesIO(stripped)).getexif().get_ifd(0x8825)
     assert b"Acme Cameras" not in stripped and b"Grace Okafor" not in stripped
 
 
@@ -94,9 +96,13 @@ async def test_client_sees_only_accepted_evidence_as_exif_free_copies(
 
     copy = storage.read_object(media.client_copy_key(accepted.storage_key))
     assert copy is not None
-    assert dict(Image.open(io.BytesIO(copy)).getexif()) == {}
+    copy_exif = Image.open(io.BytesIO(copy)).getexif()
+    assert dict(copy_exif) == {}
+    assert not copy_exif.get_ifd(0x8825)  # no GPS position
+    assert b"Acme Cameras" not in copy and b"Model X" not in copy  # no phone make or model
     # The original is untouched, so supervisors and ops still see the full photo.
-    assert dict(Image.open(io.BytesIO(storage.read_object(accepted.storage_key) or b"")).getexif())
+    original_exif = Image.open(io.BytesIO(storage.read_object(accepted.storage_key) or b"")).getexif()
+    assert dict(original_exif) and original_exif.get_ifd(0x8825)
 
 
 async def test_the_client_copy_is_made_once_and_reused(

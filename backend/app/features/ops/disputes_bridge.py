@@ -1,5 +1,8 @@
 """What the ops queue needs from Gabriel's disputes: the ones still open.
 
+TODO(Gabriel): expose `escrow.list_open_disputes(session, limit)` in `features/escrow/service.py` and
+swap the body of `list_open` below to call it. Until then this returns an empty list.
+
 Gabriel's disputes (his Day 5) are not on main yet, and until they are there cannot be any open
 dispute, so this honestly returns an empty list. When his code is merged, replace the body with a
 call to his service (for example `escrow.list_open_disputes(session)`) and map it to `OpenDispute`.
