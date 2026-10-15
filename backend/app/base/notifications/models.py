@@ -1,4 +1,4 @@
-"""The notifications table. Owner: Lilian.
+"""The notifications table.
 
 One row per notify() call: who it was for, which channel finally carried it (or the last one
 tried, if every channel failed), the provider's message id, and why earlier channels failed.

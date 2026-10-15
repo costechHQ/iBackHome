@@ -5,7 +5,8 @@ Every function takes the database session first and does NOT commit: the caller 
 so the milestone change, ledger entries and audit entry land together or not at all.
 
 Every successful transition writes an audit entry ("milestone.<new status>") in the same
-transaction, with the milestone before and after.
+transaction, with the milestone before and after. Claimed, verified, rejected and released moves
+also queue messages to the people involved, sent only after the caller commits (notices.py).
 
 Used by:
 - Christopher (BoQ approval): create_for_project()
@@ -30,7 +31,7 @@ from app.base.audit.actor import Actor
 from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.escrow import service as escrow
-from app.features.milestones import evidence_check
+from app.features.milestones import evidence_check, notices
 from app.features.milestones.models import Milestone, MilestoneStatus, Verification
 from app.features.milestones.schemas import MilestoneGroup, VerifyIn
 from app.features.milestones.transitions import ALLOWED_TRANSITIONS, ActorRole
@@ -128,6 +129,8 @@ async def transition(
         after={**after, "actor_role": actor_role.value},
         request=request,
     )
+    # Claimed, verified, rejected and released are messaged to the people involved, after commit.
+    notices.schedule(session, milestone, current)
     return milestone
 
 
