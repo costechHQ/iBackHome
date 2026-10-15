@@ -37,7 +37,9 @@ class LLMSettings(BaseSettings):
 
     llm_api_key: str = ""
     # A pinned version, not "-latest", so a stored agent run can be reproduced (spec: AI agents).
-    llm_model: str = "gemini-3.8-flash"
+    # Flash-lite: the free tier allows only 5 requests a minute on gemini-3.8-flash, and one report
+    # run can make 11. Matches .env.example; LLM_MODEL still overrides it.
+    llm_model: str = "gemini-3.5-flash-lite"
     llm_timeout_seconds: float = 60
     llm_retry_attempts: int = 4
 
