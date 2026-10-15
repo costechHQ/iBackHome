@@ -1,7 +1,7 @@
 """Create the deliveries table.
 
 Revision ID: create_deliveries
-Revises: create_payouts
+Revises: create_verifications
 Create Date: 2026-10-15
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "create_deliveries"
-down_revision: str | Sequence[str] | None = "create_payouts"
+down_revision: str | Sequence[str] | None = "create_verifications"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
