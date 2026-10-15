@@ -436,6 +436,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/evidence/upload-url` | supervisor, contractor | Get a pre-signed upload URL |
 | POST | `/evidence` | supervisor, contractor | Submit capture metadata + signature after upload; runs checks |
 | GET | `/projects/{id}/evidence` | parties, ops | Evidence gallery (signed read URLs) |
+| POST | `/evidence/{id}/decision` | ops | Accept or reject flagged evidence (rejecting needs notes) |
+| GET | `/projects/{id}/milestones` | parties, ops | The project's milestones in order, each with its newest verification |
 | POST | `/milestones/{id}/claim` | contractor | Claim milestone done |
 | POST | `/milestones/{id}/verify` | supervisor | Verify or reject with checklist |
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |
@@ -449,7 +451,7 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/orders/{id}/delivery` | supervisor | Confirm delivery with quantities + evidence |
 | POST | `/quotes/check` | client, contractor, ops | Run quote checker on a quote or BoQ |
 | GET | `/projects/{id}/reports` | parties, ops | Weekly reports |
-| POST | `/reports/{id}/review` | supervisor | Mark draft reviewed; queues send |
+| POST | `/reports/{id}/review` | supervisor (assigned), ops | Mark draft reviewed; queues send |
 | GET | `/ops/queue` | ops | Vetting, flagged evidence, disputes |
 | PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting; view own profile |
 | POST | `/supervisors/{id}/vetting` | ops | Approve or reject vetting |
@@ -559,7 +561,7 @@ Each agent is an LLM with tool calling, where every tool is an existing iBackHom
 
 | Agent | Trigger | Tools (read-only unless noted) | Output |
 | --- | --- | --- | --- |
-| Report agent | Celery Beat, Friday 16:00 WAT, per active project | `get_project`, `list_milestones`, `list_evidence(since)`, `list_verifications(since)`, `get_ledger(since)`, `list_flags(since)`; write: `create_report_draft` | Markdown draft + PDF; supervisor reviews before send |
+| Report agent | Celery Beat, Friday 16:00 WAT, per active project | `get_project`, `list_milestones`, `list_evidence(since)`, `list_verifications(since)`, `get_ledger(since)`, `list_flags(since)`; write: `create_report_draft` | Markdown draft + PDF; the assigned supervisor (or ops) reviews before send |
 | Quote checker | `POST /quotes/check` | `get_price_index`, `get_boq`; quote text extracted from PDF first | Lines flagged above index by > 15%, with index price and % difference; quantities outside plan range |
 | Image stage check (P1) | After evidence `accepted` | Vision model on the image + claimed milestone | Stage estimate + confidence; a mismatch creates a flag for ops, never a rejection |
 | WhatsApp assistant (P1) | `POST /webhooks/whatsapp` | `get_project`, `list_milestones`, `get_ledger`, `get_latest_report` for the sender's projects only | Short answer + dashboard link; hands off to ops on complaints or disputes |
@@ -634,6 +636,8 @@ WhatsApp messages outside the 24-hour customer-service window must use Meta-appr
 | Request materials | | ✓ | | | |
 | Approve order | ✓ | | | | |
 | Confirm delivery | | | ✓ | view | |
+| Review weekly report | | | ✓ (assigned only) | | ✓ |
+| Decide flagged evidence | | | | | ✓ |
 | Vet supervisors, schedule spot checks | | | | | ✓ |
 | View audit log | | | | | ✓ |
 
