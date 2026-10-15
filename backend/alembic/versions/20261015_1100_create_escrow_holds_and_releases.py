@@ -5,6 +5,7 @@
 - escrow_releases (spec table, plus project_id, order_id, hold_id, payee, attempts,
   failure_reason, requested_by): exactly one of milestone_id / order_id; at most one release
   that has not failed per milestone and per order.
+- Check constraint names go through op.f(), so the naming convention does not double them.
 
 Owner: Gabriel.
 
@@ -51,9 +52,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["milestone_id"], ["milestones.id"], name="fk_escrow_holds_milestone_id_milestones"
         ),
-        sa.CheckConstraint("amount_minor > 0", name="ck_escrow_holds_amount_positive"),
-        sa.CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_escrow_holds_currency_iso4217"),
-        sa.CheckConstraint("status IN ('held', 'pending')", name="ck_escrow_holds_status_valid"),
+        sa.CheckConstraint("amount_minor > 0", name=op.f("ck_escrow_holds_amount_positive")),
+        sa.CheckConstraint("currency ~ '^[A-Z]{3}$'", name=op.f("ck_escrow_holds_currency_iso4217")),
+        sa.CheckConstraint("status IN ('held', 'pending')", name=op.f("ck_escrow_holds_status_valid")),
     )
     op.create_index("ix_escrow_holds_project_id", "escrow_holds", ["project_id"])
 
@@ -90,13 +91,13 @@ def upgrade() -> None:
         ),
         sa.ForeignKeyConstraint(["requested_by"], ["users.id"], name="fk_escrow_releases_requested_by_users"),
         sa.CheckConstraint(
-            "(milestone_id IS NULL) <> (order_id IS NULL)", name="ck_escrow_releases_one_purpose"
+            "(milestone_id IS NULL) <> (order_id IS NULL)", name=op.f("ck_escrow_releases_one_purpose")
         ),
-        sa.CheckConstraint("amount_minor > 0", name="ck_escrow_releases_amount_positive"),
-        sa.CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_escrow_releases_currency_iso4217"),
+        sa.CheckConstraint("amount_minor > 0", name=op.f("ck_escrow_releases_amount_positive")),
+        sa.CheckConstraint("currency ~ '^[A-Z]{3}$'", name=op.f("ck_escrow_releases_currency_iso4217")),
         sa.CheckConstraint(
             "status IN ('requested', 'submitted', 'released', 'failed')",
-            name="ck_escrow_releases_status_valid",
+            name=op.f("ck_escrow_releases_status_valid"),
         ),
     )
     op.create_index("ix_escrow_releases_project_id", "escrow_releases", ["project_id"])
