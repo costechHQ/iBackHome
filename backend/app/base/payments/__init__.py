@@ -8,6 +8,7 @@ What other features import:
     from app.base.payments import accounts, balance, credit, debit, list_entries, post_transaction
     from app.base.payments import webhooks      # @webhooks.handles("stripe", "<event type>")
     from app.base.payments import register_payout_recipient, initiate_transfer   # Paystack payouts
+    from app.base.payments import queue_transfer, on_payout_outcome   # payouts saved before sending
 """
 
 from app.base.payments import accounts
@@ -19,13 +20,20 @@ from app.base.payments.service import (
     balance,
     credit,
     debit,
+    get_payout,
     get_payout_recipient,
+    get_recipient_for,
     initiate_transfer,
     list_entries,
+    list_entries_touching,
+    list_unsent_payouts,
     mark_processed,
+    on_payout_outcome,
     post_transaction,
+    queue_transfer,
     record_event,
     register_payout_recipient,
+    send_transfer,
 )
 
 __all__ = [
@@ -37,11 +45,18 @@ __all__ = [
     "balance",
     "credit",
     "debit",
+    "get_payout",
     "get_payout_recipient",
+    "get_recipient_for",
     "initiate_transfer",
     "list_entries",
+    "list_entries_touching",
+    "list_unsent_payouts",
     "mark_processed",
+    "on_payout_outcome",
     "post_transaction",
+    "queue_transfer",
     "record_event",
     "register_payout_recipient",
+    "send_transfer",
 ]

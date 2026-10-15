@@ -14,9 +14,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.payments import accounts, balance
+from app.base.payments import service as payments_service
 from app.base.payments.stripe_checkout import get_checkout_gateway
 from app.base.payments.tests.webhook_helpers import webhook_secrets
-from app.features.escrow.models import EscrowAccount
+from app.features.escrow import service as escrow
+from app.features.escrow.models import EscrowAccount, EscrowHold
+from app.features.escrow.tasks import run_submit_release
 from app.features.escrow.tests.factories import (
     FOUNDATION_NGN,
     FakeCheckout,
@@ -30,6 +33,7 @@ from app.features.escrow.tests.factories import (
     send_stripe,
     simulated_escrow,
 )
+from app.features.escrow.tests.release_helpers import add_recipient, approve_milestone, session_factory
 from app.features.milestones.models import Milestone, MilestoneStatus
 from app.features.projects.tests.factories import audit_entries, bearer, make_project, make_user
 
@@ -317,12 +321,40 @@ async def test_paid_checkout_funds_the_milestone_with_balanced_entries(
     assert account is not None and account.balance_minor == FOUNDATION_NGN
     held = await simulated_escrow().balance(p)
     assert (held.held_minor, held.currency) == (FOUNDATION_NGN, "NGN")
+    # The partner's hold id is kept: releasing this money has to name it.
+    hold = await db_session.scalar(select(EscrowHold).where(EscrowHold.milestone_id == world.foundation.id))
+    assert hold is not None
+    assert (hold.status, hold.amount_minor, hold.currency) == ("held", FOUNDATION_NGN, "NGN")
+    assert hold.provider_ref.startswith("simhold_") and hold.ref.startswith("stripe_checkout:cs_test_")
 
     actions = [e.action for e in await audit_entries(db_session, world.foundation.id)]
     assert actions == ["funding.checkout_created", "milestone.funded", "escrow.funded"]
     funded_audit = (await audit_entries(db_session, world.foundation.id))[-1]
     assert funded_audit.actor_id is None  # the system, on Stripe's word
     assert funded_audit.after is not None and funded_audit.after["fx_rate"] == "2000"
+
+
+async def test_funded_by_stripe_then_approved_is_released_from_that_hold(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    gateway: FakeCheckout,
+    world: Funded,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(escrow, "enqueue_submit_release", lambda release_id: None)
+    monkeypatch.setattr(payments_service, "enqueue_send_transfer", lambda payout_id: None)
+    await pay(client, gateway, world)
+    await approve_milestone(db_session, world, world.foundation)
+    await add_recipient(db_session, user_id=world.contractor.id)
+
+    result = await escrow.request_release(db_session, world.foundation.id, world.client)
+    assert await run_submit_release(session_factory(db_session), result.release_id, retries=0) == "done"
+
+    assert await status_of(db_session, world.foundation) == MilestoneStatus.RELEASED
+    p = world.project.id
+    assert await balance(db_session, accounts.escrow(p, "NGN")) == 0
+    assert await balance(db_session, accounts.contractor_payable("NGN")) == FOUNDATION_NGN
+    assert (await simulated_escrow().balance(p)).available_minor == 0
 
 
 async def test_same_webhook_twice_funds_once(

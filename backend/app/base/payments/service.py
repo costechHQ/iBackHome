@@ -28,7 +28,7 @@ import binascii
 import logging
 import re
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -36,14 +36,16 @@ from enum import StrEnum
 from typing import Any, Literal
 
 from fastapi import Request
-from sqlalchemy import case, func, select, tuple_
+from sqlalchemy import case, func, or_, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
+from app.base.payments.after_commit import after_commit
 from app.base.payments.models import LedgerEntry, PaymentEvent, Payout, PayoutRecipient
-from app.base.payments.paystack import PaystackClient, get_paystack_client
+from app.base.payments.paystack import PaystackClient, TransferResult, get_paystack_client
+from app.core import pagination
 from app.core.errors import AppError
 
 logger = logging.getLogger(__name__)
@@ -516,4 +518,240 @@ async def apply_transfer_event(
         },
         request=request,
     )
+    await _payout_changed(session, payout, before["status"], request)
     return payout
+
+
+# --- payouts saved before Paystack is called ------------------------------------------------
+#
+# initiate_transfer() calls Paystack inside the caller's transaction, so a lost answer rolls the
+# payout row back. Money that leaves escrow uses the two steps below instead: queue_transfer()
+# saves a `pending` payout with no transfer code in the caller's transaction, and the Celery task
+# payments.send_transfer runs send_transfer() once that has committed. "Pending without a transfer
+# code" means "Paystack may or may not have it": sending again with the same reference is safe,
+# and verify_transfer(reference) tells us what Paystack did with the first try.
+
+PayoutListener = Callable[[AsyncSession, Payout, str, Request | None], Awaitable[None]]
+
+_PAYOUT_LISTENERS: dict[str, PayoutListener] = {}
+
+
+def on_payout_outcome(reference_prefix: str) -> Callable[[PayoutListener], PayoutListener]:
+    """Register a function told about every status change of payouts whose reference starts so.
+
+    Called as listener(session, payout, previous_status, request) in the transaction that changed
+    the status (the transfer webhook's, or send_transfer's), so its ledger and state changes land
+    with it or not at all.
+    """
+
+    def register(listener: PayoutListener) -> PayoutListener:
+        existing = _PAYOUT_LISTENERS.get(reference_prefix)
+        if existing is not None and existing is not listener:
+            raise RuntimeError(
+                f"payouts {reference_prefix!r} already have a listener: {existing.__qualname__}"
+            )
+        _PAYOUT_LISTENERS[reference_prefix] = listener
+        return listener
+
+    return register
+
+
+async def _payout_changed(
+    session: AsyncSession, payout: Payout, previous: str, request: Request | None
+) -> None:
+    for prefix, listener in _PAYOUT_LISTENERS.items():
+        if payout.reference.startswith(prefix):
+            await listener(session, payout, previous, request)
+
+
+async def get_recipient_for(
+    session: AsyncSession, *, user_id: uuid.UUID | None = None, supplier_id: uuid.UUID | None = None
+) -> PayoutRecipient | None:
+    """The newest payout recipient of a user (contractor) or a supplier, or None."""
+    if (user_id is None) == (supplier_id is None):
+        raise AppError("recipient_owner_required", "Give exactly one of user_id or supplier_id.", 422)
+    owner = PayoutRecipient.user_id == user_id if user_id else PayoutRecipient.supplier_id == supplier_id
+    return await session.scalar(
+        select(PayoutRecipient)
+        .where(owner)
+        .order_by(PayoutRecipient.created_at.desc(), PayoutRecipient.id.desc())
+        .limit(1)
+    )
+
+
+async def get_payout(session: AsyncSession, payout_id: uuid.UUID, *, lock: bool = False) -> Payout:
+    query = select(Payout).where(Payout.id == payout_id)
+    if lock:
+        query = query.with_for_update().execution_options(populate_existing=True)
+    payout = await session.scalar(query)
+    if payout is None:
+        raise AppError("payout_not_found", "Payout not found.", 404)
+    return payout
+
+
+async def queue_transfer(
+    session: AsyncSession,
+    recipient_id: uuid.UUID,
+    amount_minor: int,
+    reference: str,
+    *,
+    reason: str,
+    actor_id: uuid.UUID | None = None,
+    request: Request | None = None,
+) -> Payout:
+    """Save a `pending` payout (no Paystack call) and send it once the caller has committed.
+
+    Idempotent on `reference` like initiate_transfer(): the same reference and details return the
+    existing payout; other details are refused (409 payout_reference_conflict).
+    Writes an audit entry. Does not commit.
+    """
+    if type(amount_minor) is not int or amount_minor <= 0:
+        raise AppError(
+            "invalid_amount", f"amount_minor must be a positive integer, got {amount_minor!r}.", 422
+        )
+    if not _REFERENCE.match(reference):
+        raise AppError("invalid_reference", "reference must be 16-50 of a-z, 0-9, hyphen or underscore.", 422)
+    existing = await session.scalar(select(Payout).where(Payout.reference == reference))
+    if existing is not None:
+        if (existing.recipient_id, existing.amount_minor) != (recipient_id, amount_minor):
+            raise AppError("payout_reference_conflict", "This reference was used for another payout.", 409)
+        return existing
+
+    payout = Payout(
+        recipient_id=recipient_id,
+        provider="paystack",
+        reference=reference,
+        amount_minor=amount_minor,
+        currency="NGN",
+        reason=reason[:200],
+        status="pending",
+    )
+    session.add(payout)
+    await session.flush()
+    await audit.record(
+        session, actor_id, "payout.queued", "payout", payout.id, after=audit.snapshot(payout), request=request
+    )
+    after_commit(session, enqueue_send_transfer, payout.id)
+    return payout
+
+
+def enqueue_send_transfer(payout_id: uuid.UUID) -> None:
+    """Queue payments.send_transfer (runs after commit; the sweeper re-queues it if this is lost)."""
+    from app.base.payments.tasks import send_transfer_task
+
+    send_transfer_task.delay(str(payout_id))
+
+
+async def send_transfer(
+    session: AsyncSession, payout_id: uuid.UUID, *, client: PaystackClient | None = None
+) -> Payout:
+    """Send one queued payout to Paystack. Safe to run again at any time.
+
+    - Not `pending`, or Paystack already gave it a transfer code: nothing to do.
+    - Paystack answers: save its transfer code and status.
+    - Paystack refuses or can't be reached: ask it for the transfer under our reference (a lost
+      answer, or a retry of a transfer it already has). Found: save that. Not found and refused:
+      the payout is `failed`. Not found and unreachable: raise, so the task retries.
+    A change to success/failed is passed to the payout listeners in this transaction. Does not commit.
+    """
+    payout = await get_payout(session, payout_id, lock=True)
+    if payout.status != "pending" or payout.provider_transfer_code:
+        return payout
+    recipient = await session.get(PayoutRecipient, payout.recipient_id)
+    if recipient is None:  # pragma: no cover - foreign key
+        raise AppError("recipient_not_found", "No payout recipient for this payout.", 404)
+
+    paystack = client or get_paystack_client()
+    refused: AppError | None = None
+    result: TransferResult | None
+    try:
+        result = await paystack.initiate_transfer(
+            payout.amount_minor, recipient.recipient_code, payout.reference, payout.reason
+        )
+    except AppError as exc:
+        if exc.code not in ("paystack_refused", "paystack_unavailable"):
+            raise
+        result = await paystack.verify_transfer(payout.reference)
+        if result is None and exc.code == "paystack_unavailable":
+            raise
+        refused = exc
+
+    before = audit.snapshot(payout)
+    if result is None:
+        assert refused is not None
+        payout.status = "failed"
+        payout.failure_reason = refused.message[:500]
+    else:
+        payout.provider_transfer_code = result.transfer_code or None
+        payout.status = result.status
+    if payout.status != "pending":
+        payout.completed_at = datetime.now(UTC)
+    await session.flush()
+    await audit.record(
+        session, None, "payout.sent", "payout", payout.id, before=before, after=audit.snapshot(payout)
+    )
+    if payout.status != before["status"]:
+        await _payout_changed(session, payout, before["status"], None)
+    return payout
+
+
+async def list_unsent_payouts(
+    session: AsyncSession, older_than: datetime, limit: int = 100
+) -> list[uuid.UUID]:
+    """Pending payouts with no transfer code, last touched before `older_than` (for the sweeper)."""
+    rows = await session.scalars(
+        select(Payout.id)
+        .where(
+            Payout.status == "pending",
+            Payout.provider_transfer_code.is_(None),
+            Payout.updated_at < older_than,
+        )
+        .order_by(Payout.updated_at)
+        .limit(limit)
+    )
+    return list(rows)
+
+
+# --- a project's ledger -----------------------------------------------------------------------
+
+
+async def list_entries_touching(
+    session: AsyncSession,
+    *,
+    account_prefixes: Sequence[str],
+    refs: Sequence[tuple[str, uuid.UUID]] = (),
+    since: datetime | None = None,
+    until: datetime | None = None,
+    cursor: str | None = None,
+    limit: int = pagination.DEFAULT_LIMIT,
+) -> tuple[list[LedgerEntry], str | None]:
+    """Every entry of the transactions that touch these accounts or refs, newest first, one page.
+
+    A transaction counts when any of its entries is on an account starting with one of
+    `account_prefixes`, or has one of the (ref_type, ref_id) pairs; all of its entries are then
+    returned (so a release shows both its escrow and its contractor_payable side).
+    `since` is inclusive, `until` exclusive (created_at, UTC). Paginated with core/pagination.py.
+    """
+    if not 1 <= limit <= pagination.MAX_LIMIT:
+        raise AppError("invalid_limit", f"limit must be between 1 and {pagination.MAX_LIMIT}.", 422)
+    touching = [LedgerEntry.account.startswith(prefix, autoescape=True) for prefix in account_prefixes]
+    touching += [
+        (LedgerEntry.ref_type == ref_type) & (LedgerEntry.ref_id == ref_id) for ref_type, ref_id in refs
+    ]
+    if not touching:
+        return [], None
+    transactions = select(LedgerEntry.transaction_id).where(or_(*touching))
+    query = select(LedgerEntry).where(LedgerEntry.transaction_id.in_(transactions))
+    if since is not None:
+        query = query.where(LedgerEntry.created_at >= since)
+    if until is not None:
+        query = query.where(LedgerEntry.created_at < until)
+    if cursor is not None:
+        at, entry_id = pagination.decode_cursor(cursor)
+        query = query.where(tuple_(LedgerEntry.created_at, LedgerEntry.id) < tuple_(at, entry_id))
+    rows = list(
+        await session.scalars(
+            query.order_by(LedgerEntry.created_at.desc(), LedgerEntry.id.desc()).limit(limit + 1)
+        )
+    )
+    return pagination.page(rows, limit, lambda e: (e.created_at, e.id))

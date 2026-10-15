@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.escrow import service as escrow
+from app.features.escrow.tests.release_helpers import hold_money
 from app.features.evidence import service as evidence_service
 from app.features.milestones import evidence_check, service
 from app.features.milestones.models import MilestoneStatus as S
@@ -289,6 +290,7 @@ async def test_client_approves_and_release_is_requested(
     release_calls: list[tuple[uuid.UUID, uuid.UUID]],
 ) -> None:
     site = await active_project(db_session, first_status=S.VERIFIED)
+    await hold_money(db_session, site.project_id, site.milestones[0])  # a release needs money in escrow
     response = await client.post(approve_url(site), headers=bearer(site.client))
     assert response.status_code == 200, response.text
     assert response.json()["status"] == "approved"
@@ -359,6 +361,7 @@ async def test_approve_retry_with_same_key_releases_once(
     client: AsyncClient, db_session: AsyncSession, release_calls: list[tuple[uuid.UUID, uuid.UUID]]
 ) -> None:
     site = await active_project(db_session, first_status=S.VERIFIED)
+    await hold_money(db_session, site.project_id, site.milestones[0])
     headers = bearer(site.client) | {"Idempotency-Key": str(uuid.uuid4())}
     first = await client.post(approve_url(site), headers=headers)
     retry = await client.post(approve_url(site), headers=headers)
@@ -375,6 +378,7 @@ async def test_claim_verify_approve_on_a_real_project(
 ) -> None:
     accepted(monkeypatch, PHOTO_A)
     site = await active_project(db_session, first_status=S.FUNDED)
+    await hold_money(db_session, site.project_id, site.milestones[0])
     milestone_id = site.milestones[0].id
 
     claim = await client.post(f"/api/v1/milestones/{milestone_id}/claim", headers=bearer(site.contractor))
