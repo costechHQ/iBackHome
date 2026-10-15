@@ -4,8 +4,11 @@ Kept apart from service.py because projects.service imports supervision.service 
 ensure_assignable), so service.py can't import projects back.
 
 Rotation (spec, permissions): a supervisor "is rotated after two consecutive milestones on the same
-project". next_supervisor() takes who verified each milestone, in order; Lilian's verifications
-(her Day 3) will supply that list.
+project". next_supervisor() takes who verified each milestone, in order.
+
+TODO(James): once Lilian's `milestones.list_verifiers(session, project_id) -> list[uuid.UUID]` is on
+main (it is on lilian/day-03-verify-approve), read it here with
+`from app.features.milestones import service as milestones` and drop the `verifiers` argument.
 """
 
 import random
