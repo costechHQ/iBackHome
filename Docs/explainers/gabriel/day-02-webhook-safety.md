@@ -86,7 +86,7 @@ Unique `(provider, event_id)` = `uq_payment_events_provider_event_id`.
 | currency | char(3) | `NGN` |
 | balance_minor | bigint ≥ 0 | **cache only**; the ledger account `escrow:{project}:NGN` is the source of truth |
 
-Migration: `create_payment_events_escrow` (after `create_boq`).
+Migration: `create_payment_events_escrow` (after `add_evidence_gps_time`).
 
 ## 5. Functions teammates can call
 
