@@ -75,11 +75,13 @@ dev = [
 ]
 gabriel = [
     "pypdf>=5.0",
+    "respx>=0.21",
     "stripe>=10.0",
 ]
 james = [
     "google-genai>=2.0,<3",
     "imagehash>=4.3",
+    "markdown>=3.7",
     "opencv-python-headless>=4.10",
     "pillow>=10.4",
     "weasyprint>=62",
