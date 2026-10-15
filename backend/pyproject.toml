@@ -78,6 +78,7 @@ gabriel = [
     "stripe>=10.0",
 ]
 james = [
+    "boto3>=1.35",
     "google-genai>=2.0,<3",
     "imagehash>=4.3",
     "markdown>=3.7",
