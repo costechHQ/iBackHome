@@ -6,7 +6,7 @@
 Owner: Gabriel.
 
 Revision ID: create_payment_events_escrow
-Revises: create_boq
+Revises: add_evidence_gps_time
 Create Date: 2026-10-14
 """
 
@@ -17,7 +17,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision: str = "create_payment_events_escrow"
-down_revision: str | Sequence[str] | None = "create_boq"
+down_revision: str | Sequence[str] | None = "add_evidence_gps_time"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

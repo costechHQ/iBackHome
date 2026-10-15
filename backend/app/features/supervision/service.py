@@ -1,19 +1,23 @@
 """Supervisor vetting, assignment and spot-check rules. Owner: James.
 
 Every function takes the database session first and does NOT commit: the caller commits,
-so a vetting decision and its audit entry land together or not at all.
+so a decision and its audit entry land together or not at all. Every change writes an audit entry.
 
 Used by:
-- James (assignment):   is_vetted(), ensure_assignable()
-- Abigail (ops queue):  list_pending_vetting()
+- Christopher (projects.set_supervisor):  ensure_assignable()
+- Abigail (ops queue):                    list_pending_vetting()
+Rules that need a project (assignment wrapper, project spot checks, rotation) are in rotation.py,
+because projects.service imports this module.
 """
 
 import uuid
 from datetime import UTC, datetime
 
+from fastapi import Request
 from sqlalchemy import delete, exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base import audit
 from app.base.users import service as users
 from app.core.errors import AppError
 from app.features.supervision.models import SpotCheck, SupervisorProfile, SupervisorRelation, VettingStatus
@@ -41,7 +45,11 @@ async def get_profile(session: AsyncSession, user_id: uuid.UUID, *, lock: bool =
 
 
 async def submit_application(
-    session: AsyncSession, user_id: uuid.UUID, application: SupervisorApplication
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    application: SupervisorApplication,
+    *,
+    request: Request | None = None,
 ) -> SupervisorProfile:
     """Create or update a supervisor's application. Any change sends it back to ops as pending.
 
@@ -56,6 +64,7 @@ async def submit_application(
     )
     if profile is not None and profile.vetting_status == VettingStatus.APPROVED:
         raise AppError("supervisor_already_vetted", "An approved profile can only be changed by ops.", 409)
+    before = audit.snapshot(profile) if profile is not None else None
     if profile is None:
         profile = SupervisorProfile(user_id=user_id)
         session.add(profile)
@@ -75,11 +84,21 @@ async def submit_application(
         for phone, relationship in relations.items()
     )
     await session.flush()
+    await session.refresh(profile)
+    after = audit.snapshot(profile) | {"related_contractors": sorted(relations)}
+    await audit.record(
+        session, user_id, "supervisor.applied", "supervisor_profile", profile.id, before, after, request
+    )
     return profile
 
 
 async def vet(
-    session: AsyncSession, supervisor_id: uuid.UUID, decision: VettingDecision, actor_id: uuid.UUID
+    session: AsyncSession,
+    supervisor_id: uuid.UUID,
+    decision: VettingDecision,
+    actor_id: uuid.UUID,
+    *,
+    request: Request | None = None,
 ) -> SupervisorProfile:
     """Record ops' decision.
 
@@ -97,6 +116,7 @@ async def vet(
                 422,
             )
 
+    before = audit.snapshot(profile)
     for check in CHECKS:
         setattr(profile, check, getattr(decision, check))
     profile.vetting_status = VettingStatus(decision.decision)
@@ -104,6 +124,17 @@ async def vet(
     profile.vetted_by = actor_id
     profile.vetted_at = datetime.now(UTC)
     await session.flush()
+    await session.refresh(profile)
+    await audit.record(
+        session,
+        actor_id,
+        f"supervisor.{decision.decision}",
+        "supervisor_profile",
+        profile.id,
+        before,
+        audit.snapshot(profile),
+        request,
+    )
     return profile
 
 
@@ -117,6 +148,16 @@ async def is_vetted(session: AsyncSession, user_id: uuid.UUID) -> bool:
         )
     )
     return bool(approved)
+
+
+async def list_vetted(session: AsyncSession) -> list[uuid.UUID]:
+    """User ids of every approved supervisor, longest-vetted first."""
+    result = await session.scalars(
+        select(SupervisorProfile.user_id)
+        .where(SupervisorProfile.vetting_status == VettingStatus.APPROVED)
+        .order_by(SupervisorProfile.vetted_at, SupervisorProfile.user_id)
+    )
+    return list(result)
 
 
 async def list_pending_vetting(session: AsyncSession) -> list[SupervisorProfile]:
@@ -172,8 +213,12 @@ async def schedule_spot_check(
     *,
     assigned_supervisor_id: uuid.UUID | None = None,
     contractor_phone: str | None = None,
+    request: Request | None = None,
 ) -> SpotCheck:
     """Schedule a visit by a vetted supervisor other than the project's own.
+
+    Callers with a project should use rotation.schedule_project_spot_check(), which fills in
+    `assigned_supervisor_id` and `contractor_phone` from the project.
 
     - 422 spot_check_in_past: `scheduled_for` is not in the future
     - 409 spot_check_by_assigned_supervisor: a spot check also checks the project's supervisor
@@ -197,6 +242,17 @@ async def schedule_spot_check(
     )
     session.add(spot_check)
     await session.flush()
+    await session.refresh(spot_check)
+    await audit.record(
+        session,
+        scheduled_by,
+        "spot_check.scheduled",
+        "spot_check",
+        spot_check.id,
+        None,
+        audit.snapshot(spot_check),
+        request,
+    )
     return spot_check
 
 
@@ -223,7 +279,12 @@ async def list_my_spot_checks(session: AsyncSession, supervisor_id: uuid.UUID) -
 
 
 async def complete_spot_check(
-    session: AsyncSession, spot_check_id: uuid.UUID, supervisor_id: uuid.UUID, findings: str
+    session: AsyncSession,
+    spot_check_id: uuid.UUID,
+    supervisor_id: uuid.UUID,
+    findings: str,
+    *,
+    request: Request | None = None,
 ) -> SpotCheck:
     """The visiting supervisor records what they found.
 
@@ -237,7 +298,19 @@ async def complete_spot_check(
         raise AppError("spot_check_not_found", "Spot check not found.", 404)
     if spot_check.completed_at is not None:
         raise AppError("spot_check_already_completed", "This spot check has already been completed.", 409)
+    before = audit.snapshot(spot_check)
     spot_check.findings = findings
     spot_check.completed_at = datetime.now(UTC)
     await session.flush()
+    await session.refresh(spot_check)
+    await audit.record(
+        session,
+        supervisor_id,
+        "spot_check.completed",
+        "spot_check",
+        spot_check.id,
+        before,
+        audit.snapshot(spot_check),
+        request,
+    )
     return spot_check
