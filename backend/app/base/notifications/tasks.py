@@ -1,4 +1,4 @@
-"""Background jobs for notifications. 
+"""Background jobs for notifications.
 
 - notifications.retry_failed: every 10 minutes, sends again every message that failed on all
   channels (spec: "Background jobs and notifications").

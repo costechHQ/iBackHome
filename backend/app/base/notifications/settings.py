@@ -1,4 +1,4 @@
-"""Settings for notifications, kept here so core/config.py stays Christopher's. 
+"""Settings for notifications, kept here so core/config.py stays Christopher's.
 
 Read from environment variables (Christopher adds them to .env.example). A channel whose
 settings are empty is "not configured": notify() skips it and tries the next one. On
