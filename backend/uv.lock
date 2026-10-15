@@ -606,6 +606,7 @@ gabriel = [
 ]
 james = [
     { name = "boto3" },
+    { name = "cryptography" },
     { name = "google-genai" },
     { name = "imagehash" },
     { name = "markdown" },
@@ -653,6 +654,7 @@ gabriel = [
 ]
 james = [
     { name = "boto3", specifier = ">=1.35" },
+    { name = "cryptography", specifier = ">=43" },
     { name = "google-genai", specifier = ">=2.0,<3" },
     { name = "imagehash", specifier = ">=4.3" },
     { name = "markdown", specifier = ">=3.7" },
