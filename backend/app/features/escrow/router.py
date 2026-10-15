@@ -5,18 +5,20 @@ Importing `handlers` registers the Stripe funding webhook handler.
 """
 
 import uuid
+from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 
 from app.base.payments.stripe_checkout import CheckoutGateway, get_checkout_gateway
 from app.base.users import service as users
 from app.base.users.models import User
+from app.core import pagination
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.escrow import handlers, service  # noqa: F401  (handlers: registers webhook handlers)
-from app.features.escrow.schemas import FundingCheckoutOut, FundingCreate
+from app.features.escrow.schemas import FundingCheckoutOut, FundingCreate, LedgerEntryOut, LedgerPage
 
 router = APIRouter(tags=["escrow"])
 
@@ -71,3 +73,20 @@ async def create_funding(
     await remember(session, key, scope, 201, body)
     await session.commit()
     return body
+
+
+@router.get("/projects/{project_id}/ledger", response_model=LedgerPage)
+async def project_ledger(
+    project_id: uuid.UUID,
+    session: SessionDep,
+    user: users.CurrentUserDep,
+    since: Annotated[datetime | None, Query(description="Inclusive, ISO 8601 date or time")] = None,
+    until: Annotated[datetime | None, Query(description="Exclusive, ISO 8601")] = None,
+    cursor: str | None = Query(default=None, max_length=200),
+    limit: int = Query(default=pagination.DEFAULT_LIMIT, ge=1, le=pagination.MAX_LIMIT),
+) -> LedgerPage:
+    """The project's client or ops: funding, releases and payouts, newest first (`?cursor=&limit=`)."""
+    entries, next_cursor = await service.project_ledger(
+        session, user, project_id, since=since, until=until, cursor=cursor, limit=limit
+    )
+    return LedgerPage(items=[LedgerEntryOut.model_validate(e) for e in entries], next_cursor=next_cursor)

@@ -27,6 +27,7 @@ ReleaseStatus = Literal["released", "submitted", "failed"]
 Operation = Literal["hold", "release", "balance"]
 
 _CURRENCY = re.compile(r"^[A-Z]{3}$")
+_SIMULATED_HOLD = re.compile(r"^simhold_[0-9a-f]{24}$")
 
 
 @dataclass(frozen=True)
@@ -80,6 +81,7 @@ class _Hold:
     currency: str
     amount_minor: int
     released_minor: int = 0
+    checked: bool = True  # False for a hold another process made: its amount is unknown here
 
 
 def _provider_ref(prefix: str, ref: str) -> str:
@@ -98,6 +100,12 @@ class SimulatedEscrow:
 
     Deterministic (provider refs are a hash of our ref), idempotent on ref, never releases more
     than a hold has left. State lives in this process only.
+
+    State lives in this process only, but the API (which holds, on Stripe's webhook) and the Celery
+    worker (which releases) are different processes, and a restart forgets everything. So a release
+    against a hold this process never made is accepted when the hold ref has the simulated format
+    (`simhold_` + 24 hex characters); its amount limit is then not checked here. That is safe for
+    the demo because features/escrow checks the amount left on each hold in the database first.
 
     Test hook: `fail_next("release", times=2)` makes the next two release calls raise
     EscrowProviderError without changing anything, so retries can be tested.
@@ -175,9 +183,12 @@ class SimulatedEscrow:
 
         held = self._holds.get(hold_ref)
         if held is None:
-            raise AppError("escrow_hold_not_found", f"No hold {hold_ref!r}.", 404)
+            if not _SIMULATED_HOLD.match(hold_ref):
+                raise AppError("escrow_hold_not_found", f"No hold {hold_ref!r}.", 404)
+            # A hold made by another process (see the class docstring): trust our database.
+            held = self._holds[hold_ref] = _Hold(uuid.UUID(int=0), "NGN", 0, checked=False)
         left = held.amount_minor - held.released_minor
-        if amount_minor > left:
+        if held.checked and amount_minor > left:
             raise AppError(
                 "escrow_insufficient_funds",
                 f"Cannot release {amount_minor}; only {left} {held.currency} is left on this hold.",
@@ -199,7 +210,7 @@ class SimulatedEscrow:
 
     async def balance(self, project_id: uuid.UUID) -> Balance:
         self._maybe_fail("balance")
-        holds = [h for h in self._holds.values() if h.project_id == project_id]
+        holds = [h for h in self._holds.values() if h.project_id == project_id and h.checked]
         held = sum(h.amount_minor for h in holds)
         released = sum(h.released_minor for h in holds)
         return Balance(
