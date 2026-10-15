@@ -24,6 +24,22 @@ import jwt
 from app.core.config import get_settings
 from app.core.errors import AppError
 
+# Each agent signs in as its own active `ops` user (decided 2026-10-15), seeded by scripts/seed.py.
+# The id is derived from the agent's name, so code finds its user without looking anyone up.
+AGENTS = ("report", "quote_checker")
+_AGENT_NAMESPACE = uuid.UUID("6f1d3c2a-9b4e-4f6a-8c1d-1b2a3c4d5e6f")
+
+
+def agent_user_id(agent_name: str) -> uuid.UUID:
+    """The fixed user id the agent acts as."""
+    return uuid.uuid5(_AGENT_NAMESPACE, f"agent:{agent_name}")
+
+
+def agent_email(agent_name: str) -> str:
+    """The agent user's email. `.invalid` can never receive mail, so no one can log in as an agent."""
+    return f"{agent_name.replace('_', '-')}.agent@ibackhome.invalid"
+
+
 SERVICE_TOKEN_TYPE = "service"  # noqa: S105 - the JWT "type" claim, not a secret
 JWT_ALGORITHM = "HS256"  # same as login tokens (users.service)
 JWT_ISSUER = "ibackhome"
