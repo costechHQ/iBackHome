@@ -81,6 +81,7 @@ class Evidence(TimestampedBase):
     size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
     file_sha256: Mapped[str] = mapped_column(String(64), nullable=False)  # as signed; recomputed in Day 4
     captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    gps_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     latitude: Mapped[float] = mapped_column(Float, nullable=False)
     longitude: Mapped[float] = mapped_column(Float, nullable=False)
     accuracy_m: Mapped[float] = mapped_column(Float, nullable=False)

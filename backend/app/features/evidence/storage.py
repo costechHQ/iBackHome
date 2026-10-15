@@ -59,6 +59,18 @@ def head_object(storage_key: str) -> tuple[int, str] | None:
     return int(head["ContentLength"]), str(head.get("ContentType", ""))
 
 
+def read_object(storage_key: str) -> bytes | None:
+    """The stored file's bytes, or None if it is not there."""
+    try:
+        body = get_client().get_object(Bucket=get_settings().storage_bucket, Key=storage_key)["Body"]
+    except ClientError as exc:
+        if exc.response.get("Error", {}).get("Code") in {"404", "NoSuchKey", "NotFound"}:
+            return None
+        raise
+    data: bytes = body.read()
+    return data
+
+
 def delete_object(storage_key: str) -> None:
     get_client().delete_object(Bucket=get_settings().storage_bucket, Key=storage_key)
 

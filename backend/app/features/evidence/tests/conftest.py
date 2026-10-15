@@ -119,6 +119,7 @@ def evidence_body(world: World, key: str, body: bytes, **overrides: Any) -> dict
         "storage_key": key,
         "file_sha256": hashlib.sha256(body).hexdigest(),
         "captured_at": datetime(2026, 10, 14, 9, 30, 15, 123000, tzinfo=UTC).isoformat(),
+        "gps_time": datetime(2026, 10, 14, 9, 30, 14, 800000, tzinfo=UTC).isoformat(),
         "latitude": 6.4483,
         "longitude": 7.5139,
         "accuracy_m": 8.5,
