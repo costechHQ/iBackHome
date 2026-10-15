@@ -40,6 +40,18 @@ def session_factory(session: AsyncSession) -> SessionFactory:
 async def hold_milestone(session: AsyncSession, project_id: uuid.UUID, milestone: Milestone) -> EscrowHold:
     """What a paid Stripe checkout leaves behind (see fund_from_checkout): the partner holds the
     naira, the ledger shows it in escrow, the milestone is funded."""
+    hold = await hold_money(session, project_id, milestone)
+    await milestones.mark_funded(session, milestone.id)
+    await session.flush()
+    return hold
+
+
+async def hold_money(session: AsyncSession, project_id: uuid.UUID, milestone: Milestone) -> EscrowHold:
+    """The escrow side of funding only: hold + ledger + cache, with no milestone transition.
+
+    For other features' tests that set a milestone's status directly and then approve it
+    (approving calls escrow.request_release, which needs money held for the project).
+    """
     hold = await simulated_escrow().hold(
         project_id, milestone.amount_minor, "NGN", ref=f"stripe_checkout:cs_test_{uuid.uuid4().hex}"
     )
@@ -65,7 +77,6 @@ async def hold_milestone(session: AsyncSession, project_id: uuid.UUID, milestone
     )
     account = await escrow.get_or_create_account(session, project_id, "NGN", lock=True)
     account.balance_minor += milestone.amount_minor
-    await milestones.mark_funded(session, milestone.id)
     await session.flush()
     return row
 
