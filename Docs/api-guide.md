@@ -69,3 +69,38 @@ async def get_project_info(session: AsyncSession, project_id: uuid.UUID) -> Proj
     project = await projects.get_project(session, project_id)
     return ProjectInfo(id=project.id, status=project.status, contractor_id=project.contractor_id)
 ```
+
+## Notifications
+
+```python
+from app.base.notifications import Template, notify
+
+MILESTONE_CLAIMED = Template(
+    name="milestone.claimed",                 # saved on the notifications row
+    title="Milestone claimed",                # push title and email subject
+    text="{contractor} says '{milestone}' is done. Your supervisor will check it next.",
+)
+
+await notify(session, client.id, MILESTONE_CLAIMED, {"contractor": "Obi Builders", "milestone": "Foundation"})
+await session.commit()                        # the caller commits
+```
+
+- **Order:** WhatsApp → push → SMS → email, stopping at the first channel that delivers. Pass `channels=["email", "sms"]` to choose your own order. For "WhatsApp + email" (both), call `notify()` once per channel.
+- A channel is skipped when the user has no address for it (no email, no push token yet) or it isn't configured.
+- **It never raises because a provider is down.** If every channel fails it saves a `failed` row, which `notifications.retry_failed` (backend day 5) retries.
+- It raises 404 `user_not_found` for an unknown user, and `ValueError` if a `{placeholder}` in the template is missing from `data`.
+- Send **after** committing the change the message is about, so nobody hears about something that was rolled back.
+- Each feature keeps its templates in its own `messages.py`. Use plain `{name}` placeholders only.
+
+**Login codes:** `notify_address(session, identifier, channel, LOGIN_CODE, {"code": code})` sends to a raw phone (E.164) or email on exactly that channel, with no user needed. The code is never stored. It raises 503 `notifications_not_configured` when that channel can't send here, and 502 `notification_failed` when the provider refuses.
+
+**Channels:** email over SMTP (any provider), SMS through Termii, push through Firebase Cloud Messaging, WhatsApp on backend day 5. On `ENVIRONMENT=local`, a channel that isn't configured writes the message to the API log instead; staging and production never do.
+
+**Environment variables** (empty means that channel is off):
+
+| Variable | Example |
+| --- | --- |
+| `NOTIFY_TIMEOUT_SECONDS` | `10` |
+| `EMAIL_SMTP_HOST`, `EMAIL_SMTP_PORT`, `EMAIL_SMTP_USERNAME`, `EMAIL_SMTP_PASSWORD`, `EMAIL_SMTP_STARTTLS`, `EMAIL_FROM` | `smtp-relay.brevo.com`, `587`, …, `true`, `iBackHome <no-reply@ibackhome.ng>` |
+| `TERMII_API_KEY`, `TERMII_SENDER_ID`, `TERMII_BASE_URL` | …, `iBackHome`, `https://api.ng.termii.com` |
+| `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_JSON` | the Firebase project ID, and the service account key file's contents on one line |

@@ -85,3 +85,6 @@ james = [
     "pillow>=10.4",
     "weasyprint>=62",
 ]
+lilian = [
+    "pyjwt[crypto]>=2.9",
+]
