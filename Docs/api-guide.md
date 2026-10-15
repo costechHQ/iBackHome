@@ -89,5 +89,5 @@ Sign-in is connected (Christopher's `app.base.users`). `app/base/audit/actor.py`
 
 ## Connecting projects and evidence
 
-- `app/features/milestones/project_check.py` reads the project's status, client, contractor and assigned supervisor through `projects.get_project()`.
+- Milestones read the project's status, client, contractor and assigned supervisor through `projects.get_project()`. `milestones.project_id` is a foreign key to `projects.id`.
 - `app/features/milestones/evidence_check.py` asks Abigail's `evidence.accepted_for_milestone()` for the milestone's accepted supervisor photos.

@@ -18,7 +18,7 @@ from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.escrow import service as escrow
 from app.features.evidence import service as evidence_service
-from app.features.milestones import evidence_check, project_check, service
+from app.features.milestones import evidence_check, service
 from app.features.milestones.models import MilestoneStatus as S
 from app.features.milestones.models import Verification
 from app.features.milestones.schemas import VerifyIn
@@ -389,16 +389,6 @@ async def test_claim_verify_approve_on_a_real_project(
         "milestone.verified",
         "milestone.approved",
     ]
-
-
-async def test_project_check_reads_the_real_project(db_session: AsyncSession, site: Site) -> None:
-    info = await project_check.get_project_info(db_session, site.project_id)
-    assert (info.status, info.client_id, info.contractor_id, info.supervisor_id) == (
-        "active",
-        site.client.id,
-        site.contractor.id,
-        site.supervisor.id,
-    )
 
 
 @pytest.mark.parametrize("who", ["client", "contractor", "supervisor", "ops"])

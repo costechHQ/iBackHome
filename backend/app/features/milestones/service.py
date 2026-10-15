@@ -30,11 +30,12 @@ from app.base.audit.actor import Actor
 from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.escrow import service as escrow
-from app.features.milestones import evidence_check, project_check
+from app.features.milestones import evidence_check
 from app.features.milestones.models import Milestone, MilestoneStatus, Verification
 from app.features.milestones.schemas import MilestoneGroup, VerifyIn
 from app.features.milestones.transitions import ALLOWED_TRANSITIONS, ActorRole
 from app.features.projects import service as projects
+from app.features.projects.models import Project
 
 S = MilestoneStatus
 
@@ -144,14 +145,14 @@ async def claim(
     if actor.role != ActorRole.CONTRACTOR:
         raise AppError("transition_not_allowed", "Only the project's contractor can claim a milestone.", 403)
     milestone = await get_milestone(session, milestone_id, lock=True)
-    project = await project_check.get_project_info(session, milestone.project_id)
+    project = await projects.get_project(session, milestone.project_id)
     if project.contractor_id != actor.id:
         raise AppError("not_project_contractor", "You are not the contractor on this project.", 403)
     _require_active(project, "claimed")
     return await transition(session, milestone_id, S.CLAIMED, ActorRole.CONTRACTOR, actor.id, request=request)
 
 
-def _require_active(project: "project_check.ProjectInfo", action: str) -> None:
+def _require_active(project: Project, action: str) -> None:
     if project.status != "active":
         raise AppError(
             "project_not_active",
@@ -199,7 +200,7 @@ async def verify(
     if supervisor.role != ActorRole.SUPERVISOR:
         raise AppError("transition_not_allowed", "Only the assigned supervisor can verify a milestone.", 403)
     milestone = await get_milestone(session, milestone_id, lock=True)
-    project = await project_check.get_project_info(session, milestone.project_id)
+    project = await projects.get_project(session, milestone.project_id)
     if project.supervisor_id != supervisor.id:
         raise AppError("not_assigned_supervisor", "You are not the supervisor assigned to this project.", 403)
     _require_active(project, "verified")
@@ -263,7 +264,7 @@ async def approve(
     if client.role != ActorRole.CLIENT:
         raise AppError("transition_not_allowed", "Only the project's client can approve a milestone.", 403)
     milestone = await get_milestone(session, milestone_id, lock=True)
-    project = await project_check.get_project_info(session, milestone.project_id)
+    project = await projects.get_project(session, milestone.project_id)
     if project.client_id != client.id:
         raise AppError("not_project_client", "You are not the client on this project.", 403)
     _require_active(project, "approved")

@@ -1,7 +1,11 @@
-"""Create the verifications table; tidy the milestones check-constraint names.
+"""Create the verifications table; link milestones to projects; tidy constraint names.
 
 A verification is the assigned supervisor's decision on a claimed milestone: `verified`
 (with the checklist and the photos it relies on) or `rejected` (with the reason in notes).
+
+`milestones.project_id` gets its foreign key to `projects.id` (the `projects` table did not
+exist when milestones were created). Every milestone is created by the BoQ approval, so each
+already points at a real project.
 
 The two milestones check constraints were created as `ck_milestones_ck_milestones_...`
 (the naming convention was applied to an already-prefixed name). They are renamed to
@@ -54,6 +58,10 @@ def upgrade() -> None:
     op.create_index(op.f("ix_verifications_milestone_id"), "verifications", ["milestone_id"])
     op.create_index(op.f("ix_verifications_supervisor_id"), "verifications", ["supervisor_id"])
 
+    op.create_foreign_key(
+        op.f("fk_milestones_project_id_projects"), "milestones", "projects", ["project_id"], ["id"]
+    )
+
     for old, new in _RENAMES:
         op.execute(f"ALTER TABLE milestones RENAME CONSTRAINT {old} TO {new}")
 
@@ -61,6 +69,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     for old, new in _RENAMES:
         op.execute(f"ALTER TABLE milestones RENAME CONSTRAINT {new} TO {old}")
+    op.drop_constraint(op.f("fk_milestones_project_id_projects"), "milestones", type_="foreignkey")
     op.drop_index(op.f("ix_verifications_supervisor_id"), table_name="verifications")
     op.drop_index(op.f("ix_verifications_milestone_id"), table_name="verifications")
     op.drop_table("verifications")

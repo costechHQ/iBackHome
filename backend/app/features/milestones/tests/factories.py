@@ -14,6 +14,7 @@ from app.features.milestones import service
 from app.features.milestones.models import Milestone, MilestoneStatus
 from app.features.milestones.schemas import MilestoneGroup
 from app.features.projects import service as projects
+from app.features.projects.models import Project
 from app.features.projects.schemas import ProjectCreate
 
 
@@ -26,6 +27,31 @@ async def make_user(session: AsyncSession, role: str) -> User:
 
 def bearer(user: User) -> dict[str, str]:
     return {"Authorization": f"Bearer {users.create_access_token(user)}"}
+
+
+async def make_project(
+    session: AsyncSession,
+    *,
+    client: User | None = None,
+    contractor: User | None = None,
+    status: str = "active",
+) -> Project:
+    """A real project through projects.service (milestones.project_id must point at one)."""
+    client = client or await make_user(session, "client")
+    project = await projects.create_project(
+        session,
+        client,
+        ProjectCreate(
+            title="4-bedroom bungalow",
+            address="Independence Layout, Enugu",
+            currency="NGN",
+            budget_minor=40_000_000_00,
+            contractor_phone=contractor.phone if contractor else None,
+        ),
+    )
+    project.status = status
+    await session.flush()
+    return project
 
 
 @dataclass
@@ -52,19 +78,8 @@ async def active_project(
     contractor = await make_user(session, "contractor")
     supervisor = await make_user(session, "supervisor")
     ops = await make_user(session, "ops")
-    project = await projects.create_project(
-        session,
-        client,
-        ProjectCreate(
-            title="4-bedroom bungalow",
-            address="Independence Layout, Enugu",
-            currency="NGN",
-            budget_minor=40_000_000_00,
-            contractor_phone=contractor.phone,
-        ),
-    )
+    project = await make_project(session, client=client, contractor=contractor)
     project.supervisor_id = supervisor.id
-    project.status = "active"
     await session.flush()
     milestones = await service.create_for_project(
         session,

@@ -10,6 +10,7 @@ from app.features.milestones import service
 from app.features.milestones.models import Milestone
 from app.features.milestones.models import MilestoneStatus as S
 from app.features.milestones.schemas import MilestoneGroup
+from app.features.milestones.tests.factories import make_project
 from app.features.milestones.transitions import ALLOWED_TRANSITIONS, ActorRole
 
 R = ActorRole
@@ -35,8 +36,9 @@ STAMPS = {
 
 
 async def make_milestone(session: AsyncSession, status: S = S.PENDING) -> Milestone:
+    project = await make_project(session)
     milestone = Milestone(
-        project_id=uuid.uuid4(),
+        project_id=project.id,
         sequence=1,
         name="Foundation",
         amount_minor=150_000_000,
@@ -101,7 +103,7 @@ async def test_rejected_claim_clears_the_claim(db_session: AsyncSession) -> None
 
 
 async def test_create_for_project_makes_pending_milestones_in_order(db_session: AsyncSession) -> None:
-    project_id = uuid.uuid4()
+    project_id = (await make_project(db_session)).id
     groups = [
         MilestoneGroup(name="Foundation", amount_minor=150_000_000),
         MilestoneGroup(name="Blockwork to lintel", amount_minor=220_000_000),
@@ -117,7 +119,7 @@ async def test_create_for_project_makes_pending_milestones_in_order(db_session: 
 
 
 async def test_create_for_project_twice_is_refused(db_session: AsyncSession) -> None:
-    project_id = uuid.uuid4()
+    project_id = (await make_project(db_session)).id
     groups = [MilestoneGroup(name="Foundation", amount_minor=1_000)]
     await service.create_for_project(db_session, project_id, groups, "NGN")
     with pytest.raises(AppError) as error:
@@ -143,7 +145,7 @@ async def test_create_for_project_validates_input(
     db_session: AsyncSession, groups: list[MilestoneGroup], currency: str, code: str
 ) -> None:
     with pytest.raises(AppError) as error:
-        await service.create_for_project(db_session, uuid.uuid4(), groups, currency)
+        await service.create_for_project(db_session, (await make_project(db_session)).id, groups, currency)
     assert error.value.code == code
 
 
