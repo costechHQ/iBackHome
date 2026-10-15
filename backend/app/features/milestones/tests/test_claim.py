@@ -131,11 +131,11 @@ async def test_claim_is_refused(
     assert (await service.get_milestone(db_session, milestone.id)).status == milestone_status
 
 
-async def test_claim_waits_for_projects_to_be_connected(db_session: AsyncSession) -> None:
-    milestone = await make_milestone(db_session)
+async def test_claim_on_a_missing_project_is_404(db_session: AsyncSession) -> None:
+    milestone = await make_milestone(db_session)  # its project_id points at no project
     with pytest.raises(AppError) as error:
         await service.claim(db_session, milestone.id, CONTRACTOR)
-    assert error.value.code == "projects_not_ready"
+    assert (error.value.status_code, error.value.code) == (404, "project_not_found")
 
 
 # --- POST /milestones/{id}/claim ---------------------------------------------------------------
@@ -207,11 +207,9 @@ async def test_claim_endpoint_is_for_contractors_only(
     assert await audit_entries(db_session, milestone.id) == []
 
 
-async def test_claim_endpoint_waits_for_projects_to_be_connected(
-    client: AsyncClient, db_session: AsyncSession
-) -> None:
+async def test_claim_endpoint_reads_the_real_project(client: AsyncClient, db_session: AsyncSession) -> None:
     _, headers = await sign_in_as(db_session, "contractor")
-    milestone = await make_milestone(db_session)
+    milestone = await make_milestone(db_session)  # its project_id points at no project
     response = await client.post(f"/api/v1/milestones/{milestone.id}/claim", headers=headers)
-    assert response.status_code == 503
-    assert response.json()["error"]["code"] == "projects_not_ready"
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "project_not_found"

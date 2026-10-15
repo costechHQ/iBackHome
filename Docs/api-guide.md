@@ -37,35 +37,57 @@ Rules:
 
 | Endpoint | Who | What it does |
 | --- | --- | --- |
-| `POST /api/v1/milestones/{id}/claim` | the project's contractor | The work is done, so `funded` becomes `claimed`. Send an `Idempotency-Key` header; a retry with the same key gets the first answer back. |
+| `POST /api/v1/milestones/{id}/claim` | the project's contractor | The work is done: `funded` → `claimed`. |
+| `POST /api/v1/milestones/{id}/verify` | the project's assigned supervisor | `verified` with a checklist: `claimed` → `verified`. `rejected` with a reason: back to `funded` for rework. |
+| `POST /api/v1/milestones/{id}/approve` | the project's client | `verified` → `approved`, and escrow is asked to release the money (`escrow.request_release()`). The milestone becomes `released` when the escrow partner confirms. |
+| `GET /api/v1/projects/{id}/milestones` | the project's client, contractor, assigned supervisor, and ops | The milestones in order, each with `latest_verification` (so the contractor can see why a claim was rejected). |
 
-Errors from claim:
+All three POSTs need a project that is `active` and accept an `Idempotency-Key` header: a retry with the same key gets the first answer back (the mobile sync queue relies on this).
+
+**Verify body:**
+
+```json
+{
+  "decision": "verified",
+  "checklist": [
+    {"item": "Trench depth as drawn", "passed": true, "evidence_ids": ["<evidence uuid>"]},
+    {"item": "Rebar spacing 150 mm", "passed": true, "evidence_ids": ["<evidence uuid>", "<evidence uuid>"]}
+  ],
+  "notes": "optional"
+}
+```
+
+```json
+{"decision": "rejected", "notes": "Blockwork not plumb on the east wall", "checklist": []}
+```
+
+- `verified`: at least one checklist item; every item `passed` and with at least one photo (`evidence_ids`, up to 20 per item, up to 50 items). Every photo must be this milestone's **accepted supervisor evidence** (`evidence.accepted_for_milestone()`): contractor uploads, and photos still being checked, flagged or rejected, don't count.
+- `rejected`: `notes` is required (the reason the contractor sees). Nothing about evidence is checked.
+- The response is `{"milestone": {...}, "verification": {...}}`.
+
+Errors:
 
 | Status | Code | Meaning |
 | --- | --- | --- |
 | 401 | `unauthorized` | No valid sign-in token |
-| 403 | `forbidden_role` | The signed-in user is not a contractor |
-| 403 | `transition_not_allowed` | Raised by the service when a non-contractor reaches it (the route refuses them first) |
-| 403 | `not_project_contractor` | The user is a contractor, but not on this project |
-| 404 | `milestone_not_found` | No milestone has this ID |
+| 403 | `forbidden_role` | Wrong role for this endpoint (claim: contractor, verify: supervisor, approve: client) |
+| 403 | `not_project_contractor` / `not_assigned_supervisor` / `not_project_client` | Right role, but not on this project |
+| 403 | `not_project_member` | List: not the project's client, contractor or supervisor, and not ops |
+| 404 | `milestone_not_found` / `project_not_found` | No such milestone or project |
 | 409 | `project_not_active` | The project is draft, in BoQ review, paused or completed |
-| 409 | `invalid_transition` | The milestone is not `funded` (it isn't funded yet, or it has already been claimed) |
-| 503 | `projects_not_ready` | Projects are not connected yet (see below) |
+| 409 | `invalid_transition` | The milestone is in the wrong state (claim needs `funded`, verify `claimed`, approve `verified`); also a queued offline verification after the milestone was disputed |
+| 409 | `evidence_not_accepted` | Verify: some checklist photos are not accepted supervisor evidence for this milestone yet |
+| 422 | `validation_error` | Bad body (e.g. a verified checklist with a failed item or no photo, a rejection without a reason) |
 
-Service functions for other features (they never commit; the caller does): `create_for_project()` (Christopher), plus `mark_funded()`, `mark_released()`, `mark_disputed()` and `mark_resolved()` (Gabriel).
+Every move writes an audit entry (`milestone.<status>`); each verification also writes `verification.verified` or `verification.rejected`.
+
+Service functions for other features (they never commit; the caller does): `create_for_project()` (Christopher); `mark_funded()`, `mark_released()`, `mark_disputed()` and `mark_resolved()` (Gabriel); `list_verifiers(session, project_id)` (James's rotation: who verified each verified milestone, in milestone order; a milestone sent back for rework drops out).
 
 ## Sign-in
 
 Sign-in is connected (Christopher's `app.base.users`). `app/base/audit/actor.py` turns the signed-in user into an `Actor(id, role)` through `current_actor` / `CurrentActor`. To limit a route to one role, add `dependencies=[Depends(users.require_role("ops"))]` (`from app.base.users import service as users`). No token returns 401, a wrong role returns 403 `forbidden_role`. In tests, sign in with a real token: `users.create_access_token(user)` in an `Authorization: Bearer ...` header.
 
-## Connecting projects
+## Connecting projects and evidence
 
-`app/features/milestones/project_check.py` has `get_project_info`, which tells a claim the project's status and contractor. Until Christopher's projects feature is merged, it answers 503 `projects_not_ready`. Once his projects service is in main, replace its body with a call to his service, for example:
-
-```python
-from app.features.projects import service as projects
-
-async def get_project_info(session: AsyncSession, project_id: uuid.UUID) -> ProjectInfo:
-    project = await projects.get_project(session, project_id)
-    return ProjectInfo(id=project.id, status=project.status, contractor_id=project.contractor_id)
-```
+- `app/features/milestones/project_check.py` reads the project's status, client, contractor and assigned supervisor through `projects.get_project()`.
+- `app/features/milestones/evidence_check.py` asks Abigail's `evidence.accepted_for_milestone()` for the milestone's accepted supervisor photos.

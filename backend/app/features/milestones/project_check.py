@@ -1,12 +1,10 @@
 """What milestones need to know about a project.
 
-Claiming a milestone needs two facts from Christopher's projects feature: the project's
-status (it must be `active`) and who its contractor is. This file is the one place that asks.
+Claim, verify and approve each need a few facts from Christopher's projects feature: the
+project's status (it must be `active`) and who its client, contractor and assigned supervisor
+are. This file is the one place that asks, through `projects.get_project()`.
 
-Until Christopher's `projects` feature is merged (backend day 3), `get_project_info` refuses
-with 503 `projects_not_ready`, so a claim can never skip the checks. Tests replace it.
-When his code is in main, replace the body with a call to his service
-(see Docs/api-guide.md, "Connecting projects"). Nothing else changes.
+Tests can replace `get_project_info` to try one rule at a time without building a full project.
 """
 
 import uuid
@@ -14,7 +12,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.errors import AppError
+from app.features.projects import service as projects
 
 
 @dataclass(frozen=True)
@@ -22,7 +20,17 @@ class ProjectInfo:
     id: uuid.UUID
     status: str  # draft | boq_review | active | paused | completed
     contractor_id: uuid.UUID | None
+    client_id: uuid.UUID | None = None
+    supervisor_id: uuid.UUID | None = None
 
 
 async def get_project_info(session: AsyncSession, project_id: uuid.UUID) -> ProjectInfo:
-    raise AppError("projects_not_ready", "Projects are not connected yet.", 503)
+    """The project's status and people. 404 project_not_found."""
+    project = await projects.get_project(session, project_id)
+    return ProjectInfo(
+        id=project.id,
+        status=project.status,
+        contractor_id=project.contractor_id,
+        client_id=project.client_id,
+        supervisor_id=project.supervisor_id,
+    )

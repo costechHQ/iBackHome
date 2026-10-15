@@ -10,6 +10,10 @@ transaction, with the milestone before and after.
 Used by:
 - Christopher (BoQ approval): create_for_project()
 - Gabriel (escrow):           mark_funded(), mark_released(), mark_disputed(), mark_resolved()
+- James (rotation):           list_verifiers()
+
+Endpoints (router.py): claim (contractor), verify (assigned supervisor), approve (client),
+and the project's milestone list (members and ops).
 """
 
 import uuid
@@ -23,11 +27,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
 from app.base.audit.actor import Actor
+from app.base.users.models import User
 from app.core.errors import AppError
-from app.features.milestones import project_check
-from app.features.milestones.models import Milestone, MilestoneStatus
-from app.features.milestones.schemas import MilestoneGroup
+from app.features.escrow import service as escrow
+from app.features.milestones import evidence_check, project_check
+from app.features.milestones.models import Milestone, MilestoneStatus, Verification
+from app.features.milestones.schemas import MilestoneGroup, VerifyIn
 from app.features.milestones.transitions import ALLOWED_TRANSITIONS, ActorRole
+from app.features.projects import service as projects
 
 S = MilestoneStatus
 
@@ -140,13 +147,184 @@ async def claim(
     project = await project_check.get_project_info(session, milestone.project_id)
     if project.contractor_id != actor.id:
         raise AppError("not_project_contractor", "You are not the contractor on this project.", 403)
+    _require_active(project, "claimed")
+    return await transition(session, milestone_id, S.CLAIMED, ActorRole.CONTRACTOR, actor.id, request=request)
+
+
+def _require_active(project: "project_check.ProjectInfo", action: str) -> None:
     if project.status != "active":
         raise AppError(
             "project_not_active",
-            f"Milestones can only be claimed on an active project (this one is '{project.status}').",
+            f"Milestones can only be {action} on an active project (this one is '{project.status}').",
             409,
         )
-    return await transition(session, milestone_id, S.CLAIMED, ActorRole.CONTRACTOR, actor.id, request=request)
+
+
+def _require_status(milestone: Milestone, status: MilestoneStatus, action: str) -> None:
+    """Refuse early with the state machine's 409, before slower checks give a confusing error."""
+    if milestone.status != status:
+        raise AppError(
+            "invalid_transition",
+            f"Only a {status.value} milestone can be {action} (this one is '{milestone.status.value}').",
+            409,
+        )
+
+
+async def verify(
+    session: AsyncSession,
+    milestone_id: uuid.UUID,
+    supervisor: User,
+    data: VerifyIn,
+    *,
+    request: Request | None = None,
+) -> tuple[Milestone, Verification]:
+    """The project's assigned supervisor verifies or rejects a claimed milestone.
+
+    - `verified`: every photo the checklist points to must be this milestone's accepted
+      supervisor evidence (`evidence.accepted_for_milestone()`); contractor uploads never count.
+      The milestone moves `claimed` -> `verified`.
+    - `rejected`: the milestone goes back to `funded` with the reason in `notes`;
+      the contractor reworks and claims again.
+
+    Errors:
+    - 403 transition_not_allowed: the user is not a supervisor
+    - 404 milestone_not_found / project_not_found
+    - 403 not_assigned_supervisor: a supervisor, but not the one assigned to this project
+    - 409 project_not_active
+    - 409 invalid_transition: the milestone is not `claimed`
+      (e.g. it was disputed while the supervisor was offline)
+    - 409 evidence_not_accepted: a checklist photo is missing, still being checked, flagged,
+      rejected, from another milestone, or was captured by the contractor
+    """
+    if supervisor.role != ActorRole.SUPERVISOR:
+        raise AppError("transition_not_allowed", "Only the assigned supervisor can verify a milestone.", 403)
+    milestone = await get_milestone(session, milestone_id, lock=True)
+    project = await project_check.get_project_info(session, milestone.project_id)
+    if project.supervisor_id != supervisor.id:
+        raise AppError("not_assigned_supervisor", "You are not the supervisor assigned to this project.", 403)
+    _require_active(project, "verified")
+    _require_status(milestone, S.CLAIMED, "verified or rejected")
+
+    if data.decision == "verified":
+        needed = data.evidence_ids()
+        accepted = await evidence_check.accepted_evidence_ids(session, milestone.id)
+        missing = needed - accepted
+        if missing:
+            raise AppError(
+                "evidence_not_accepted",
+                f"{len(missing)} of the checklist's {len(needed)} photos are not accepted supervisor "
+                "evidence for this milestone yet. Wait for them to upload and pass the checks.",
+                409,
+            )
+
+    verification = Verification(
+        milestone_id=milestone.id,
+        supervisor_id=supervisor.id,
+        checklist=[item.model_dump(mode="json") for item in data.checklist],
+        notes=data.notes,
+        decision=data.decision,
+        # The clock now, not the transaction start: two decisions in one transaction stay in order.
+        created_at=datetime.now(UTC),
+    )
+    session.add(verification)
+    await session.flush()
+    await audit.record(
+        session,
+        supervisor.id,
+        f"verification.{data.decision}",
+        "verification",
+        verification.id,
+        after=audit.snapshot(verification),
+        request=request,
+    )
+    to_status = S.VERIFIED if data.decision == "verified" else S.FUNDED
+    milestone = await transition(
+        session, milestone.id, to_status, ActorRole.SUPERVISOR, supervisor.id, request=request
+    )
+    return milestone, verification
+
+
+async def approve(
+    session: AsyncSession, milestone_id: uuid.UUID, client: User, *, request: Request | None = None
+) -> Milestone:
+    """The project's client approves a verified milestone and asks escrow to release its money.
+
+    In one transaction: `verified` -> `approved`, then `escrow.request_release()`. If escrow
+    refuses, nothing is saved. The milestone becomes `released` later, when the escrow partner
+    confirms (Gabriel's webhook calls `mark_released()`).
+
+    Errors:
+    - 403 transition_not_allowed: the user is not a client
+    - 404 milestone_not_found / project_not_found
+    - 403 not_project_client: a client, but not this project's
+    - 409 project_not_active
+    - 409 invalid_transition: the milestone is not `verified`
+    """
+    if client.role != ActorRole.CLIENT:
+        raise AppError("transition_not_allowed", "Only the project's client can approve a milestone.", 403)
+    milestone = await get_milestone(session, milestone_id, lock=True)
+    project = await project_check.get_project_info(session, milestone.project_id)
+    if project.client_id != client.id:
+        raise AppError("not_project_client", "You are not the client on this project.", 403)
+    _require_active(project, "approved")
+    _require_status(milestone, S.VERIFIED, "approved")
+
+    milestone = await transition(
+        session, milestone.id, S.APPROVED, ActorRole.CLIENT, client.id, request=request
+    )
+    await escrow.request_release(session, milestone.id, client)
+    return milestone
+
+
+async def list_for_member(session: AsyncSession, user: User, project_id: uuid.UUID) -> list[Milestone]:
+    """The project's milestones in order, for its client, contractor, assigned supervisor or ops.
+
+    - 404 project_not_found
+    - 403 not_project_member
+    """
+    await projects.require_project_member(session, user, project_id)
+    return await list_for_project(session, project_id)
+
+
+async def latest_verifications(
+    session: AsyncSession, milestone_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, Verification]:
+    """The newest verification of each milestone (so the contractor sees why a claim was rejected)."""
+    if not milestone_ids:
+        return {}
+    rows = await session.scalars(
+        select(Verification)
+        .where(Verification.milestone_id.in_(milestone_ids))
+        .order_by(Verification.milestone_id, Verification.created_at.desc(), Verification.id.desc())
+        .distinct(Verification.milestone_id)
+    )
+    return {v.milestone_id: v for v in rows}
+
+
+# Milestones that have been verified at some point and not sent back for rework since.
+_VERIFIED_OR_LATER = (S.VERIFIED, S.APPROVED, S.DISPUTED, S.RELEASED)
+
+
+async def list_verifiers(session: AsyncSession, project_id: uuid.UUID) -> list[uuid.UUID]:
+    """Who verified each verified milestone of the project, in milestone order (for James's rotation).
+
+    A milestone counts once it is verified, approved, disputed or released; its verifier is the
+    supervisor of its newest `verified` decision. Milestones not verified yet are left out.
+    """
+    milestones = [m for m in await list_for_project(session, project_id) if m.status in _VERIFIED_OR_LATER]
+    if not milestones:
+        return []
+    rows = await session.scalars(
+        select(Verification)
+        .where(
+            Verification.milestone_id.in_([m.id for m in milestones]),
+            Verification.decision == "verified",
+        )
+        .order_by(Verification.milestone_id, Verification.created_at.desc(), Verification.id.desc())
+        .distinct(Verification.milestone_id)
+    )
+    by_milestone = {v.milestone_id: v.supervisor_id for v in rows}
+    return [by_milestone[m.id] for m in milestones if m.id in by_milestone]
 
 
 async def create_for_project(
