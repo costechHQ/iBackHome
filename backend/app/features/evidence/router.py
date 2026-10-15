@@ -66,9 +66,17 @@ async def revoke_device(
 
 
 @router.post("/evidence/upload-url", response_model=UploadUrlOut)
-async def get_upload_url(body: UploadUrlRequest, session: SessionDep, actor: DeviceOwner) -> UploadUrlOut:
+async def get_upload_url(
+    body: UploadUrlRequest, session: SessionDep, actor: DeviceOwner, key: IdempotencyKeyDep
+) -> JSONResponse:
     """A 15-minute pre-signed URL to PUT one photo (JPEG, max 10 MB) or video (MP4, max 60 MB)."""
-    return await service.create_upload_url(session, actor, body)
+    scope = f"POST /evidence/upload-url {actor.id}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    out = (await service.create_upload_url(session, actor, body)).model_dump(mode="json")
+    await remember(session, key, scope, 200, out)
+    await session.commit()
+    return JSONResponse(status_code=200, content=out)
 
 
 @router.post("/evidence", status_code=201, response_model=EvidenceOut)

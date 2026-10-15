@@ -96,7 +96,7 @@ async def create_upload_url(session: AsyncSession, user: User, data: UploadUrlRe
     key = f"{_key_prefix(data.project_id)}{uuid.uuid4()}.{EXTENSIONS[data.content_type]}"
     return UploadUrlOut(
         storage_key=key,
-        upload_url=storage.presign_upload(key, data.content_type),
+        upload_url=await asyncio.to_thread(storage.presign_upload, key, data.content_type),
         headers={"Content-Type": data.content_type},
         expires_in=storage.UPLOAD_URL_TTL_S,
         max_bytes=MAX_BYTES[data.kind],
@@ -137,14 +137,16 @@ async def submit_evidence(
         if milestone.project_id != data.project_id:
             raise AppError("milestone_not_in_project", "This milestone is not on this project.", 422)
 
-    stored = storage.head_object(data.storage_key)
+    stored = await asyncio.to_thread(storage.head_object, data.storage_key)
     if stored is None:
         raise AppError("file_not_uploaded", "Upload the file to the upload URL first.", 422)
     size, content_type = stored
     if content_type != CONTENT_TYPES[data.kind]:
         raise AppError("invalid_content_type", f"A {data.kind} must be {CONTENT_TYPES[data.kind]}.", 422)
     if size > MAX_BYTES[data.kind]:
-        storage.delete_object(data.storage_key)  # a presigned PUT can't cap the size, so enforce it here
+        await asyncio.to_thread(
+            storage.delete_object, data.storage_key
+        )  # a presigned PUT can't cap the size, so enforce it here
         raise AppError(
             "file_too_large", f"A {data.kind} can be at most {MAX_BYTES[data.kind] // (1024 * 1024)} MB.", 422
         )
