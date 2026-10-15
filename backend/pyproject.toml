@@ -79,6 +79,7 @@ gabriel = [
 ]
 james = [
     "boto3>=1.35",
+    "cryptography>=43",
     "google-genai>=2.0,<3",
     "imagehash>=4.3",
     "markdown>=3.7",
