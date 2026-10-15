@@ -48,6 +48,21 @@ def presign_upload(storage_key: str, content_type: str, expires_in: int = UPLOAD
     return url
 
 
+def head_object(storage_key: str) -> tuple[int, str] | None:
+    """(size in bytes, content type) of a stored file, or None if it was never uploaded."""
+    try:
+        head = get_client().head_object(Bucket=get_settings().storage_bucket, Key=storage_key)
+    except ClientError as exc:
+        if exc.response.get("Error", {}).get("Code") in {"404", "NoSuchKey", "NotFound"}:
+            return None
+        raise
+    return int(head["ContentLength"]), str(head.get("ContentType", ""))
+
+
+def delete_object(storage_key: str) -> None:
+    get_client().delete_object(Bucket=get_settings().storage_bucket, Key=storage_key)
+
+
 def presign_read(storage_key: str, expires_in: int = READ_URL_TTL_S) -> str:
     """URL for viewing a stored file, valid for 15 minutes by default."""
     url: str = get_client().generate_presigned_url(

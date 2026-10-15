@@ -58,6 +58,7 @@ abigail = [
     "boto3>=1.35",
     "cryptography>=43",
     "geoalchemy2>=0.15",
+    "moto[s3]>=5",
 ]
 christopher = [
     "geoalchemy2>=0.15",
