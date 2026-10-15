@@ -30,7 +30,7 @@ from typing import Annotated, Any
 
 import jwt
 import phonenumbers
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import ColumnElement, func, select, text, update
 from sqlalchemy.exc import IntegrityError
@@ -46,6 +46,7 @@ from app.core.errors import AppError
 JWT_ALGORITHM = "HS256"
 JWT_ISSUER = "ibackhome"
 ACCESS_TOKEN_TYPE = "access"  # noqa: S105 - the JWT "type" claim, not a secret
+SERVICE_TOKEN_TYPE = "service"  # noqa: S105 - an AI agent's token (agents.service), not a secret
 OTP_DIGITS = 6
 DEFAULT_PHONE_REGION = "NG"  # "0803..." means a Nigerian number
 
@@ -411,18 +412,73 @@ def decode_access_token(token: str) -> uuid.UUID:
         raise _unauthorized("Invalid access token.") from exc
 
 
+def _unverified_type(token: str) -> object:
+    """The token's "type" claim, read WITHOUT checking the signature: only picks the verifier."""
+    try:
+        return jwt.decode(token, options={"verify_signature": False}).get("type")
+    except jwt.InvalidTokenError:
+        return None
+
+
+def _route_template(request: Request) -> str:
+    """The matched route as a full template, e.g. "/api/v1/projects/{project_id}".
+
+    FastAPI gives the route's own template without the prefixes of the routers it was included in
+    ("/projects/{project_id}"). Each template segment matches one path segment (no route uses a
+    `:path` converter), so the prefix is the request's leading segments, read from the raw path so
+    an encoded "/" inside a value stays one segment. Anything unexpected gives a template that is
+    on no allow-list, so the agent is refused.
+    """
+    route = request.scope.get("route")
+    if route is None:
+        raise AppError("route_not_allowed", "Agents may only call API routes.", 403)
+    template = [s for s in str(route.path).split("/") if s]
+    raw = request.scope.get("raw_path") or request.scope["path"].encode()
+    segments = [s for s in raw.decode("latin-1").split("/") if s]
+    if len(template) > len(segments):
+        raise AppError("route_not_allowed", "Agents may only call API routes.", 403)
+    return "/" + "/".join(segments[: len(segments) - len(template)] + template)
+
+
+def _service_token_user_id(request: Request, token: str) -> uuid.UUID:
+    """An AI agent's service token: verified, and allowed only on the routes it lists.
+
+    Spec (AI agents): agent tokens carry an allow-list of tools and can never call approve,
+    release, resolve or pay routes. The rules live in James's agents.service; imported here,
+    not at the top, so base/ doesn't load a feature module at startup.
+    """
+    from app.features.agents import service as agents
+
+    claims = agents.decode_service_token(token)  # 401 invalid_service_token
+    agents.check_route(claims, request.method, _route_template(request))  # 403 route_not_allowed
+    try:
+        return uuid.UUID(str(claims["sub"]))
+    except ValueError as exc:
+        raise _unauthorized("Invalid access token.") from exc
+
+
 async def current_user(
+    request: Request,
     session: SessionDep,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
 ) -> User:
-    """The signed-in user, read fresh from the database (so role changes and suspensions apply at once)."""
+    """The signed-in user, read fresh from the database (so role changes and suspensions apply at once).
+
+    A person signs in with an access token. An AI agent uses a service token (agents.service) and
+    acts as its own `ops` user, limited to the routes on its token (decided 2026-10-15).
+    """
     if credentials is None:
         raise _unauthorized("Sign in first.")
-    user = await session.get(User, decode_access_token(credentials.credentials))
+    token = credentials.credentials
+    is_agent = _unverified_type(token) == SERVICE_TOKEN_TYPE
+    user_id = _service_token_user_id(request, token) if is_agent else decode_access_token(token)
+    user = await session.get(User, user_id)
     if user is None:
         raise _unauthorized("Invalid access token.")
     if user.status != UserStatus.ACTIVE.value:
         raise AppError("account_suspended", "This account is suspended. Contact support.", 403)
+    if is_agent and user.role != Role.OPS.value:
+        raise AppError("forbidden_role", "An agent must act as an ops user.", 403)
     return user
 
 
