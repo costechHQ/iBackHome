@@ -388,6 +388,26 @@ async def get_payout_recipient(session: AsyncSession, recipient_code: str) -> Pa
     return recipient
 
 
+async def _start_or_find_transfer(
+    paystack: PaystackClient, amount_minor: int, recipient_code: str, reference: str, reason: str
+) -> TransferResult:
+    """Start a transfer; if Paystack refuses or can't be reached, look it up by our reference.
+
+    Found: that transfer (a lost answer, or a retry of a transfer Paystack already has). Not
+    found: the original error (paystack_unavailable: try again later; paystack_refused: it was
+    really refused). The lookup itself may raise paystack_unavailable.
+    """
+    try:
+        return await paystack.initiate_transfer(amount_minor, recipient_code, reference, reason)
+    except AppError as exc:
+        if exc.code not in ("paystack_refused", "paystack_unavailable"):
+            raise
+        found = await paystack.verify_transfer(reference)
+        if found is None:
+            raise
+        return found
+
+
 async def initiate_transfer(
     session: AsyncSession,
     recipient_code: str,
@@ -403,9 +423,12 @@ async def initiate_transfer(
 
     Calling again with the same reference and details returns the existing payout without a
     second Paystack call; the same reference with other details is refused (409). Paystack
-    itself also refuses a reference it has seen, so even a lost answer can't pay twice.
+    itself also refuses a reference it has seen, so even a lost answer can't pay twice: if
+    Paystack's answer is lost (the caller's transaction then rolls back this row) or it refuses
+    the reference on a retry, the transfer is looked up by reference and that result is kept.
     The payout starts `pending` (or `success`/`failed` if Paystack answers so at once);
-    transfer.* webhooks move it on. Ledger entries for payouts come with releases (day 4).
+    transfer.* webhooks move it on. Money leaving escrow uses queue_transfer() instead, which
+    saves the payout before Paystack is called.
 
     - 404 recipient_not_found; 409 payout_reference_conflict, payout_in_progress
     - 422 invalid_amount, invalid_reference, paystack_refused; 502 paystack_unavailable
@@ -444,8 +467,8 @@ async def initiate_transfer(
         ) from exc
 
     paystack = client or get_paystack_client()
-    result = await paystack.initiate_transfer(
-        amount_minor, recipient.recipient_code, reference, payout.reason
+    result = await _start_or_find_transfer(
+        paystack, amount_minor, recipient.recipient_code, reference, payout.reason
     )
     payout.provider_transfer_code = result.transfer_code or None
     payout.status = result.status
@@ -663,16 +686,13 @@ async def send_transfer(
 
     paystack = client or get_paystack_client()
     refused: AppError | None = None
-    result: TransferResult | None
+    result: TransferResult | None = None
     try:
-        result = await paystack.initiate_transfer(
-            payout.amount_minor, recipient.recipient_code, payout.reference, payout.reason
+        result = await _start_or_find_transfer(
+            paystack, payout.amount_minor, recipient.recipient_code, payout.reference, payout.reason
         )
     except AppError as exc:
-        if exc.code not in ("paystack_refused", "paystack_unavailable"):
-            raise
-        result = await paystack.verify_transfer(payout.reference)
-        if result is None and exc.code == "paystack_unavailable":
+        if exc.code != "paystack_refused":
             raise
         refused = exc
 
