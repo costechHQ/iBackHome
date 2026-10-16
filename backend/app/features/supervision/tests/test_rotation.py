@@ -6,6 +6,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.users.models import User
+from app.features.milestones import service as milestones
+from app.features.milestones.models import MilestoneStatus, Verification
+from app.features.milestones.schemas import MilestoneGroup
 from app.features.projects import service as projects
 from app.features.projects.models import Project
 from app.features.supervision import rotation
@@ -92,13 +95,30 @@ async def test_suspended_supervisor_is_not_offered(
     assert suspended.id not in offered.candidates
 
 
+async def verified_by(session: AsyncSession, project: Project, *supervisors: User) -> None:
+    """Milestones 1..n of the project, each verified by the given supervisor, in order (Lilian's tables,
+    read back by milestones.list_verifiers())."""
+    count = len(supervisors) + 1  # plus one milestone not verified yet
+    groups = [MilestoneGroup(name=f"Stage {i}", amount_minor=1_000_00) for i in range(1, count + 1)]
+    created = await milestones.create_for_project(session, project.id, groups, "NGN")
+    for milestone, supervisor in zip(created, supervisors, strict=False):
+        milestone.status = MilestoneStatus.VERIFIED
+        session.add(
+            Verification(
+                milestone_id=milestone.id, supervisor_id=supervisor.id, checklist=[], decision="verified"
+            )
+        )
+    await session.flush()
+
+
 async def test_next_supervisor_is_none_until_rotation_is_due(
     db_session: AsyncSession, project: Project, ops: User
 ) -> None:
     current = await assigned(db_session, project, ops)
     await make_vetted(db_session, ops)
+    await verified_by(db_session, project, current)  # only one milestone so far
 
-    assert await rotation.next_supervisor(db_session, project.id, [current.id]) is None
+    assert await rotation.next_supervisor(db_session, project.id) is None
 
 
 async def test_next_supervisor_can_be_assigned_when_rotation_is_due(
@@ -106,8 +126,9 @@ async def test_next_supervisor_can_be_assigned_when_rotation_is_due(
 ) -> None:
     current = await assigned(db_session, project, ops)
     await make_vetted(db_session, ops)
+    await verified_by(db_session, project, current, current)  # two in a row
 
-    replacement = await rotation.next_supervisor(db_session, project.id, [current.id, current.id])
+    replacement = await rotation.next_supervisor(db_session, project.id)
 
     assert replacement is not None and replacement != current.id
     updated = await projects.set_supervisor(db_session, project.id, replacement, ops.id)

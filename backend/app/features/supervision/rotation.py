@@ -4,11 +4,8 @@ Kept apart from service.py because projects.service imports supervision.service 
 ensure_assignable), so service.py can't import projects back.
 
 Rotation (spec, permissions): a supervisor "is rotated after two consecutive milestones on the same
-project". next_supervisor() takes who verified each milestone, in order.
-
-TODO(James): once Lilian's `milestones.list_verifiers(session, project_id) -> list[uuid.UUID]` is on
-main (it is on lilian/day-03-verify-approve), read it here with
-`from app.features.milestones import service as milestones` and drop the `verifiers` argument.
+project". next_supervisor() reads who verified each milestone, in order, from Lilian's
+`milestones.list_verifiers()`.
 """
 
 import random
@@ -112,15 +109,20 @@ async def pick_replacement(
 async def next_supervisor(
     session: AsyncSession,
     project_id: uuid.UUID,
-    verifiers: Sequence[uuid.UUID],
     *,
     choose: Callable[[list[uuid.UUID]], uuid.UUID] = _system_random.choice,
 ) -> uuid.UUID | None:
     """Who should take over the project now, or None if rotation isn't due (or nobody qualifies).
 
-    Doesn't assign anyone: the caller passes the result to projects.set_supervisor(), which re-checks it.
+    Rotation is due when the current supervisor verified the last two verified milestones
+    (`milestones.list_verifiers()`; a milestone sent back for rework drops out). Doesn't assign
+    anyone: the caller passes the result to projects.set_supervisor(), which re-checks it.
     """
+    # Imported here: milestones imports escrow, which imports more of the app than supervision needs.
+    from app.features.milestones import service as milestones
+
     project = await projects.get_project(session, project_id)
+    verifiers = await milestones.list_verifiers(session, project_id)
     if not rotation_due(project.supervisor_id, verifiers):
         return None
     return await pick_replacement(session, project_id, choose=choose)
