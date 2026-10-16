@@ -28,7 +28,7 @@ async def _run(day: date) -> dict[str, Any]:
     engine = create_async_engine(get_settings().database_url, poolclass=NullPool)
     try:
         async with AsyncSession(engine, expire_on_commit=False) as session:
-            stripe, paystack, escrow = default_sources()
+            stripe, paystack, escrow = default_sources(session)
             result = await service.reconcile_day(session, day, stripe, paystack, escrow)
             await session.commit()
     finally:

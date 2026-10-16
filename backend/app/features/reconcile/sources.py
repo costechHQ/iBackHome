@@ -14,8 +14,10 @@ from datetime import datetime
 from typing import Any, Protocol
 
 import httpx
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.payments.settings import get_payments_settings
+from app.core.errors import AppError
 
 STRIPE_API = "https://api.stripe.com/v1"
 PAGE = 100
@@ -52,9 +54,13 @@ def totals(records: list[tuple[str, int]]) -> dict[str, ProviderTotal]:
     return {c: ProviderTotal(c, amounts[c], counts[c]) for c in amounts}
 
 
+# The Stripe events that mean "a Checkout payment is paid" (the ones Gabriel's funding handles).
+PAID_EVENTS = ("checkout.session.completed", "checkout.session.async_payment_succeeded")
+
+
 class StripeSource(Protocol):
     async def paid(self, since: datetime, until: datetime) -> dict[str, ProviderTotal]:
-        """Completed Checkout payments created in [since, until), per currency."""
+        """Checkout payments that became paid in [since, until) (Stripe event time), per currency."""
         ...
 
 
@@ -69,6 +75,7 @@ class EscrowHolding:
     project_id: uuid.UUID
     currency: str
     available_minor: int  # what the partner says it holds for the project right now
+    source: str = "partner"  # "records": the simulated partner, read from escrow's own records
 
 
 class EscrowSource(Protocol):
@@ -81,32 +88,31 @@ class StripeHttp:
         self._client = client
 
     async def paid(self, since: datetime, until: datetime) -> dict[str, ProviderTotal]:
+        """By Stripe event time (when the payment completed), the same clock the ledger side uses
+        (payments.provider_event_times), so a payment near midnight is counted on one day only."""
         if not self._key:
             raise SourceUnavailable("STRIPE_SECRET_KEY is not set")
         records: list[tuple[str, int]] = []
         params: dict[str, Any] = {
             "limit": PAGE,
-            "status": "complete",
+            "types[]": list(PAID_EVENTS),
             "created[gte]": int(since.timestamp()),
             "created[lt]": int(until.timestamp()),
         }
         async with _http(self._client) as http:
             while True:
-                response = await http.get(
-                    f"{STRIPE_API}/checkout/sessions", params=params, auth=(self._key, "")
-                )
+                response = await http.get(f"{STRIPE_API}/events", params=params, auth=(self._key, ""))
                 if response.status_code != 200:
                     raise SourceUnavailable(f"Stripe answered {response.status_code}")
                 body = response.json()
-                sessions = body.get("data", [])
-                records += [
-                    (s["currency"], int(s["amount_total"]))
-                    for s in sessions
-                    if s.get("payment_status") == "paid"
-                ]
-                if not body.get("has_more") or not sessions:
+                events = body.get("data", [])
+                for event in events:
+                    checkout = (event.get("data") or {}).get("object") or {}
+                    if checkout.get("payment_status") == "paid":
+                        records.append((checkout["currency"], int(checkout["amount_total"])))
+                if not body.get("has_more") or not events:
                     return totals(records)
-                params["starting_after"] = sessions[-1]["id"]
+                params["starting_after"] = events[-1]["id"]
 
 
 class PaystackHttp:
@@ -144,22 +150,30 @@ class PaystackHttp:
                 page += 1
 
 
-class EscrowNotReady:
-    """Until the escrow feature exposes the partner's balances to other features.
+class EscrowFromService:
+    """What the partner holds, through Gabriel's escrow.partner_balances() (read-only).
 
-    Needs Gabriel: a function in features/escrow/service.py returning, per project, what the partner
-    holds (its EscrowProvider.balance()). Also, SimulatedEscrow keeps its state inside one process,
-    so a worker can't see what the API process holds: escrow is only reconcilable with a real partner.
+    With the simulated partner the figures come from escrow's own hold/release records (its memory
+    lives in one process), so they are marked source="records".
     """
 
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
     async def holdings(self) -> list[EscrowHolding]:
-        raise SourceUnavailable("escrow balances aren't exposed by features/escrow yet (Gabriel)")
+        from app.features.escrow import service as escrow  # escrow imports more than reconcile needs
+
+        try:
+            balances = await escrow.partner_balances(self._session)
+        except AppError as exc:
+            raise SourceUnavailable(f"escrow partner: {exc.code}") from exc
+        return [EscrowHolding(b.project_id, b.currency, b.available_minor, b.source) for b in balances]
 
 
-def default_sources() -> tuple[StripeSource, PaystackSource, EscrowSource]:
+def default_sources(session: AsyncSession) -> tuple[StripeSource, PaystackSource, EscrowSource]:
     s = get_payments_settings()
     return (
         StripeHttp(s.stripe_secret_key),
         PaystackHttp(s.paystack_secret_key, s.paystack_base_url),
-        EscrowNotReady(),
+        EscrowFromService(session),
     )
