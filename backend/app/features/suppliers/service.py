@@ -34,6 +34,36 @@ ALLOWED_TRANSITIONS: dict[tuple[str, str], str] = {
 }
 
 
+async def ensure_supplier(
+    session: AsyncSession,
+    name: str,
+    *,
+    owner_id: uuid.UUID | None = None,
+    address: str | None = None,
+    verified: bool = False,
+    actor_id: uuid.UUID | None = None,
+) -> Supplier:
+    """The supplier with this name and owner, created (and audited) if it doesn't exist yet.
+
+    No route calls this yet: ops vets suppliers outside the app for the pilot, and scripts/seed.py
+    creates the test supplier. Safe to call twice. Does not commit.
+    """
+    name = name.strip()
+    if not name:
+        raise AppError("invalid_supplier_name", "The supplier name is required.", 422)
+    same_owner = Supplier.owner_id.is_(None) if owner_id is None else Supplier.owner_id == owner_id
+    existing = await session.scalar(select(Supplier).where(Supplier.name == name, same_owner).limit(1))
+    if existing is not None:
+        return existing
+    supplier = Supplier(name=name, owner_id=owner_id, address=address, verified=verified)
+    session.add(supplier)
+    await session.flush()
+    await audit.record(
+        session, actor_id, "supplier.created", "supplier", supplier.id, after=audit.snapshot(supplier)
+    )
+    return supplier
+
+
 def order_total_minor(items: list[OrderItem]) -> int:
     """Sum of quantity x unit price in minor units, rounded half up once per line (integers only)."""
     return sum(
