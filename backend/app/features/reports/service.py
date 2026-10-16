@@ -20,7 +20,7 @@ from app.base.users.models import Role, User
 from app.core.errors import AppError
 from app.features.projects import service as projects
 from app.features.projects.models import Project
-from app.features.reports import pdf, storage
+from app.features.reports import messages, pdf, storage
 from app.features.reports.models import Report, ReportStatus
 
 log = logging.getLogger(__name__)
@@ -158,30 +158,40 @@ def pdf_url(report: Report) -> str | None:
     return storage.presign_read(report.pdf_key) if report.pdf_key else None
 
 
-# Sends one report; True only when it was really delivered.
+# Sends one report; True once it has been handed to notifications.
 Sender = Callable[[AsyncSession, Report, Project], Awaitable[bool]]
 
 
 async def notify_client(session: AsyncSession, report: Report, project: Project) -> bool:
     """Tell the client their report is ready, through Lilian's notify() (spec: WhatsApp + email).
 
-    STUB until base/notifications has notify(session, user_id, template, data, channels=None) on main:
-    returns False, so reports stay `reviewed` and are sent by a later run instead of being marked
-    sent without a message.
+    WhatsApp first (falling back to push, SMS, email), then the same message by email if the client
+    has an address and the first one didn't already go by email. Each send has a key, so a report is
+    never announced twice. A message that fails on every channel is saved as `failed` and retried by
+    notifications.retry_failed, so the report still counts as sent (otherwise every 15-minute run
+    would announce it again).
     """
-    from app.base.notifications import service as notifications
+    from app.base.notifications import notify
 
-    notify = getattr(notifications, "notify", None)
-    if notify is None:
-        log.warning("notifications.notify() isn't on main yet; report %s stays reviewed", report.id)
-        return False
     data = {
+        "project": project.title,
+        "week": report.week_start.strftime("%d %b %Y"),
         "report_id": str(report.id),
         "project_id": str(project.id),
-        "project_title": project.title,
-        "week_start": report.week_start.isoformat(),
     }
-    await notify(session, project.client_id, "weekly_report_ready", data)
+    first = await notify(
+        session, project.client_id, messages.WEEKLY_REPORT_READY, data, key=f"report:{report.id}:main"
+    )
+    client = await session.get(User, project.client_id)
+    if client is not None and client.email and first.channel != "email":
+        await notify(
+            session,
+            project.client_id,
+            messages.WEEKLY_REPORT_READY,
+            data,
+            ["email"],
+            key=f"report:{report.id}:email",
+        )
     return True
 
 
