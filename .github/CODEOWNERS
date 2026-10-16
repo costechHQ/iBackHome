@@ -11,6 +11,7 @@
 /backend/tests/                       @costechHQ
 /backend/alembic/env.py               @costechHQ
 /docker-compose.yml                   @costechHQ
+/deploy/                              @costechHQ
 /.github/                             @costechHQ
 /.env.example                         @costechHQ
 

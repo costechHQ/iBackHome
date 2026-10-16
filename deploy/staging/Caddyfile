@@ -1,0 +1,10 @@
+# HTTPS for the staging API. Owner: Christopher.
+# Caddy obtains and renews the certificate for STAGING_DOMAIN (its DNS A record must point at this server).
+{
+	email {$ACME_EMAIL}
+}
+
+{$STAGING_DOMAIN} {
+	encode gzip
+	reverse_proxy api:8000
+}
