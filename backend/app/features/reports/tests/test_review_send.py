@@ -10,9 +10,13 @@ from typing import Any
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.audit.service import search
+from app.base.notifications import service as notifications_service
+from app.base.notifications.adapters import FakeAdapter
+from app.base.notifications.models import Channel, Notification
 from app.base.users import service as users
 from app.base.users.models import User
 from app.core.errors import AppError
@@ -219,14 +223,71 @@ async def test_undelivered_or_failing_reports_stay_reviewed(
     assert report.status == ReportStatus.REVIEWED.value and report.sent_at is None
 
 
-async def test_until_notify_exists_the_default_sender_never_marks_sent(
-    db_session: AsyncSession, project: Project, people: dict[str, User], uploads: Uploads
+@pytest.fixture
+def channels(monkeypatch: pytest.MonkeyPatch) -> dict[Channel, FakeAdapter]:
+    """Fake providers behind Lilian's notify(), so the default sender runs for real."""
+    fakes = {channel: FakeAdapter() for channel in Channel}
+    monkeypatch.setattr(notifications_service, "get_adapters", lambda: fakes)
+    return fakes
+
+
+async def test_default_sender_tells_the_client_on_whatsapp_and_email(
+    db_session: AsyncSession,
+    project: Project,
+    people: dict[str, User],
+    uploads: Uploads,
+    channels: dict[Channel, FakeAdapter],
 ) -> None:
+    client = people["client"]
+    client.email = f"{secrets.token_hex(4)}@example.com"
+    await db_session.flush()
     report = await reviewed_report(db_session, project, people)
 
-    await service.send_reviewed(db_session)
+    assert await service.send_reviewed(db_session) == 1
 
-    assert report.status == ReportStatus.REVIEWED.value
+    assert report.status == ReportStatus.SENT.value
+    [(to_phone, whatsapp)] = channels[Channel.WHATSAPP].sent
+    [(to_email, email)] = channels[Channel.EMAIL].sent
+    assert (to_phone, to_email) == (client.phone, client.email)
+    assert whatsapp.text == (
+        f"Your weekly report for {project.title} (week of {MONDAY.strftime('%d %b %Y')}) is ready. "
+        "Open iBackHome to read it."
+    )
+    assert email.subject == "Your iBackHome weekly report"
+
+
+async def test_a_report_is_announced_once(
+    db_session: AsyncSession,
+    project: Project,
+    people: dict[str, User],
+    uploads: Uploads,
+    channels: dict[Channel, FakeAdapter],
+) -> None:
+    report = await reviewed_report(db_session, project, people)
+    await service.notify_client(db_session, report, project)
+    await service.notify_client(db_session, report, project)  # e.g. a run that crashed after sending
+    assert len(channels[Channel.WHATSAPP].sent) == 1
+
+
+async def test_failed_message_still_marks_sent_and_is_left_to_the_retry_job(
+    db_session: AsyncSession,
+    project: Project,
+    people: dict[str, User],
+    uploads: Uploads,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(notifications_service, "get_adapters", lambda: {})  # nothing configured
+    report = await reviewed_report(db_session, project, people)
+
+    assert await service.send_reviewed(db_session) == 1
+
+    assert report.status == ReportStatus.SENT.value
+    row = await db_session.scalar(
+        select(Notification).where(
+            Notification.user_id == people["client"].id, Notification.template == "report.weekly_ready"
+        )
+    )
+    assert row is not None and row.status == "failed"  # notifications.retry_failed sends it later
 
 
 # The Friday job
