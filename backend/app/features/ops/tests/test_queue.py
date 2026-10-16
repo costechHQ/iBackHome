@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.users.models import User
+from app.features.escrow.models import Dispute
 from app.features.evidence.tests.conftest import World, add_evidence, bearer, make_user, make_world
 from app.features.ops import disputes_bridge
 from app.features.supervision import service as supervision
@@ -124,3 +125,32 @@ async def test_only_ops_can_see_the_queue(client: AsyncClient, world: World) -> 
 async def test_without_gabriels_disputes_there_are_simply_none(client: AsyncClient, world: World) -> None:
     # The bridge returns an empty list until his disputes exist, because none can be open yet.
     assert (await client.get(URL, headers=bearer(world.ops))).json()["disputes"] == []
+
+
+async def test_a_real_open_dispute_shows_in_the_queue(
+    client: AsyncClient, db_session: AsyncSession, world: World
+) -> None:
+    """The bridge reads Gabriel's escrow.list_open_disputes(); resolved disputes don't show."""
+    open_one = Dispute(
+        project_id=world.project.id,
+        milestone_id=world.milestone.id,
+        raised_by=world.client.id,
+        reason="Foundation is cracked",
+        status="open",
+    )
+    closed = Dispute(
+        project_id=world.project.id,
+        milestone_id=world.other_milestone.id,
+        raised_by=world.client.id,
+        reason="Settled",
+        status="resolved_reject",
+    )
+    db_session.add_all([open_one, closed])
+    await db_session.flush()
+
+    response = await client.get(URL, headers=bearer(world.ops))
+    assert response.status_code == 200
+    disputes = response.json()["disputes"]
+    assert [d["dispute_id"] for d in disputes] == [str(open_one.id)]
+    assert disputes[0]["reason"] == "Foundation is cracked"
+    assert disputes[0]["milestone_id"] == str(world.milestone.id)
