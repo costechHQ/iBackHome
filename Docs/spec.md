@@ -139,7 +139,7 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `agent_runs` | agents | agent, user → users (empty for scheduled runs), input (JSONB: system prompt, prompt, tools), tool_calls (JSONB), output, model (exact version), status (`succeeded`, `failed`), error, duration_ms, created_at |
 | `audit_log` | base/audit | actor → users, action, object_type, object_id, before (JSONB), after (JSONB), ip, device_id, at — insert only |
 | `idempotency_keys` | core | key, scope, status_code, response (the saved response a retried write replays) |
-| `notifications` | base/notifications | user → users, channel, template, payload, status, provider_ref, sent_at |
+| `notifications` | base/notifications | user → users (nullable: login codes go to a raw phone or email), channel (`whatsapp`, `push`, `sms`, `email`: the one that delivered, or the last tried), template, payload (JSONB; never a login code; may hold the send key `_key`), recipient (the phone or email used), status (`sent`, `failed`), provider_ref, attempts, error (why channels failed), sent_at |
 
 **Indexes that matter**: GiST on `sites.geofence`; unique on `payment_events (provider, event_id)`; btree on `evidence.phash` plus a BK-tree or prefix index for near-match search (see evidence integrity); `ledger_entries (ref_type, ref_id)`.
 
@@ -614,7 +614,7 @@ WhatsApp messages outside the 24-hour customer-service window must use Meta-appr
 
 ## Auth, roles and permissions
 
-**Login**: OTP by SMS or WhatsApp (Nigerian and international numbers, E.164) or email. OTPs are 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and per IP. Successful login returns a 15-minute access JWT and a 30-day refresh token (rotated on use, stored hashed). Mobile keeps tokens in Android encrypted storage.
+**Login**: OTP by SMS or WhatsApp (Nigerian and international numbers, E.164) or email. OTPs are 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and per IP. Codes are sent through `notify_address()` on exactly the channel asked for (no fallback); an unconfigured channel answers 503 `notifications_not_configured` and a provider failure 502 `notification_failed`, and no code is left waiting. Only `ENVIRONMENT=local` writes codes to the log. Successful login returns a 15-minute access JWT and a 30-day refresh token (rotated on use, stored hashed). Mobile keeps tokens in Android encrypted storage.
 
 **Authorisation** has two layers, both checked on every request:
 

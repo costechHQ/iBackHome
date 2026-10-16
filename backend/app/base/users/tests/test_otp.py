@@ -8,9 +8,11 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base.notifications.adapters import FakeAdapter
+from app.base.notifications.models import Channel, Notification
 from app.base.users import otp_sender, service
 from app.base.users.models import OtpCode, User
-from app.base.users.otp_sender import DevLogSender
+from app.base.users.otp_sender import NotificationSender
 from app.base.users.tests.conftest import CapturingSender, make_user, random_phone
 from app.core.config import Settings, get_settings
 from app.core.errors import AppError
@@ -253,24 +255,62 @@ async def test_code_must_be_six_digits(client: AsyncClient) -> None:
     assert response.json()["error"]["code"] == "validation_error"
 
 
-# --- safety outside local -----------------------------------------------------------------------
+# --- sending the code through notifications ------------------------------------------------------
 
 
-async def test_development_sender_refuses_outside_local() -> None:
-    for environment in ("staging", "production"):
-        with pytest.raises(AppError) as err:
-            await DevLogSender(environment).send("+2348031234567", "sms", "123456")
-        assert (err.value.status_code, err.value.code) == (503, "otp_sender_not_configured")
-
-
-async def test_development_sender_logs_only_locally(
-    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    ("identifier", "channel"),
+    [("+2348031234567", "sms"), ("+447700900123", "whatsapp"), ("ada@example.com", "email")],
+)
+async def test_code_goes_out_on_the_chosen_channel(
+    db_session: AsyncSession, identifier: str, channel: str
 ) -> None:
-    # Alembic's logging setup (run by the shared migrated_database fixture) disables loggers that
-    # already exist; the real app runs migrations in a separate process, so it isn't affected.
-    monkeypatch.setattr(otp_sender.logger, "disabled", False)
-    await DevLogSender("local").send("+2348031234567", "sms", "123456")
-    assert "123456" in caplog.text
+    fakes = {c: FakeAdapter() for c in Channel}
+    await NotificationSender(db_session, adapters=fakes).send(identifier, channel, "482913")
+
+    [(to, message)] = fakes[Channel(channel)].sent
+    assert to == identifier
+    assert message.template == "auth.login_code"
+    assert "482913" in message.text
+    assert sum(len(f.sent) for f in fakes.values()) == 1  # that channel only, no fallback
+    row = await db_session.scalar(
+        select(Notification)
+        .where(Notification.recipient == identifier)
+        .order_by(Notification.created_at.desc())
+        .limit(1)
+    )
+    assert row is not None and row.payload == {}  # the code is never stored
+
+
+async def test_unconfigured_channel_refuses_with_503(db_session: AsyncSession) -> None:
+    with pytest.raises(AppError) as err:
+        await NotificationSender(db_session, adapters={}).send("+2348031234567", "sms", "123456")
+    assert (err.value.status_code, err.value.code) == (503, "notifications_not_configured")
+
+
+async def test_provider_failure_refuses_with_502(db_session: AsyncSession) -> None:
+    failing = {Channel.SMS: FakeAdapter(fail=True)}
+    with pytest.raises(AppError) as err:
+        await NotificationSender(db_session, adapters=failing).send("+2348031234567", "sms", "123456")
+    assert (err.value.status_code, err.value.code) == (502, "notification_failed")
+
+
+async def test_request_route_fails_when_the_code_cannot_be_sent(client: AsyncClient) -> None:
+    """Without the test's capturing sender, the route uses notifications for real."""
+    from app.main import app
+
+    app.dependency_overrides[otp_sender.get_otp_sender] = lambda: _Refusing()
+    try:
+        response = await client.post("/api/v1/auth/otp/request", json={"identifier": random_phone()})
+    finally:
+        app.dependency_overrides.pop(otp_sender.get_otp_sender, None)
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "notifications_not_configured"
+
+
+class _Refusing:
+    async def send(self, identifier: str, channel: str, code: str) -> None:
+        raise AppError("notifications_not_configured", "Messages can't be sent by sms here yet.", 503)
 
 
 def test_placeholder_jwt_secret_is_refused_outside_local() -> None:
