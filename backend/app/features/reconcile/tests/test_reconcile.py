@@ -10,7 +10,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.audit.service import search
-from app.base.payments import accounts, credit, debit, post_transaction
+from app.base.payments import accounts, credit, debit, post_transaction, record_event
+from app.features.escrow.tests.factories import FOUNDATION_NGN, make_active_project
+from app.features.escrow.tests.release_helpers import hold_milestone
 from app.features.reconcile import service, sources
 from app.features.reconcile.sources import EscrowHolding, ProviderTotal, SourceUnavailable
 from app.workers.celery_app import celery_app
@@ -191,31 +193,107 @@ async def test_unreachable_providers_are_unchecked_not_matched(db_session: Async
     assert not result.ok  # nothing was actually verified
 
 
-async def test_escrow_is_unchecked_until_gabriel_exposes_balances(db_session: AsyncSession) -> None:
-    result = await run(db_session, FakeStripe(), FakePaystack(), sources.EscrowNotReady())
+# Escrow through Gabriel's escrow.partner_balances() (simulated partner: escrow's own records)
 
-    assert "escrow" in result.unchecked and result.checked == ["stripe", "paystack"]
+
+async def test_escrow_matches_the_ledger_through_the_escrow_service(db_session: AsyncSession) -> None:
+    funded = await make_active_project(db_session)
+    await hold_milestone(db_session, funded.project.id, funded.foundation)
+
+    holdings = await sources.EscrowFromService(db_session).holdings()
+    mine = [h for h in holdings if h.project_id == funded.project.id]
+    assert mine == [EscrowHolding(funded.project.id, "NGN", FOUNDATION_NGN, "records")]
+
+    result = await run(db_session, FakeStripe(), FakePaystack(), sources.EscrowFromService(db_session))
+    assert [d for d in result.differences if d.project_id == str(funded.project.id)] == []
+    assert "escrow (records)" in result.checked
+
+
+async def test_ledger_drifting_from_escrow_records_is_caught(db_session: AsyncSession) -> None:
+    funded = await make_active_project(db_session)
+    await hold_milestone(db_session, funded.project.id, funded.foundation)
+    await escrow_hold(db_session, funded.project.id, 1_000)  # a ledger entry escrow never recorded
+
+    result = await run(db_session, FakeStripe(), FakePaystack(), sources.EscrowFromService(db_session))
+    [difference] = [d for d in result.differences if d.project_id == str(funded.project.id)]
+    assert (difference.source, difference.ours_minor, difference.theirs_minor) == (
+        "escrow",
+        FOUNDATION_NGN + 1_000,
+        FOUNDATION_NGN,
+    )
+
+
+async def test_escrow_partner_down_is_unchecked(
+    db_session: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from app.core.errors import AppError
+    from app.features.escrow import service as escrow
+
+    async def down(_: AsyncSession) -> list[Any]:
+        raise AppError("escrow_provider_unavailable", "The escrow provider is unavailable.", 502)
+
+    monkeypatch.setattr(escrow, "partner_balances", down)
+    result = await run(db_session, FakeStripe(), FakePaystack(), sources.EscrowFromService(db_session))
+    assert result.unchecked["escrow"] == "escrow partner: escrow_provider_unavailable"
+
+
+# A payment near midnight counts on the day it happened at Stripe, not the day its webhook arrived
+
+
+async def late_webhook_payment(session: AsyncSession, happened: datetime, amount_minor: int) -> None:
+    """A Stripe event that happened at `happened`, processed (ledger posted) now."""
+    _, event = await record_event(
+        session,
+        "stripe",
+        f"evt_{uuid.uuid4().hex}",
+        "checkout.session.completed",
+        {"id": "evt", "created": int(happened.timestamp()), "type": "checkout.session.completed"},
+    )
+    assert event is not None
+    await post_transaction(
+        session,
+        [
+            debit(accounts.stripe_clearing("GBP"), amount_minor, "GBP"),
+            credit(accounts.client_funding(uuid.uuid4(), "GBP"), amount_minor, "GBP"),
+        ],
+        ref_type="payment_event",
+        ref_id=event.id,
+    )
+
+
+async def test_payment_at_2359_with_late_webhook_counts_once(db_session: AsyncSession) -> None:
+    yesterday = TODAY - timedelta(days=1)
+    just_before_midnight = service.window(TODAY)[0] - timedelta(seconds=30)
+    await late_webhook_payment(db_session, just_before_midnight, 42_000)  # ledger posted today
+
+    on_its_day = await service.reconcile_day(
+        db_session, yesterday, FakeStripe(GBP=(42_000, 1)), FakePaystack(), FakeEscrow()
+    )
+    next_day = await service.reconcile_day(db_session, TODAY, FakeStripe(), FakePaystack(), FakeEscrow())
+
+    assert on_its_day.differences == []  # Stripe says yesterday, and so do we
+    assert [d for d in next_day.differences if d.source == "stripe"] == []  # not counted again today
 
 
 # The read-only provider clients (no network: httpx.MockTransport)
 
 
-def stripe_page(sessions: list[dict[str, Any]], has_more: bool) -> dict[str, Any]:
-    return {"data": sessions, "has_more": has_more}
+def stripe_page(events: list[dict[str, Any]], has_more: bool) -> dict[str, Any]:
+    return {"data": events, "has_more": has_more}
 
 
-async def test_stripe_client_pages_and_counts_only_paid_sessions() -> None:
+def paid_event(event_id: str, currency: str, amount: int, status: str = "paid") -> dict[str, Any]:
+    return {
+        "id": event_id,
+        "type": "checkout.session.completed",
+        "data": {"object": {"currency": currency, "amount_total": amount, "payment_status": status}},
+    }
+
+
+async def test_stripe_client_pages_events_and_counts_only_paid_ones() -> None:
     pages = [
-        stripe_page(
-            [{"id": "cs_1", "currency": "gbp", "amount_total": 1000, "payment_status": "paid"}], True
-        ),
-        stripe_page(
-            [
-                {"id": "cs_2", "currency": "gbp", "amount_total": 500, "payment_status": "paid"},
-                {"id": "cs_3", "currency": "usd", "amount_total": 700, "payment_status": "unpaid"},
-            ],
-            False,
-        ),
+        stripe_page([paid_event("evt_1", "gbp", 1000)], True),
+        stripe_page([paid_event("evt_2", "gbp", 500), paid_event("evt_3", "usd", 700, "unpaid")], False),
     ]
     seen: list[httpx.Request] = []
 
@@ -228,8 +306,10 @@ async def test_stripe_client_pages_and_counts_only_paid_sessions() -> None:
         result = await sources.StripeHttp("sk_test_x", http).paid(since, since + timedelta(days=1))
 
     assert result == {"GBP": ProviderTotal("GBP", 1500, 2)}
-    assert seen[1].url.params["starting_after"] == "cs_1"
+    assert seen[0].url.path == "/v1/events"
+    assert seen[0].url.params.get_list("types[]") == list(sources.PAID_EVENTS)
     assert seen[0].url.params["created[gte]"] == str(int(since.timestamp()))
+    assert seen[1].url.params["starting_after"] == "evt_1"
 
 
 async def test_paystack_client_counts_successful_transfers_in_the_window() -> None:

@@ -5,9 +5,13 @@ alerts ops on any difference." The person who checks the money isn't the person 
 so this only reads: the ledger through payments.list_entries()/balance(), the providers through sources.py.
 
 What is compared, for one UTC day [day 00:00, next day 00:00):
-- Stripe:   completed Checkout payments  vs  ledger debits to stripe_clearing:<CUR> (money received)
+- Stripe:   Checkout payments that became paid (Stripe event time)  vs  ledger debits to
+            stripe_clearing:<CUR> whose Stripe event happened that day (payments.provider_event_times),
+            so a payment at 23:59 whose webhook lands at 00:01 counts on the earlier day on both sides
 - Paystack: successful transfers         vs  ledger entries on escrow_payouts:<CUR> (confirmed payouts)
-- Escrow:   what the partner holds       vs  balance(escrow:<project>:<CUR>)        (point in time)
+- Escrow:   what the partner holds       vs  balance(escrow:<project>:<CUR>)        (point in time),
+            from escrow.partner_balances(); with the simulated partner that is escrow's own
+            hold/release records (reported as checked "escrow (records)")
 Amounts are integer minor units per currency and are never converted or rounded.
 
 Each difference is written to the audit log ("reconcile.mismatch"; ops find them with
@@ -23,7 +27,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
-from app.base.payments import accounts, balance, list_entries
+from app.base.payments import accounts, balance, list_entries, provider_event_times
 from app.features.reconcile.sources import (
     EscrowSource,
     PaystackSource,
@@ -38,6 +42,9 @@ log = logging.getLogger(__name__)
 STRIPE_CURRENCIES = ("GBP", "USD", "EUR", "NGN")
 PAYOUT_CURRENCIES = ("NGN",)
 LEDGER_PAGE = 100
+# Stripe retries a webhook for up to 3 days, so a payment's ledger entries can be posted that long after
+# it happened (or, in tests and clock skew, a little before). Entries outside this margin can't belong.
+WEBHOOK_LATENESS = timedelta(days=4)
 
 
 @dataclass(frozen=True)
@@ -91,6 +98,44 @@ async def _ledger_sum(
         cursor = page.next_cursor
 
 
+async def _stripe_ledger_sum(
+    session: AsyncSession, currency: str, since: datetime, until: datetime
+) -> tuple[int, int]:
+    """(total, count) of stripe_clearing debits whose Stripe event happened in [since, until).
+
+    Entries are read in a wider window (webhooks arrive late), then each is dated by its payment
+    event's provider time; an entry that isn't from a stored event is dated by when it was posted.
+    """
+    entries, cursor = [], None
+    while True:
+        page = await list_entries(
+            session,
+            account=accounts.stripe_clearing(currency),
+            since=since - WEBHOOK_LATENESS,
+            until=until + WEBHOOK_LATENESS,
+            cursor=cursor,
+            limit=LEDGER_PAGE,
+        )
+        entries += [e for e in page.items if e.direction == "debit"]
+        if page.next_cursor is None:
+            break
+        cursor = page.next_cursor
+    happened = await provider_event_times(
+        session, [e.ref_id for e in entries if e.ref_type == "payment_event"]
+    )
+    total = count = 0
+    for entry in entries:
+        when = (
+            happened.get(entry.ref_id, entry.created_at)
+            if entry.ref_type == "payment_event"
+            else entry.created_at
+        )
+        if since <= when < until:
+            total += entry.amount_minor
+            count += 1
+    return total, count
+
+
 def compare_totals(
     source: str, ours: dict[str, tuple[int, int]], theirs: dict[str, ProviderTotal]
 ) -> list[Difference]:
@@ -118,7 +163,7 @@ async def reconcile_day(
     try:
         theirs = await stripe.paid(since, until)
         ours = {
-            c: await _ledger_sum(session, accounts.stripe_clearing(c), since, until, direction="debit")
+            c: await _stripe_ledger_sum(session, c, since, until)
             for c in sorted(set(STRIPE_CURRENCIES) | set(theirs))
         }
         result.differences += compare_totals("stripe", ours, theirs)
@@ -138,7 +183,8 @@ async def reconcile_day(
         result.unchecked["paystack"] = str(exc)
 
     try:
-        for holding in await escrow.holdings():
+        holdings = await escrow.holdings()
+        for holding in holdings:
             ours_minor = await balance(session, accounts.escrow(holding.project_id, holding.currency))
             if ours_minor != holding.available_minor:
                 result.differences.append(
@@ -150,7 +196,8 @@ async def reconcile_day(
                         project_id=str(holding.project_id),
                     )
                 )
-        result.checked.append("escrow")
+        simulated = any(h.source == "records" for h in holdings)
+        result.checked.append("escrow (records)" if simulated else "escrow")
     except SourceUnavailable as exc:
         result.unchecked["escrow"] = str(exc)
 

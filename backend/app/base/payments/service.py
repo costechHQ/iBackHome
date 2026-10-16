@@ -277,6 +277,33 @@ async def mark_processed(session: AsyncSession, event: PaymentEvent) -> None:
     await session.flush()
 
 
+async def provider_event_times(
+    session: AsyncSession, event_ids: Sequence[uuid.UUID]
+) -> dict[uuid.UUID, datetime]:
+    """When the provider says each stored event happened, by our payment_events id. Read-only.
+
+    Stripe events carry `created` (Unix seconds); for others, when we stored the event. For James's
+    reconciliation: a payment is counted on the day it happened at the provider, not the day its
+    webhook reached us (a payment at 23:59 whose webhook lands at 00:01 belongs to the earlier day).
+    Ids that aren't stored events are left out.
+    """
+    if not event_ids:
+        return {}
+    rows = await session.execute(
+        select(PaymentEvent.id, PaymentEvent.payload, PaymentEvent.created_at).where(
+            PaymentEvent.id.in_(list(event_ids))
+        )
+    )
+    times: dict[uuid.UUID, datetime] = {}
+    for event_id, payload, stored_at in rows:
+        created = payload.get("created") if isinstance(payload, dict) else None
+        if isinstance(created, int) and not isinstance(created, bool):
+            times[event_id] = datetime.fromtimestamp(created, UTC)
+        else:
+            times[event_id] = stored_at
+    return times
+
+
 # --- Paystack payouts: recipients and transfers -----------------------------------------------
 
 PayoutStatus = Literal["pending", "success", "failed", "reversed"]

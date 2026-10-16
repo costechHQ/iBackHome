@@ -1204,6 +1204,72 @@ async def list_open_disputes(session: AsyncSession, limit: int = 50) -> list[Dis
     return list(rows)
 
 
+# --- What the partner holds (for James's reconciliation) ---------------------------------------
+
+
+@dataclass(frozen=True)
+class PartnerBalance:
+    project_id: uuid.UUID
+    currency: str
+    available_minor: int  # held minus released
+    source: Literal["partner", "records"]  # asked the partner, or from our hold/release records
+
+
+async def partner_balances(session: AsyncSession) -> list[PartnerBalance]:
+    """What the escrow partner holds now, per project that has ever had money held. Read-only.
+
+    With a real partner, each project's `EscrowProvider.balance()`. With the simulated partner
+    (ESCROW_PROVIDER=simulated) the partner's memory lives in one process and is lost on restart, so
+    the API and the worker would disagree; instead this totals what the partner confirmed to us:
+    holds `held` minus releases `released` (source "records"). That still catches a ledger that
+    drifted from escrow's own records, but it is not an outside check.
+    - 502 escrow_provider_unavailable (real partner unreachable)
+    """
+    pairs = (
+        await session.execute(
+            select(EscrowHold.project_id, EscrowHold.currency)
+            .where(EscrowHold.status == "held")
+            .distinct()
+            .order_by(EscrowHold.project_id, EscrowHold.currency)
+        )
+    ).all()
+    if get_escrow_settings().escrow_provider != "simulated":
+        provider = get_escrow_provider()
+        found = []
+        for project_id, currency in pairs:
+            partner = await provider.balance(project_id)
+            found.append(
+                PartnerBalance(project_id, partner.currency or currency, partner.available_minor, "partner")
+            )
+        return found
+
+    held: dict[tuple[uuid.UUID, str], int] = {
+        (project_id, currency): int(total)
+        for project_id, currency, total in await session.execute(
+            select(EscrowHold.project_id, EscrowHold.currency, func.sum(EscrowHold.amount_minor))
+            .where(EscrowHold.status == "held")
+            .group_by(EscrowHold.project_id, EscrowHold.currency)
+        )
+    }
+    released: dict[tuple[uuid.UUID, str], int] = {
+        (project_id, currency): int(total)
+        for project_id, currency, total in await session.execute(
+            select(EscrowRelease.project_id, EscrowRelease.currency, func.sum(EscrowRelease.amount_minor))
+            .where(EscrowRelease.status == "released")
+            .group_by(EscrowRelease.project_id, EscrowRelease.currency)
+        )
+    }
+    return [
+        PartnerBalance(
+            project_id,
+            currency,
+            held[(project_id, currency)] - released.get((project_id, currency), 0),
+            "records",
+        )
+        for project_id, currency in pairs
+    ]
+
+
 # --- GET /projects/{id}/ledger -----------------------------------------------------------------
 
 
