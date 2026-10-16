@@ -713,8 +713,8 @@ Each becomes an architecture decision record (ADR) in `docs/adr/` once decided.
 | --- | --- | --- | --- | --- |
 | 1 | Base modules (users, payments, audit, geo, notifications) | Cohort starter repo; our own `base/` | Decided: each team builds its own; ours lives in `base/` | Done |
 | 2 | Escrow partner | To be identified in week-one talks; simulated meanwhile | Simulated until a partner signs | Day 10 |
-| 3 | Hosting | Render, Railway, Fly.io, a VPS with Docker | Whichever gives Postgres + PostGIS and a worker cheaply | Day 5 |
-| 4 | Object storage | AWS S3, Cloudflare R2, Backblaze B2 | R2 or B2 for low cost | Day 5 |
+| 3 | Hosting | Render, Railway, Fly.io, a VPS with Docker | Decided 2026-10-16: staging is one VPS running the Docker Compose stack behind Caddy (HTTPS); `deploy/staging/` | Done |
+| 4 | Object storage | AWS S3, Cloudflare R2, Backblaze B2 | Decided 2026-10-16: Cloudflare R2 (S3 API, no egress fees) | Done |
 | 5 | SMS provider | Termii, Africa's Talking, Twilio | Local provider for Nigerian numbers | Day 5 |
 | 6 | LLM provider and model | Any with tool calling and vision | Pick one with strong tool calling and image input | Day 12 |
 | 7 | Mobile local database | Drift, Isar, Hive | Drift (SQL, good for queues) | Day 5 |

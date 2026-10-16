@@ -89,4 +89,5 @@ Tests share fixtures from `backend/conftest.py`: `db_session` (real Postgres, ro
 
 - `Docs/spec.md` — technical specification (data model, ERD, state machines, API, evidence integrity, payments)
 - `Docs/adr/` — architecture decision records
+- `deploy/staging/README.md` — staging: one VPS with Docker Compose, HTTPS by Caddy, photos in Cloudflare R2; setup steps and automatic deploys from `main`
 - PRD, task breakdowns and the non-coding plan live in the team's shared docs

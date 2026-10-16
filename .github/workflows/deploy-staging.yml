@@ -1,0 +1,81 @@
+name: deploy-staging
+
+# Deploys main to the staging VPS (spec: "Merging to main deploys to staging"). Owner: Christopher.
+# Runs after backend-ci passes on main, when the staging files change, or by hand (Actions > Run workflow).
+# Until the repository secrets below exist it only prints a notice, so it never fails before the server is up.
+#
+# Repository secrets (Settings > Secrets and variables > Actions), see deploy/staging/README.md:
+#   STAGING_HOST         the server's IP or host name
+#   STAGING_USER         the deploy user (e.g. deploy)
+#   STAGING_SSH_KEY      that user's private key (ed25519), whose public key is in ~/.ssh/authorized_keys
+#   STAGING_KNOWN_HOSTS  output of `ssh-keyscan -t ed25519 <STAGING_HOST>` (pins the server's host key)
+#   STAGING_DOMAIN       e.g. api-staging.ibackhome.ng (for the health check)
+
+on:
+  workflow_run:
+    workflows: [backend-ci]
+    types: [completed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths: ["deploy/staging/**", ".github/workflows/deploy-staging.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      HOST: ${{ secrets.STAGING_HOST }}
+      DEPLOY_USER: ${{ secrets.STAGING_USER }}
+      DOMAIN: ${{ secrets.STAGING_DOMAIN }}
+      SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - name: Skip until staging exists
+        id: ready
+        run: |
+          if [ -z "$HOST" ] || [ -z "$DEPLOY_USER" ] || [ -z "$DOMAIN" ]; then
+            echo "::notice::Staging secrets are not set yet; nothing deployed (see deploy/staging/README.md)."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: SSH key
+        if: steps.ready.outputs.go == 'true'
+        env:
+          SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.STAGING_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Deploy ${{ env.SHA }}
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          ssh -o BatchMode=yes "$DEPLOY_USER@$HOST" "SHA=$SHA bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd /opt/ibackhome
+          git fetch --quiet origin main
+          git checkout --quiet --detach "$SHA"
+          docker compose -f deploy/staging/docker-compose.staging.yml up -d --build --remove-orphans
+          docker image prune -f > /dev/null
+          echo "deployed $(git rev-parse --short HEAD)"
+          REMOTE
+
+      - name: Health check
+        if: steps.ready.outputs.go == 'true'
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -fsS "https://$DOMAIN/healthz"; then echo; exit 0; fi
+            sleep 10
+          done
+          echo "::error::https://$DOMAIN/healthz did not answer 200 within 5 minutes"
+          exit 1
