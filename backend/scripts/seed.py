@@ -5,6 +5,11 @@ v2 (backend Day 3): a second vetted supervisor, and two Enugu projects with site
                     a supervisor each. Projects stay in `draft` (the BoQ comes from the simulator).
 v3 (backend Day 5): one active `ops` user per AI agent (agents.service.AGENTS), with the fixed id
                     agents.service.agent_user_id() so each agent can sign in with its service token.
+v4 (backend gate):  a verified supplier owned by the seeded supplier user, and Paystack bank accounts
+                    (payout recipients) for the contractor and that supplier, so milestone payouts and
+                    supplier payments can run. With PAYSTACK_SECRET_KEY set (test mode) they are
+                    registered with Paystack; on ENVIRONMENT=local without a key a stand-in recipient
+                    code is used; elsewhere without a key they are skipped (and said so).
 
 Refuses to run when ENVIRONMENT=production.
 
@@ -29,16 +34,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # so `app` imports
 from sqlalchemy import select  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
+from app.base.payments import register_payout_recipient  # noqa: E402
+from app.base.payments.paystack import PaystackClient, RecipientResult, get_paystack_client  # noqa: E402
+from app.base.payments.settings import get_payments_settings  # noqa: E402
 from app.base.users import service as users  # noqa: E402
 from app.base.users.models import Role, User, UserStatus  # noqa: E402
 from app.core.config import get_settings  # noqa: E402
 from app.core.db import SessionLocal  # noqa: E402
+from app.core.errors import AppError  # noqa: E402
 from app.features.agents import service as agents  # noqa: E402
 from app.features.projects import service as projects  # noqa: E402
 from app.features.projects.models import Project  # noqa: E402
 from app.features.projects.schemas import Pin, ProjectCreate, SiteSet  # noqa: E402
 from app.features.supervision import service as supervision  # noqa: E402
 from app.features.supervision.schemas import SupervisorApplication, VettingDecision  # noqa: E402
+from app.features.suppliers import service as suppliers  # noqa: E402
+from app.features.suppliers.models import Supplier  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -182,6 +193,90 @@ async def upsert_project(session: AsyncSession, seed: SeedProject, users: dict[s
     return project
 
 
+SUPPLIER_NAME = "Obinna Building Materials"
+SUPPLIER_ADDRESS = "Ogbete Main Market, Enugu"
+
+
+@dataclass(frozen=True)
+class SeedBankAccount:
+    owner: str  # "contractor" or "supplier"
+    account_name: str
+    account_number: str  # test NUBAN: only sent to Paystack, never stored (we keep the last 4)
+    bank_code: str
+
+
+# Test-mode accounts (Paystack test keys never move real money). 057 = Zenith Bank.
+BANK_ACCOUNTS = [
+    SeedBankAccount("contractor", "Chukwuemeka Nwosu", "0123456789", "057"),
+    SeedBankAccount("supplier", SUPPLIER_NAME, "0987654321", "057"),
+]
+
+
+class StandInPaystack:
+    """ENVIRONMENT=local without PAYSTACK_SECRET_KEY: a fixed recipient code per account, so the
+    rest of the seed (and local payout tests by hand) still works. Never used elsewhere."""
+
+    async def create_transfer_recipient(
+        self, account_name: str, account_number: str, bank_code: str
+    ) -> RecipientResult:
+        return RecipientResult(
+            recipient_code=f"RCP_seed_{bank_code}_{account_number[-4:]}",
+            bank_code=bank_code,
+            bank_name="Zenith Bank (seed)",
+            account_name=account_name,
+            account_last4=account_number[-4:],
+        )
+
+    async def initiate_transfer(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError("the stand-in only registers recipients")
+
+    async def verify_transfer(self, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError("the stand-in only registers recipients")
+
+
+def paystack_for_seed() -> PaystackClient | None:
+    """Real Paystack when a key is set; the stand-in locally; otherwise None (skip bank accounts)."""
+    if get_payments_settings().paystack_secret_key:
+        return get_paystack_client()
+    if get_settings().environment == "local":
+        return StandInPaystack()
+    return None
+
+
+async def upsert_supplier(session: AsyncSession, owner: User, ops: User) -> Supplier:
+    return await suppliers.ensure_supplier(
+        session, SUPPLIER_NAME, owner_id=owner.id, address=SUPPLIER_ADDRESS, verified=True, actor_id=ops.id
+    )
+
+
+async def register_bank_accounts(
+    session: AsyncSession, people: dict[str, User], supplier: Supplier, paystack: PaystackClient | None
+) -> list[str]:
+    """Register each seed bank account; returns one line per account for the summary."""
+    if paystack is None:
+        return ["bank accounts skipped: set PAYSTACK_SECRET_KEY (test key) to register them"]
+    lines = []
+    for account in BANK_ACCOUNTS:
+        is_contractor = account.owner == "contractor"
+        try:
+            recipient = await register_payout_recipient(
+                session,
+                account_name=account.account_name,
+                account_number=account.account_number,
+                bank_code=account.bank_code,
+                actor_id=people["ops"].id,
+                user_id=people["contractor"].id if is_contractor else None,
+                supplier_id=None if is_contractor else supplier.id,
+                client=paystack,
+            )
+        except AppError as exc:  # Paystack refused or is down: the rest of the seed still stands
+            lines.append(f"bank account for {account.owner} not registered: {exc.code} ({exc.message})")
+            continue
+        masked = recipient.account_number_masked
+        lines.append(f"bank        {account.owner:<11} {recipient.recipient_code} {masked}")
+    return lines
+
+
 def refuse_production() -> None:
     if get_settings().environment == "production":
         raise SystemExit("seed.py refuses to run with ENVIRONMENT=production: it creates test accounts.")
@@ -195,6 +290,8 @@ async def seed() -> None:
         await vet_supervisor(session, people["supervisor_2"], people["ops"], "SEED-0002")
         seeded = [await upsert_project(session, seed, people) for seed in PROJECTS]
         agent_users = [await upsert_agent_user(session, name) for name in agents.AGENTS]
+        supplier = await upsert_supplier(session, people["supplier"], people["ops"])
+        bank_lines = await register_bank_accounts(session, people, supplier, paystack_for_seed())
         await session.commit()
 
     for user_seed in USERS:
@@ -203,6 +300,9 @@ async def seed() -> None:
         print(f"ops (agent) {agent_user.full_name:<26} {agent_user.id}")
     for project, project_seed in zip(seeded, PROJECTS, strict=True):
         print(f"project     {project.title:<40} supervisor: {people[project_seed.supervisor].full_name}")
+    print(f"supplier    {supplier.name:<26} {supplier.id}")
+    for line in bank_lines:
+        print(line)
 
 
 if __name__ == "__main__":
