@@ -65,6 +65,8 @@ We use **uv** for Python, never pip (see `Docs/adr/0002-uv-dependencies.md`). Ru
 
 Inside the API container (`docker compose exec api sh`) the tools are on the path directly: `pytest -q`, `alembic upgrade head`.
 
+**Backend gate test:** `uv run pytest tests/e2e -v` (or `docker compose exec api pytest tests/e2e -v`, which is how it runs on staging). It walks the backend done gate through the API: OTP sign-in, project, site, BoQ, supervisor, Stripe funding, signed evidence, claim → verify → approve → release and payout, plus the protections and extras. Outside services (Stripe, Paystack, storage, messaging, the AI model) are faked and every test is rolled back, so it is safe to run against the staging database.
+
 Tests share fixtures from `backend/conftest.py`: `db_session` (real Postgres, rolled back after each test) and `client` (HTTP calls into the app using that session). Without a database, DB tests are skipped locally but fail in CI.
 
 ## How to add your feature
