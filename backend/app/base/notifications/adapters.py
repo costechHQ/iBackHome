@@ -1,4 +1,4 @@
-"""How a message reaches a phone or inbox. Owner: Lilian.
+"""How a message reaches a phone or inbox.
 
 Every channel is an adapter with one method:
 
@@ -11,7 +11,8 @@ notify() then tries the next channel. Adapters never touch the database.
 - TermiiSmsAdapter: SMS through Termii (spec decision 5 may pick another provider; only this
   class would change).
 - FcmPushAdapter: Firebase Cloud Messaging HTTP v1, to one device's push token.
-- WhatsApp Business Cloud adapter: backend day 5.
+- WhatsAppAdapter: WhatsApp Business Cloud API (Meta). Sends the Meta-approved template when the
+  message has one, plain text otherwise.
 - DevLogAdapter: writes the message to the API log. Used only on ENVIRONMENT=local, for channels
   that are not configured, so staging and production never fall back to logging.
 - FakeAdapter: for tests; records what it sent and can be told to fail.
@@ -189,6 +190,90 @@ class FcmPushAdapter:
         return str(response.json().get("name", ""))
 
 
+# --- WhatsApp (Business Cloud API) -------------------------------------------------------------
+
+
+class WhatsAppAdapter:
+    """Sends through Meta's Cloud API from our business number.
+
+    A business may start a conversation only with a template Meta has approved, so a message whose
+    template names one goes as that template (its placeholders as the body parameters, plus a
+    copy-code button for login codes). Otherwise it goes as plain text, which Meta refuses outside
+    the 24 hours after the person last wrote to us; notify() then falls back to the next channel.
+    """
+
+    def __init__(
+        self, settings: NotificationSettings, transport: httpx.AsyncBaseTransport | None = None
+    ) -> None:
+        self.settings = settings
+        self.transport = transport
+
+    def _body(self, to: str, message: Rendered) -> dict[str, Any]:
+        s = self.settings
+        recipient = to.lstrip("+")  # Meta wants 2348031234567, no plus sign
+        if not (s.whatsapp_use_templates and message.whatsapp_template):
+            return {
+                "messaging_product": "whatsapp",
+                "recipient_type": "individual",
+                "to": recipient,
+                "type": "text",
+                "text": {"preview_url": False, "body": message.text},
+            }
+        components: list[dict[str, Any]] = []
+        if message.params:
+            components.append(
+                {"type": "body", "parameters": [{"type": "text", "text": p} for p in message.params]}
+            )
+        if message.whatsapp_button is not None:
+            components.append(
+                {
+                    "type": "button",
+                    "sub_type": "url",
+                    "index": "0",
+                    "parameters": [{"type": "text", "text": message.whatsapp_button}],
+                }
+            )
+        return {
+            "messaging_product": "whatsapp",
+            "recipient_type": "individual",
+            "to": recipient,
+            "type": "template",
+            "template": {
+                "name": message.whatsapp_template,
+                "language": {"code": s.whatsapp_language},
+                "components": components,
+            },
+        }
+
+    async def send(self, to: str, message: Rendered) -> str:
+        s = self.settings
+        path = f"/{s.whatsapp_api_version}/{s.whatsapp_phone_number_id}/messages"
+        async with httpx.AsyncClient(
+            base_url=s.whatsapp_base_url, timeout=s.notify_timeout_seconds, transport=self.transport
+        ) as client:
+            try:
+                response = await client.post(
+                    path,
+                    headers={"Authorization": f"Bearer {s.whatsapp_access_token}"},
+                    json=self._body(to, message),
+                )
+            except httpx.HTTPError as exc:
+                raise SendError(f"whatsapp: {exc.__class__.__name__}") from exc
+        if response.status_code >= 400:
+            code = ""
+            try:
+                code = str(response.json().get("error", {}).get("code", ""))
+            except ValueError:
+                pass
+            detail = f" ({code})" if code else ""
+            raise SendError(f"whatsapp: Meta answered {response.status_code}{detail}")
+        try:
+            message_id = response.json()["messages"][0]["id"]
+        except (ValueError, KeyError, IndexError, TypeError) as exc:
+            raise SendError("whatsapp: Meta gave no message id") from exc
+        return str(message_id)
+
+
 # --- local development and tests ---------------------------------------------------------------
 
 
@@ -233,6 +318,8 @@ def get_adapters() -> Mapping[Channel, Adapter]:
         adapters[Channel.SMS] = TermiiSmsAdapter(s)
     if s.fcm_project_id and s.fcm_service_account_json:
         adapters[Channel.PUSH] = FcmPushAdapter(s)
+    if s.whatsapp_access_token and s.whatsapp_phone_number_id:
+        adapters[Channel.WHATSAPP] = WhatsAppAdapter(s)
     environment = get_settings().environment
     if environment == "local":
         for channel in Channel:

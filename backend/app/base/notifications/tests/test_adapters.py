@@ -19,6 +19,7 @@ from app.base.notifications.adapters import (
     FcmPushAdapter,
     SendError,
     TermiiSmsAdapter,
+    WhatsAppAdapter,
     get_adapters,
 )
 from app.base.notifications.models import Channel
@@ -237,6 +238,8 @@ def environment(monkeypatch: pytest.MonkeyPatch) -> Iterator[Callable[[str, dict
             "TERMII_API_KEY",
             "FCM_PROJECT_ID",
             "FCM_SERVICE_ACCOUNT_JSON",
+            "WHATSAPP_ACCESS_TOKEN",
+            "WHATSAPP_PHONE_NUMBER_ID",
         ):
             monkeypatch.delenv(key, raising=False)
         for key, value in variables.items():
@@ -268,7 +271,14 @@ def test_configured_channels_get_real_adapters(environment: Callable[[str, dict[
     assert isinstance(found[Channel.EMAIL], EmailAdapter)
     assert isinstance(found[Channel.SMS], TermiiSmsAdapter)
     assert isinstance(found[Channel.PUSH], FcmPushAdapter)
-    assert Channel.WHATSAPP not in found  # WhatsApp adapter is backend day 5
+    assert Channel.WHATSAPP not in found  # no WhatsApp token or number set
+
+
+def test_whatsapp_needs_token_and_number(environment: Callable[[str, dict[str, str]], None]) -> None:
+    environment("staging", {"WHATSAPP_ACCESS_TOKEN": "t"})
+    assert Channel.WHATSAPP not in get_adapters()
+    environment("staging", {"WHATSAPP_ACCESS_TOKEN": "t", "WHATSAPP_PHONE_NUMBER_ID": "1234567890"})
+    assert isinstance(get_adapters()[Channel.WHATSAPP], WhatsAppAdapter)
 
 
 def test_local_logs_every_unconfigured_channel(environment: Callable[[str, dict[str, str]], None]) -> None:
