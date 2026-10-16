@@ -118,14 +118,16 @@ async def test_two_photos_and_a_repeated_id_are_stored_once(
 # the payment must be started, or nothing is saved
 
 
-async def test_without_a_connected_payment_the_delivery_is_refused(
+async def test_when_escrow_cannot_pay_the_delivery_is_refused(
     client: AsyncClient, db_session: AsyncSession, world: World
 ) -> None:
     order = await approved_order(db_session, world)
     photo = await good_photo(db_session, world)
-    response = await confirm(client, order, world.supervisor, [photo])  # the real bridge: not connected yet
-    assert response.status_code == 503
-    assert response.json()["error"]["code"] == "escrow_not_ready"
+    # The real bridge to escrow.pay_supplier(): this supplier has no bank account registered.
+    response = await confirm(client, order, world.supervisor, [photo])
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "supplier_payout_not_set"
+    # Nothing is saved: see test_a_failed_payment_start_undoes_the_delivery below.
 
 
 async def test_a_failed_payment_start_undoes_the_delivery(
