@@ -2,6 +2,20 @@
 
 One block per screen. Tick each item when the screen is built, then re-run lint, type-check and tests. "States" lists every designed frame; "Rules" comes from the screen's spec section 6. Do not tick a screen whose data still comes from a mock adapter without noting the MX id.
 
+## Web build stages (W0–W4, the web gate)
+
+The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks below are ticked as each stage builds them.
+
+### W0 · Repo, contract and Spec (no screens)
+
+- [x] Handoff committed at `Docs/design/`, kept out of every build (the web image's build context is `web/`)
+- [x] CODEOWNERS: `/web/` and `/mobile/` → Gabriel
+- [x] Next.js (App Router) + TypeScript strict + Tailwind CSS v4 scaffold; the Spec's `common/` and `features/` folders plus `app/` for routes only (ESLint enforces the import rules)
+- [x] Generated API client (`web/src/common/api/`, from the backend's OpenAPI) and a CI drift check (`api-contract`)
+- [x] CI `web-ci`: eslint, prettier, tsc, next build, Vitest, Playwright against next start, Docker image
+- [x] Docker image (standalone, Node), `web` in local Compose and staging Compose, Caddy route on its own hostname
+- [x] ADR 0003 and the Spec update (separate commit)
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
