@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WEB-CLIENT-006 · Quote checker</title>
+<link rel="stylesheet" href="../../../01-design-system/tokens.css">
+<style>
+/* styles from approved board Setup-Quote.dc.html */
+
+@keyframes ibh-pulse{0%,100%{opacity:1}50%{opacity:0.55}}
+.ibh-skel{background:var(--ibh-neutral-bg);animation:ibh-pulse 1.6s ease-in-out infinite;border-radius:6px}
+@media (prefers-reduced-motion: reduce){.ibh-skel{animation:none}}
+
+
+</style>
+<style>
+body.ibh-pkg{margin:0;background:var(--ibh-canvas);font-family:var(--ibh-font-sans);color:var(--ibh-slate)}
+.ibh-pkg-head{background:var(--ibh-white);border-bottom:1px solid var(--ibh-line);padding:12px 24px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.ibh-pkg-head b{color:var(--ibh-ink);font-size:16px}.ibh-pkg-head code{font:500 13px/20px var(--ibh-font-mono);color:var(--ibh-ink)}
+.ibh-pkg-head a{color:var(--ibh-accent);font-size:14px;font-weight:600}.ibh-pkg-head span{font-size:13px;color:var(--ibh-muted)}
+.ibh-pkg-note{margin:16px 24px 0;font-size:13px;line-height:19px;color:var(--ibh-muted);max-width:980px}
+.ibh-pkg-frame{margin:24px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.ibh-pkg-frame>h2{margin:0;font:600 14px/20px var(--ibh-font-sans);color:var(--ibh-ink)}
+.ibh-pkg-frame>h2 small{font-weight:400;color:var(--ibh-muted);margin-left:8px}
+.ibh-pkg-scroll{max-width:100%;overflow-x:auto}
+</style>
+</head>
+<body class="ibh-pkg">
+<header class="ibh-pkg-head"><code>WEB-CLIENT-006</code><b>Quote checker</b><span>Stage 5 · web · client · P0</span><a href="spec.md">spec.md</a><a href="fixtures.json">fixtures.json</a><a href="../../../index.html">All screens</a></header>
+<p class="ibh-pkg-note">Static export of the approved design. Every frame below is one designed state. Colours use the tokens in 01-design-system/tokens.css; buttons and links do nothing except navigate to other exported screens. Sample names and figures are PLACEHOLDER data.</p>
+<section class="ibh-pkg-frame" id="desktop"><h2>1 · Choose what to check<small>desktop · 1280×800 · desktop.png</small></h2><div class="ibh-pkg-scroll"><div style="width:1280px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 1280px; height: 800px; border-radius: 12px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-mist); display: flex; flex-direction: column" data-ibh-frame="desktop">
+          <!-- dc-import ClientTop -->
+
+<header style="width: 100%; height: 64px; box-sizing: border-box; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line); padding: 0 32px; display: flex; align-items: center; gap: 16px; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: var(--ibh-ink)">
+  <a href="#" aria-label="iBackHome home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none">
+    <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--ibh-navy-900); color: var(--ibh-white); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z"></path></svg></span>
+    <span style="font-size: 19px; font-weight: 700; letter-spacing: -0.035em; color: var(--ibh-navy-900)">iBackHome</span>
+  </a>
+  
+    <span aria-hidden="true" style="width: 1px; height: 24px; background: var(--ibh-line)"></span>
+    <button type="button" aria-haspopup="menu" style="min-width: 0; height: 40px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--ibh-mist); color: var(--ibh-ink); font: 600 15px/1 Inter, sans-serif; display: inline-flex; align-items: center; gap: 8px"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Chioma’s bungalow</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg></button>
+  
+  <span style="flex: 1"></span>
+  <a href="#" style="font-size: 14px; font-weight: 500; color: var(--ibh-slate); text-decoration: none">Help</a>
+  <a href="../../stage-07-client-milestones-money/web-client-020-notifications/screen.html" aria-label="Notifications, 2 unread" style="position: relative; width: 40px; height: 40px; border-radius: 999px; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center; flex: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0 M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg><span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--ibh-navy-900); color: var(--ibh-white); border: 2px solid var(--ibh-white); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">2</span></a>
+  <button type="button" aria-label="Account" style="height: 40px; padding: 0 10px 0 4px; border-radius: 999px; border: 1px solid var(--ibh-line); background: var(--ibh-white); display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 Inter, sans-serif; color: var(--ibh-ink)"><span style="width: 32px; height: 32px; border-radius: 999px; background: var(--ibh-neutral-bg); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">CN</span>Chioma</button>
+</header>
+
+          <div style="flex: 1; padding: 32px 48px; display: flex; flex-direction: column; gap: 22px; max-width: 980px">
+            <div style="display: flex; flex-direction: column; gap: 6px"><span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--ibh-white); border: 1px solid var(--ibh-line); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>AI check</span><h2 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ibh-ink)">Check a quote against Enugu prices</h2><p style="margin: 0; font-size: 15px; line-height: 23px">We compare each unit price with what partner suppliers in Enugu charge this month, and each quantity with what a 4-bedroom bungalow usually needs.</p></div>
+            <div role="radiogroup" aria-label="What to check" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+              <label style="background: var(--ibh-white); border: 2px solid var(--ibh-navy-900); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box">
+                <span style="display: flex; justify-content: space-between; align-items: center"><span style="width: 20px; height: 20px; border-radius: 999px; border: 6px solid var(--ibh-navy-900); box-sizing: border-box"></span><span style="height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ibh-mist); border: 1px solid var(--ibh-line); font-size: 12px; font-weight: 600; color: var(--ibh-navy-900); display: inline-flex; align-items: center">Recommended</span></span>
+                <b style="font-size: 17px; color: var(--ibh-ink)">The submitted BoQ</b>
+                <span style="font-size: 14px; line-height: 21px">Version 2 from Engr. Obi · 64 lines · ₦54,405,000. Already structured, so the check is exact.</span>
+              </label>
+              <label style="background: var(--ibh-white); border: 1px solid var(--ibh-frame); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box">
+                <span style="width: 20px; height: 20px; border-radius: 999px; border: 1.5px solid var(--ibh-line-strong); box-sizing: border-box"></span>
+                <b style="font-size: 17px; color: var(--ibh-ink)">A quote PDF</b>
+                <span style="font-size: 14px; line-height: 21px">A quote your contractor sent you outside iBackHome. AI reads it into lines first.</span>
+                <div style="margin-top: 4px; min-height: 64px; padding: 12px 14px; border: 1.5px dashed var(--ibh-line-strong); border-radius: 8px; background: var(--ibh-mist); display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ibh-slate)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z M14 2v4a2 2 0 0 0 2 2h4"></path></svg><span><b style="color: var(--ibh-ink)">Choose a PDF</b> or drop it here · up to 10 MB</span></div>
+              </label>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 13px; color: var(--ibh-muted)">Index updated 16 Oct 2026 from partner suppliers · <a href="#" style="color: var(--ibh-accent)">See the price index</a></span><button type="button" style="height: 48px; padding: 0 24px; border-radius: 8px; border: 0; background: var(--ibh-navy-900); color: var(--ibh-white); font: 600 15px/1 Inter, sans-serif">Run the check</button></div>
+          </div>
+        </div></div></div></section>
+<section class="ibh-pkg-frame" id="desktop-02-2-checking"><h2>2 · Checking<small>desktop · 1280×800 · desktop-02-2-checking.png</small></h2><div class="ibh-pkg-scroll"><div style="width:1280px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 1280px; height: 800px; border-radius: 12px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-mist); display: flex; flex-direction: column" data-ibh-frame="desktop-02-2-checking">
+          <!-- dc-import ClientTop -->
+
+<header style="width: 100%; height: 64px; box-sizing: border-box; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line); padding: 0 32px; display: flex; align-items: center; gap: 16px; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: var(--ibh-ink)">
+  <a href="#" aria-label="iBackHome home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none">
+    <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--ibh-navy-900); color: var(--ibh-white); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z"></path></svg></span>
+    <span style="font-size: 19px; font-weight: 700; letter-spacing: -0.035em; color: var(--ibh-navy-900)">iBackHome</span>
+  </a>
+  
+    <span aria-hidden="true" style="width: 1px; height: 24px; background: var(--ibh-line)"></span>
+    <button type="button" aria-haspopup="menu" style="min-width: 0; height: 40px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--ibh-mist); color: var(--ibh-ink); font: 600 15px/1 Inter, sans-serif; display: inline-flex; align-items: center; gap: 8px"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Chioma’s bungalow</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg></button>
+  
+  <span style="flex: 1"></span>
+  <a href="#" style="font-size: 14px; font-weight: 500; color: var(--ibh-slate); text-decoration: none">Help</a>
+  <a href="../../stage-07-client-milestones-money/web-client-020-notifications/screen.html" aria-label="Notifications, 2 unread" style="position: relative; width: 40px; height: 40px; border-radius: 999px; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center; flex: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0 M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg><span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--ibh-navy-900); color: var(--ibh-white); border: 2px solid var(--ibh-white); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">2</span></a>
+  <button type="button" aria-label="Account" style="height: 40px; padding: 0 10px 0 4px; border-radius: 999px; border: 1px solid var(--ibh-line); background: var(--ibh-white); display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 Inter, sans-serif; color: var(--ibh-ink)"><span style="width: 32px; height: 32px; border-radius: 999px; background: var(--ibh-neutral-bg); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">CN</span>Chioma</button>
+</header>
+
+          <div style="flex: 1; padding: 32px 48px; display: flex; flex-direction: column; gap: 20px; max-width: 980px">
+            <h2 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; color: var(--ibh-ink)">Checking quote-obi-oct.pdf</h2>
+            <ol aria-label="Progress" style="list-style: none; margin: 0; padding: 0; background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px">
+              
+                <li style="display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line)">
+                  <span style="width: 28px; height: 28px; border-radius: 999px; background: var(--ibh-navy-900); border: 0; color: var(--ibh-white); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; color: var(--ibh-ink)">Reading the quote</b><span style="font-size: 13px; color: var(--ibh-muted)">5 pages · 64 lines found</span></span>
+                  <span style="font-size: 13px; font-weight: 600; color: var(--ibh-ok-fg)">Done</span>
+                </li>
+              
+                <li style="display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line)">
+                  <span style="width: 28px; height: 28px; border-radius: 999px; background: var(--ibh-white); border: 2px solid var(--ibh-accent); color: var(--ibh-accent); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"></path></svg></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; color: var(--ibh-ink)">Matching items to the price index</b><span style="font-size: 13px; color: var(--ibh-muted)">41 of 64 matched so far</span></span>
+                  <span style="font-size: 13px; font-weight: 600; color: var(--ibh-info-fg)">In progress</span>
+                </li>
+              
+                <li style="display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line)">
+                  <span style="width: 28px; height: 28px; border-radius: 999px; background: var(--ibh-white); border: 1.5px dashed var(--ibh-line-strong); color: var(--ibh-neutral-fg); display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 12h.01"></path></svg></span>
+                  <span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; color: var(--ibh-ink)">Comparing prices and quantities</b><span style="font-size: 13px; color: var(--ibh-muted)">Fixed rules, no AI judgement</span></span>
+                  <span style="font-size: 13px; font-weight: 600; color: var(--ibh-muted)">Waiting</span>
+                </li>
+              
+            </ol>
+            <div aria-busy="true" style="background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; gap: 16px; align-items: center"><div class="ibh-skel" style="height: 14px; flex: 1"></div><div class="ibh-skel" style="height: 22px; width: 110px; border-radius: 999px"></div></div>
+              <div style="display: flex; gap: 16px; align-items: center"><div class="ibh-skel" style="height: 14px; flex: 1"></div><div class="ibh-skel" style="height: 22px; width: 110px; border-radius: 999px"></div></div>
+              <div style="display: flex; gap: 16px; align-items: center"><div class="ibh-skel" style="height: 14px; width: 60%"></div><div class="ibh-skel" style="height: 22px; width: 110px; border-radius: 999px; margin-left: auto"></div></div>
+            </div>
+            <span style="font-size: 14px; color: var(--ibh-muted)">Usually under a minute. You can leave this page — we'll keep the result on the BoQ.</span>
+          </div>
+        </div></div></div></section>
+<section class="ibh-pkg-frame" id="desktop-03-3-results-flagged-lines-first"><h2>3 · Results — flagged lines first<small>desktop · 1280×800 · desktop-03-3-results-flagged-lines-first.png</small></h2><div class="ibh-pkg-scroll"><div style="width:1280px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 1280px; height: 800px; border-radius: 12px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-white); display: flex; flex-direction: column" data-ibh-frame="desktop-03-3-results-flagged-lines-first">
+          <!-- dc-import ClientTop -->
+
+<header style="width: 100%; height: 64px; box-sizing: border-box; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line); padding: 0 32px; display: flex; align-items: center; gap: 16px; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: var(--ibh-ink)">
+  <a href="#" aria-label="iBackHome home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none">
+    <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--ibh-navy-900); color: var(--ibh-white); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z"></path></svg></span>
+    <span style="font-size: 19px; font-weight: 700; letter-spacing: -0.035em; color: var(--ibh-navy-900)">iBackHome</span>
+  </a>
+  
+    <span aria-hidden="true" style="width: 1px; height: 24px; background: var(--ibh-line)"></span>
+    <button type="button" aria-haspopup="menu" style="min-width: 0; height: 40px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--ibh-mist); color: var(--ibh-ink); font: 600 15px/1 Inter, sans-serif; display: inline-flex; align-items: center; gap: 8px"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Chioma’s bungalow</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg></button>
+  
+  <span style="flex: 1"></span>
+  <a href="#" style="font-size: 14px; font-weight: 500; color: var(--ibh-slate); text-decoration: none">Help</a>
+  <a href="../../stage-07-client-milestones-money/web-client-020-notifications/screen.html" aria-label="Notifications, 2 unread" style="position: relative; width: 40px; height: 40px; border-radius: 999px; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center; flex: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0 M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg><span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--ibh-navy-900); color: var(--ibh-white); border: 2px solid var(--ibh-white); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">2</span></a>
+  <button type="button" aria-label="Account" style="height: 40px; padding: 0 10px 0 4px; border-radius: 999px; border: 1px solid var(--ibh-line); background: var(--ibh-white); display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 Inter, sans-serif; color: var(--ibh-ink)"><span style="width: 32px; height: 32px; border-radius: 999px; background: var(--ibh-neutral-bg); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">CN</span>Chioma</button>
+</header>
+
+          <div style="flex: 1; padding: 24px 40px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start">
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px"><h2 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--ibh-ink)">Quote check · BoQ version 2</h2><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--ibh-mist); border: 1px solid var(--ibh-line); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>AI check · advisory only</span></div>
+              <div role="group" aria-label="Filter results" style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button type="button" aria-pressed="true" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--ibh-accent); background: var(--ibh-accent-tint); color: var(--ibh-ink); font: 600 14px/1 Inter, sans-serif">Flagged · 3</button>
+                <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-slate); font: 500 14px/1 Inter, sans-serif">Within range · 58</button>
+                <button type="button" aria-pressed="false" style="height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-slate); font: 500 14px/1 Inter, sans-serif">Not in index · 3</button>
+              </div>
+              <div style="border: 1px solid var(--ibh-line); border-radius: 12px; overflow: hidden">
+                <div style="display: grid; grid-template-columns: 60px minmax(0, 1fr) 120px 120px 90px 170px; background: var(--ibh-mist); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ibh-muted)"><span style="padding: 10px 14px">Line</span><span style="padding: 10px 12px">Item</span><span style="padding: 10px 12px; text-align: right">Quoted</span><span style="padding: 10px 12px; text-align: right">Index</span><span style="padding: 10px 12px; text-align: right">Diff.</span><span style="padding: 10px 14px">Flag</span></div>
+                
+                  <div style="display: grid; grid-template-columns: 60px minmax(0, 1fr) 120px 120px 90px 170px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px">
+                    <span style="padding: 12px 14px; font-variant-numeric: tabular-nums; color: var(--ibh-muted)">1.2</span>
+                    <span style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><b style="color: var(--ibh-ink)">Cement, 50 kg bag</b><span style="font-size: 12px; color: var(--ibh-muted)">420 bags · Foundation</span></span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink)">₦11,500</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums">₦9,800</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ibh-warn-fg)">+17%</span>
+                    <span style="padding: 12px 14px"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 12px; font-weight: 600; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01"></path></svg>Above index</span></span>
+                  </div>
+                
+                  <div style="display: grid; grid-template-columns: 60px minmax(0, 1fr) 120px 120px 90px 170px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px">
+                    <span style="padding: 12px 14px; font-variant-numeric: tabular-nums; color: var(--ibh-muted)">2.1</span>
+                    <span style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><b style="color: var(--ibh-ink)">9-inch sandcrete blocks</b><span style="font-size: 12px; color: var(--ibh-muted)">4,800 blocks · Blockwork to Lintel</span></span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink)">₦950</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums">₦780</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ibh-warn-fg)">+22%</span>
+                    <span style="padding: 12px 14px"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 12px; font-weight: 600; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01"></path></svg>Above index</span></span>
+                  </div>
+                
+                  <div style="display: grid; grid-template-columns: 60px minmax(0, 1fr) 120px 120px 90px 170px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px">
+                    <span style="padding: 12px 14px; font-variant-numeric: tabular-nums; color: var(--ibh-muted)">3.4</span>
+                    <span style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><b style="color: var(--ibh-ink)">Roofing sheets, 0.55 mm</b><span style="font-size: 12px; color: var(--ibh-muted)">310 sheets · expected 180–240 for this plan</span></span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink)">310</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums">180–240</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ibh-warn-fg)">+29%</span>
+                    <span style="padding: 12px 14px"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 12px; font-weight: 600; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3 M12 9v4 M12 17h.01"></path></svg>Quantity outside range</span></span>
+                  </div>
+                
+                  <div style="display: grid; grid-template-columns: 60px minmax(0, 1fr) 120px 120px 90px 170px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px">
+                    <span style="padding: 12px 14px; font-variant-numeric: tabular-nums; color: var(--ibh-muted)">1.5</span>
+                    <span style="padding: 12px; display: flex; flex-direction: column; gap: 2px"><b style="color: var(--ibh-ink)">12 mm iron rods</b><span style="font-size: 12px; color: var(--ibh-muted)">160 lengths · Foundation</span></span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink)">₦14,200</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums">₦13,900</span>
+                    <span style="padding: 12px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ibh-slate)">+2%</span>
+                    <span style="padding: 12px 14px"><span style="display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 999px; background: var(--ibh-neutral-bg); color: var(--ibh-neutral-fg); font-size: 12px; font-weight: 600; white-space: nowrap"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>Within range</span></span>
+                  </div>
+                
+              </div>
+              <span style="display: flex; gap: 8px; align-items: flex-start; font-size: 12px; line-height: 18px; color: var(--ibh-muted)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><path d="M22 12a10 10 0 1 1-20 0a10 10 0 1 1 20 0 M12 16v-4 M12 8h.01"></path></svg>AI read the lines; fixed rules decided the flags (more than 15% above the index, or a quantity outside the expected range). A flag isn't proof of anything — prices vary by brand and delivery.</span>
+            </div>
+            <aside style="display: flex; flex-direction: column; gap: 14px">
+              <div style="border: 1px solid var(--ibh-line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+                <b style="font-size: 15px; color: var(--ibh-ink)">Summary</b>
+                <span style="display: flex; justify-content: space-between; font-size: 14px"><span>Lines checked</span><b style="color: var(--ibh-ink); font-variant-numeric: tabular-nums">64</b></span><span style="display: flex; justify-content: space-between; font-size: 14px"><span>Above index by more than 15%</span><b style="color: var(--ibh-ink); font-variant-numeric: tabular-nums">2</b></span><span style="display: flex; justify-content: space-between; font-size: 14px"><span>Quantity outside range</span><b style="color: var(--ibh-ink); font-variant-numeric: tabular-nums">1</b></span><span style="display: flex; justify-content: space-between; font-size: 14px"><span>Not in the index</span><b style="color: var(--ibh-ink); font-variant-numeric: tabular-nums">3</b></span>
+                <div style="height: 1px; background: var(--ibh-line)"></div>
+                <span style="display: flex; justify-content: space-between; font-size: 14px"><span>Above index, total</span><b style="color: var(--ibh-ink); font-variant-numeric: tabular-nums">₦1,530,000</b></span>
+                <span style="font-size: 12px; line-height: 18px; color: var(--ibh-muted)">If lines 1.2 and 2.1 were priced at the index.</span>
+              </div>
+              <div style="border: 1px solid var(--ibh-line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+                <b style="font-size: 15px; color: var(--ibh-ink)">What you can do</b>
+                <span style="font-size: 14px; line-height: 21px">Ask Engr. Obi about these lines, or send the BoQ back with these notes attached.</span>
+                <button type="button" style="height: 44px; border-radius: 8px; border: 1px solid transparent; background: var(--ibh-mist); color: var(--ibh-navy-900); font: 600 14px/1 Inter, sans-serif">Send back with these notes</button>
+                <button type="button" style="height: 44px; border-radius: 8px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-navy-900); font: 600 14px/1 Inter, sans-serif">Back to the BoQ</button>
+              </div>
+            </aside>
+          </div>
+        </div></div></div></section>
+<section class="ibh-pkg-frame" id="desktop-04-4-price-index-reference"><h2>4 · Price index reference<small>desktop · 1280×800 · desktop-04-4-price-index-reference.png</small></h2><div class="ibh-pkg-scroll"><div style="width:1280px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 1280px; height: 800px; border-radius: 12px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-white); display: flex; flex-direction: column" data-ibh-frame="desktop-04-4-price-index-reference">
+          <!-- dc-import ClientTop -->
+
+<header style="width: 100%; height: 64px; box-sizing: border-box; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line); padding: 0 32px; display: flex; align-items: center; gap: 16px; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: var(--ibh-ink)">
+  <a href="#" aria-label="iBackHome home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none">
+    <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--ibh-navy-900); color: var(--ibh-white); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z"></path></svg></span>
+    <span style="font-size: 19px; font-weight: 700; letter-spacing: -0.035em; color: var(--ibh-navy-900)">iBackHome</span>
+  </a>
+  
+    <span aria-hidden="true" style="width: 1px; height: 24px; background: var(--ibh-line)"></span>
+    <button type="button" aria-haspopup="menu" style="min-width: 0; height: 40px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--ibh-mist); color: var(--ibh-ink); font: 600 15px/1 Inter, sans-serif; display: inline-flex; align-items: center; gap: 8px"><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Chioma’s bungalow</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex: none"><path d="m6 9 6 6 6-6"></path></svg></button>
+  
+  <span style="flex: 1"></span>
+  <a href="#" style="font-size: 14px; font-weight: 500; color: var(--ibh-slate); text-decoration: none">Help</a>
+  <a href="../../stage-07-client-milestones-money/web-client-020-notifications/screen.html" aria-label="Notifications, 2 unread" style="position: relative; width: 40px; height: 40px; border-radius: 999px; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center; flex: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0 M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg><span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--ibh-navy-900); color: var(--ibh-white); border: 2px solid var(--ibh-white); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">2</span></a>
+  <button type="button" aria-label="Account" style="height: 40px; padding: 0 10px 0 4px; border-radius: 999px; border: 1px solid var(--ibh-line); background: var(--ibh-white); display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 Inter, sans-serif; color: var(--ibh-ink)"><span style="width: 32px; height: 32px; border-radius: 999px; background: var(--ibh-neutral-bg); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">CN</span>Chioma</button>
+</header>
+
+          <div style="flex: 1; padding: 24px 40px; display: flex; flex-direction: column; gap: 14px; min-height: 0">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px"><div style="display: flex; flex-direction: column; gap: 4px"><h2 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--ibh-ink)">Enugu price index</h2><span style="font-size: 14px">Current prices from verified partner suppliers. Items not updated in 14 days are marked.</span></div>
+              <div style="display: flex; gap: 8px"><div style="width: 260px; height: 40px; padding: 0 12px; border: 1px solid var(--ibh-line-strong); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ibh-muted)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M21 21l-4.3-4.3 M19 11a8 8 0 1 1-16 0a8 8 0 1 1 16 0"></path></svg>Search materials</div><div style="height: 40px; padding: 0 12px; border: 1px solid var(--ibh-line-strong); border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ibh-ink)">All categories<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg></div></div></div>
+            <div style="border: 1px solid var(--ibh-line); border-radius: 12px; overflow: hidden">
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; background: var(--ibh-mist); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ibh-muted)"><span style="padding: 10px 16px">Item</span><span style="padding: 10px 12px">Unit</span><span style="padding: 10px 12px; text-align: right">Price</span><span style="padding: 10px 12px">Source</span><span style="padding: 10px 16px">Last updated</span></div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">Cement, 50 kg bag</span><span style="padding: 0 12px">bag</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦9,800</span><span style="padding: 0 12px; font-size: 13px">Ugwu Building Materials</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">9-inch sandcrete block</span><span style="padding: 0 12px">block</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦780</span><span style="padding: 0 12px; font-size: 13px">Ugwu Building Materials</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">6-inch sandcrete block</span><span style="padding: 0 12px">block</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦650</span><span style="padding: 0 12px; font-size: 13px">Ugwu Building Materials</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">Sharp sand</span><span style="padding: 0 12px">tonne</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦18,000</span><span style="padding: 0 12px; font-size: 13px">Coal City Aggregates</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">14 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">Granite, ¾ inch</span><span style="padding: 0 12px">tonne</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦32,000</span><span style="padding: 0 12px; font-size: 13px">Coal City Aggregates</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">14 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">10 mm iron rod</span><span style="padding: 0 12px">length</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦9,600</span><span style="padding: 0 12px; font-size: 13px">Ogbete Steel Traders</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">12 mm iron rod</span><span style="padding: 0 12px">length</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦13,900</span><span style="padding: 0 12px; font-size: 13px">Ogbete Steel Traders</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">16 mm iron rod</span><span style="padding: 0 12px">length</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦24,500</span><span style="padding: 0 12px; font-size: 13px">Ogbete Steel Traders</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">Binding wire</span><span style="padding: 0 12px">roll</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦28,000</span><span style="padding: 0 12px; font-size: 13px">Ogbete Steel Traders</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">12 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">Roofing sheet, 0.55 mm aluminium</span><span style="padding: 0 12px">sheet</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦12,800</span><span style="padding: 0 12px; font-size: 13px">Abakpa Roofing</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">2 Oct 2026<span style="display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 11px; font-weight: 600">19 days old</span></span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">Timber, 2 × 4 in</span><span style="padding: 0 12px">length</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦3,400</span><span style="padding: 0 12px; font-size: 13px">Abakpa Timber Market</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">9 Oct 2026</span>
+                </div>
+              
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 110px 140px 230px 200px; align-items: center; border-top: 1px solid var(--ibh-line); font-size: 14px; height: 38px">
+                  <span style="padding: 0 16px; color: var(--ibh-ink); font-weight: 500">PVC pipe, 4 in</span><span style="padding: 0 12px">length</span><span style="padding: 0 12px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ibh-ink); font-weight: 600">₦9,500</span><span style="padding: 0 12px; font-size: 13px">Ugwu Building Materials</span>
+                  <span style="padding: 0 16px; display: flex; gap: 8px; align-items: center; font-size: 13px">16 Oct 2026</span>
+                </div>
+              
+            </div>
+            <span style="font-size: 12px; color: var(--ibh-muted)">Showing 12 of 16 items · sample prices for design only</span>
+          </div>
+        </div></div></div></section>
+<section class="ibh-pkg-frame" id="mobile"><h2>Results<small>mobile · 390×844 · mobile.png</small></h2><div class="ibh-pkg-scroll"><div style="width:390px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 390px; height: 844px; border-radius: 24px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-white); display: flex; flex-direction: column" data-ibh-frame="mobile">
+        <div style="height: 56px; padding: 0 4px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--ibh-line)"><button type="button" aria-label="Back" style="width: 44px; height: 44px; border: 0; background: transparent; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button><span style="font-size: 17px; font-weight: 600; color: var(--ibh-ink)">Quote check</span></div>
+        <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; background: var(--ibh-mist)">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap"><span style="display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 999px; background: var(--ibh-white); border: 1px solid var(--ibh-line); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>AI check · advisory only</span></div>
+          <b style="font-size: 18px; color: var(--ibh-ink)">3 of 64 lines flagged</b>
+          
+            <div style="background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start"><b style="font-size: 15px; color: var(--ibh-ink)">Cement, 50 kg bag</b><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 11px; font-weight: 600; white-space: nowrap">Above index</span></div>
+              <span style="font-size: 13px; color: var(--ibh-slate); font-variant-numeric: tabular-nums">Quoted ₦11,500 · index ₦9,800 · <b style="color: var(--ibh-warn-fg)">+17%</b></span>
+            </div>
+          
+            <div style="background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start"><b style="font-size: 15px; color: var(--ibh-ink)">9-inch sandcrete blocks</b><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 11px; font-weight: 600; white-space: nowrap">Above index</span></div>
+              <span style="font-size: 13px; color: var(--ibh-slate); font-variant-numeric: tabular-nums">Quoted ₦950 · index ₦780 · <b style="color: var(--ibh-warn-fg)">+22%</b></span>
+            </div>
+          
+            <div style="background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start"><b style="font-size: 15px; color: var(--ibh-ink)">Roofing sheets, 0.55 mm</b><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 11px; font-weight: 600; white-space: nowrap">Quantity outside range</span></div>
+              <span style="font-size: 13px; color: var(--ibh-slate); font-variant-numeric: tabular-nums">Quoted 310 · index 180–240 · <b style="color: var(--ibh-warn-fg)">+29%</b></span>
+            </div>
+          
+            <div style="background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px">
+              <div style="display: flex; justify-content: space-between; gap: 8px; align-items: flex-start"><b style="font-size: 15px; color: var(--ibh-ink)">12 mm iron rods</b><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ibh-neutral-bg); color: var(--ibh-neutral-fg); font-size: 11px; font-weight: 600; white-space: nowrap">Within range</span></div>
+              <span style="font-size: 13px; color: var(--ibh-slate); font-variant-numeric: tabular-nums">Quoted ₦14,200 · index ₦13,900 · <b style="color: var(--ibh-slate)">+2%</b></span>
+            </div>
+          
+        </div>
+      </div></div></div></section>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.next/
+node_modules/
+bun.lock
+next-env.d.ts
+playwright-report/
+test-results/
+# Generated from the backend's OpenAPI document (scripts/gen-api.sh); CI checks them for drift.
+src/common/api/openapi.json
+src/common/api/schema.d.ts

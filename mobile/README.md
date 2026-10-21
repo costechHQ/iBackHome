@@ -1,5 +1,5 @@
 # mobile/
 
-The Flutter Android app. Built in the Flutter phase (programme days 12–14), after the web gate passes.
+The Flutter Android app (supervisor and contractor). Owner: Gabriel.
 
-Lilian creates the app shell on app day 1. See the **Flutter App Tasks** doc for who owns which folder.
+It is built after the web gate (stage W4 of the web build). The designs are in `Docs/design/` (screens `AND-*`).

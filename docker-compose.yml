@@ -3,6 +3,7 @@
 # API docs:          http://localhost:8000/docs
 # Health check:      http://localhost:8000/healthz
 # Object storage:    http://localhost:9000  (S3 API, SeaweedFS; keys are STORAGE_ACCESS_KEY / STORAGE_SECRET_KEY)
+# Web app:           http://localhost:3000  (production build; for hot reload run `bun run dev` in web/ instead)
 
 x-backend: &backend
   build: ./backend
@@ -13,6 +14,9 @@ x-backend: &backend
     DATABASE_URL: postgresql+psycopg://ibackhome:ibackhome@db:5432/ibackhome
     REDIS_URL: redis://redis:6379/0
     STORAGE_ENDPOINT: http://storage:9000
+    # uvicorn trusts X-Forwarded-For only from the web container (its auth proxy forwards the caller's IP),
+    # so the per-IP OTP limit sees the browser, not the proxy. Calls to :8000 from the host are unaffected.
+    FORWARDED_ALLOW_IPS: 172.31.251.10
   volumes:
     - ./backend:/app
   depends_on:
@@ -35,6 +39,19 @@ services:
   beat:
     <<: *backend
     command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
+
+  # The Next.js web app (ADR 0003). The browser talks only to it; its server calls the API inside Docker.
+  web:
+    build: ./web
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    ports:
+      - "3000:3000"
+    networks:
+      default:
+        ipv4_address: 172.31.251.10
+    depends_on:
+      - api
 
   db:
     image: postgis/postgis:16-3.4
@@ -84,6 +101,13 @@ services:
       timeout: 5s
       retries: 10
       start_period: 30s
+
+# A fixed subnet so the web container has a fixed address for FORWARDED_ALLOW_IPS above.
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.31.251.0/24
 
 volumes:
   db-data:

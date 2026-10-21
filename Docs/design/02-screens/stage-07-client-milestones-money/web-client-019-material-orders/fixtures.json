@@ -1,0 +1,135 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CLIENT-019",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "POST /orders/{id}/approve": {
+      "request": {},
+      "response": {
+        "id": "eb7a9525-6db5-53f0-b0b8-e82a9ac4c1e8",
+        "display_ref": "O-0141",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "supplier": "dad34148-28cb-5789-b8af-e404357113d2",
+        "requested_by": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+        "currency": "NGN",
+        "status": "approved",
+        "items": [
+          {
+            "item": "Cement, 50 kg bag",
+            "unit": "bag",
+            "quantity": "120",
+            "unit_price_minor": 1030000
+          },
+          {
+            "item": "Sharp sand",
+            "unit": "tonne",
+            "quantity": "20",
+            "unit_price_minor": 2150000
+          }
+        ],
+        "total_minor": 217200000,
+        "approved_by": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+        "approved_at": "2026-12-15T16:02:00Z",
+        "created_at": "2026-12-15T14:22:00Z"
+      }
+    },
+    "POST /quotes/check": {
+      "request": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "source": "boq"
+      },
+      "response": {
+        "lines_checked": 64,
+        "flagged": [
+          {
+            "item": "Sharp sand",
+            "unit": "tonne",
+            "quantity": "20",
+            "unit_price_minor": 2150000,
+            "index_price_minor": 1750000,
+            "percent_above_index": 22.9,
+            "reason": "more than 15% above the index"
+          }
+        ],
+        "index_updated_on": "2027-01-04",
+        "label": "AI-generated"
+      }
+    },
+    "GET /price-index": {
+      "items": [
+        {
+          "item_key": "cement-50kg",
+          "item": "Cement, 50 kg bag",
+          "unit": "bag",
+          "price_minor": 1030000,
+          "currency": "NGN",
+          "supplier_name": "Ugwu Building Materials",
+          "observed_on": "2027-01-04",
+          "source": "supplier"
+        },
+        {
+          "item_key": "block-9in",
+          "item": "9-inch sandcrete block",
+          "unit": "block",
+          "price_minor": 78000,
+          "currency": "NGN",
+          "supplier_name": "Ugwu Building Materials",
+          "observed_on": "2026-10-16",
+          "source": "supplier"
+        },
+        {
+          "item_key": "sharp-sand",
+          "item": "Sharp sand",
+          "unit": "tonne",
+          "price_minor": 1750000,
+          "currency": "NGN",
+          "supplier_name": "Coal City Aggregates",
+          "observed_on": "2026-12-07",
+          "source": "supplier"
+        }
+      ],
+      "next_cursor": null
+    }
+  },
+  "mock_adapters": {
+    "MX-05": {
+      "orders": {
+        "items": [
+          {
+            "id": "eb7a9525-6db5-53f0-b0b8-e82a9ac4c1e8",
+            "display_ref": "O-0141",
+            "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+            "supplier": "dad34148-28cb-5789-b8af-e404357113d2",
+            "requested_by": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+            "currency": "NGN",
+            "status": "requested",
+            "items": [
+              {
+                "item": "Cement, 50 kg bag",
+                "unit": "bag",
+                "quantity": "120",
+                "unit_price_minor": 1030000
+              },
+              {
+                "item": "Sharp sand",
+                "unit": "tonne",
+                "quantity": "20",
+                "unit_price_minor": 2150000
+              }
+            ],
+            "total_minor": 217200000,
+            "approved_by": null,
+            "approved_at": null,
+            "created_at": "2026-12-15T14:22:00Z"
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-OPS-007",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "POST /projects/{id}/spot-checks": {
+      "request": {
+        "supervisor": "5339927e-8e0c-55cf-b562-232aca963ca4",
+        "scheduled_for": "2027-01-13T08:00:00Z"
+      },
+      "response": {
+        "id": "8079c6cf-eae2-54c7-9548-6690dac2be9a",
+        "project": "ed6d5d47-ba43-5c71-987c-95d5dd0f9aa9",
+        "supervisor": "5339927e-8e0c-55cf-b562-232aca963ca4",
+        "scheduled_by": "12fd191f-b5e6-5655-a0e8-694aec7dcc95",
+        "scheduled_for": "2027-01-07T08:00:00Z",
+        "completed_at": null,
+        "findings": null
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-14": {
+      "spot_checks": {
+        "items": [
+          {
+            "id": "8079c6cf-eae2-54c7-9548-6690dac2be9a",
+            "project": "ed6d5d47-ba43-5c71-987c-95d5dd0f9aa9",
+            "supervisor": "5339927e-8e0c-55cf-b562-232aca963ca4",
+            "scheduled_by": "12fd191f-b5e6-5655-a0e8-694aec7dcc95",
+            "scheduled_for": "2027-01-07T08:00:00Z",
+            "completed_at": "2026-12-01T13:00:00Z",
+            "findings": "Findings matched the claims.",
+            "_shared_with_client": true
+          }
+        ],
+        "next_cursor": null
+      }
+    },
+    "MX-15": {
+      "supervisors": {
+        "items": [
+          {
+            "user": "5339927e-8e0c-55cf-b562-232aca963ca4",
+            "full_name": "Chidi Nnaji",
+            "registration_body": "NIOB",
+            "active_projects": 3,
+            "related_to_contractor": false
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  }
+}

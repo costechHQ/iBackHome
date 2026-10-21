@@ -1,0 +1,238 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "AND-SUPERVISOR-008",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "POST /milestones/{id}/verify": {
+      "request": {
+        "decision": "verified",
+        "checklist": [
+          {
+            "item": "Trusses fixed and braced",
+            "evidence": [
+              "EV-2109",
+              "EV-2110"
+            ]
+          },
+          {
+            "item": "Roof covering complete, all slopes",
+            "evidence": [
+              "EV-2115",
+              "EV-2116"
+            ]
+          },
+          {
+            "item": "Ridge, fascia and flashing",
+            "evidence": [
+              "EV-2118"
+            ]
+          },
+          {
+            "item": "Walkthrough of the roof space",
+            "evidence": [
+              "EV-2119"
+            ]
+          }
+        ],
+        "notes": "Long-span aluminium 0.55 mm, as in the BoQ. Ridge caps sealed and fascia straight."
+      },
+      "response": {
+        "id": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "sequence": 3,
+        "name": "Roofing",
+        "amount_minor": 1326000000,
+        "currency": "NGN",
+        "status": "verified",
+        "funded_at": "2026-11-30T10:20:00Z",
+        "claimed_at": "2026-12-09T11:40:00Z",
+        "verified_at": "2026-12-10T15:20:00Z",
+        "approved_at": null,
+        "released_at": null,
+        "_derived_client_amount": {
+          "amount_minor": 680000,
+          "currency": "GBP"
+        },
+        "latest_verification": {
+          "id": "831ec260-53c6-5a6d-a221-6928bc2e17f7",
+          "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+          "decision": "verified",
+          "checklist": [
+            {
+              "item": "Trusses fixed and braced",
+              "evidence": [
+                "EV-2109",
+                "EV-2110"
+              ]
+            },
+            {
+              "item": "Roof covering complete, all slopes",
+              "evidence": [
+                "EV-2115",
+                "EV-2116"
+              ]
+            },
+            {
+              "item": "Ridge, fascia and flashing",
+              "evidence": [
+                "EV-2118"
+              ]
+            },
+            {
+              "item": "Walkthrough of the roof space",
+              "evidence": [
+                "EV-2119"
+              ]
+            }
+          ],
+          "notes": "Long-span aluminium 0.55 mm, as in the BoQ. Ridge caps sealed and fascia straight."
+        }
+      }
+    },
+    "GET /projects/{id}/milestones": {
+      "items": [
+        {
+          "id": "21db5638-927e-57d6-8a2f-9f59a3bf2815",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 1,
+          "name": "Foundation",
+          "amount_minor": 1053000000,
+          "currency": "NGN",
+          "status": "released",
+          "funded_at": "2026-10-21T09:12:00Z",
+          "claimed_at": "2026-11-02T10:00:00Z",
+          "verified_at": "2026-11-04T14:00:00Z",
+          "approved_at": "2026-11-06T11:50:00Z",
+          "released_at": "2026-11-06T12:20:00Z",
+          "_derived_client_amount": {
+            "amount_minor": 540000,
+            "currency": "GBP"
+          }
+        },
+        {
+          "id": "94406ee7-342d-59c9-bc6d-1688a15f2270",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 2,
+          "name": "Blockwork to Lintel",
+          "amount_minor": 819000000,
+          "currency": "NGN",
+          "status": "released",
+          "funded_at": "2026-11-09T10:00:00Z",
+          "claimed_at": "2026-11-24T09:00:00Z",
+          "verified_at": "2026-11-25T14:48:00Z",
+          "approved_at": "2026-11-27T08:52:00Z",
+          "released_at": "2026-11-27T09:07:00Z",
+          "_derived_client_amount": {
+            "amount_minor": 420000,
+            "currency": "GBP"
+          }
+        },
+        {
+          "id": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 3,
+          "name": "Roofing",
+          "amount_minor": 1326000000,
+          "currency": "NGN",
+          "status": "verified",
+          "funded_at": "2026-11-30T10:20:00Z",
+          "claimed_at": "2026-12-09T11:40:00Z",
+          "verified_at": "2026-12-10T15:20:00Z",
+          "approved_at": null,
+          "released_at": null,
+          "_derived_client_amount": {
+            "amount_minor": 680000,
+            "currency": "GBP"
+          },
+          "latest_verification": {
+            "id": "831ec260-53c6-5a6d-a221-6928bc2e17f7",
+            "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+            "decision": "verified",
+            "checklist": [
+              {
+                "item": "Trusses fixed and braced",
+                "evidence": [
+                  "EV-2109",
+                  "EV-2110"
+                ]
+              },
+              {
+                "item": "Roof covering complete, all slopes",
+                "evidence": [
+                  "EV-2115",
+                  "EV-2116"
+                ]
+              },
+              {
+                "item": "Ridge, fascia and flashing",
+                "evidence": [
+                  "EV-2118"
+                ]
+              },
+              {
+                "item": "Walkthrough of the roof space",
+                "evidence": [
+                  "EV-2119"
+                ]
+              }
+            ],
+            "notes": "Long-span aluminium 0.55 mm, as in the BoQ. Ridge caps sealed and fascia straight."
+          }
+        },
+        {
+          "id": "abfddc0c-6e2c-54df-ad39-4cd47ec67998",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 4,
+          "name": "Plastering",
+          "amount_minor": 760500000,
+          "currency": "NGN",
+          "status": "pending",
+          "funded_at": null,
+          "claimed_at": null,
+          "verified_at": null,
+          "approved_at": null,
+          "released_at": null,
+          "_derived_client_amount": {
+            "amount_minor": 390000,
+            "currency": "GBP"
+          }
+        },
+        {
+          "id": "ef8dc75f-d9d9-54d5-afcf-964b6d870749",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 5,
+          "name": "Finishing",
+          "amount_minor": 1482000000,
+          "currency": "NGN",
+          "status": "pending",
+          "funded_at": null,
+          "claimed_at": null,
+          "verified_at": null,
+          "approved_at": null,
+          "released_at": null,
+          "_derived_client_amount": {
+            "amount_minor": 760000,
+            "currency": "GBP"
+          }
+        }
+      ],
+      "next_cursor": null
+    }
+  },
+  "errors": {
+    "conflict_409": {
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "PLACEHOLDER_invalid_transition",
+          "message": "This milestone changed state; refresh to see it."
+        }
+      }
+    }
+  }
+}

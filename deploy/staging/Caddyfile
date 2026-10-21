@@ -1,10 +1,18 @@
-# HTTPS for the staging API. Owner: Christopher.
-# Caddy obtains and renews the certificate for STAGING_DOMAIN (its DNS A record must point at this server).
+# HTTPS for the staging API and web app. Owner: Christopher.
+# Caddy obtains and renews the certificates for STAGING_DOMAIN and STAGING_WEB_DOMAIN
+# (both DNS A records must point at this server).
 {
 	email {$ACME_EMAIL}
 }
 
+# The API: mobile app, payment webhooks, /docs.
 {$STAGING_DOMAIN} {
 	encode gzip
 	reverse_proxy api:8000
+}
+
+# The web app (ADR 0003). Its own /api/v1/* is the auth proxy, so it needs its own hostname.
+{$STAGING_WEB_DOMAIN} {
+	encode gzip
+	reverse_proxy web:3000
 }

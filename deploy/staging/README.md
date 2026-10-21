@@ -1,7 +1,8 @@
 # Staging: one VPS with Docker Compose, photos in Cloudflare R2
 
 Owner: Christopher. Decided 2026-10-16 (spec decisions 3 and 4): one small Linux server running the same
-stack as local (api, worker, beat, PostGIS, Redis) plus Caddy for HTTPS; evidence photos in Cloudflare R2.
+stack as local (api, worker, beat, PostGIS, Redis, and the web app since 2026-10-21) plus Caddy for HTTPS;
+evidence photos in Cloudflare R2.
 After the one-time setup below, every merge to `main` that passes CI deploys itself
 (`.github/workflows/deploy-staging.yml`).
 
@@ -12,7 +13,7 @@ Staging uses **test keys only** (Stripe test mode, Paystack test mode, simulated
 | Thing | Where | Cost |
 | --- | --- | --- |
 | A server: Ubuntu 24.04, 2 vCPU, 4 GB RAM, 40 GB disk | Hetzner CX22, DigitalOcean, Contabo... | ~€4–12/month |
-| A domain name you control, e.g. `api-staging.ibackhome.ng` | your DNS provider | — |
+| A domain name you control, with two names on it: `api-staging.ibackhome.ng` (API) and `staging.ibackhome.ng` (web app) | your DNS provider | — |
 | Cloudflare R2 bucket + API token | dash.cloudflare.com → R2 | free up to 10 GB |
 | Stripe **test** secret key + webhook secret | dashboard.stripe.com (test mode) | free |
 | Paystack **test** secret key | dashboard.paystack.com (test mode) | free |
@@ -24,7 +25,8 @@ Without a messaging provider nobody can sign in: login codes answer 503 `notific
 ## 1. Create the server
 
 1. Create the VPS with your SSH key. Note its IP.
-2. DNS: add an **A record** `api-staging` → the IP (wait until `nslookup api-staging.<your domain>` shows it).
+2. DNS: add an **A record** `api-staging` → the IP (wait until `nslookup api-staging.<your domain>` shows it),
+   and a second **A record** `staging` → the same IP for the web app.
 3. Log in as root and run:
 
 ```bash
@@ -59,7 +61,7 @@ chmod 600 deploy/staging/.env
 nano deploy/staging/.env
 ```
 
-Fill in at least: `STAGING_DOMAIN`, `ACME_EMAIL`, `POSTGRES_PASSWORD` and `JWT_SECRET` (`openssl rand -hex 32`),
+Fill in at least: `STAGING_DOMAIN`, `STAGING_WEB_DOMAIN`, `ACME_EMAIL`, `POSTGRES_PASSWORD` and `JWT_SECRET` (`openssl rand -hex 32`),
 the four `STORAGE_*` values from R2, `STRIPE_SECRET_KEY`, `PAYSTACK_SECRET_KEY`, `ESCROW_WEBHOOK_SECRET`
 (`openssl rand -hex 32`), and one messaging channel (`EMAIL_SMTP_*` + `EMAIL_FROM`, or `TERMII_API_KEY`).
 
@@ -70,6 +72,7 @@ cd /opt/ibackhome
 docker compose -f deploy/staging/docker-compose.staging.yml up -d --build
 docker compose -f deploy/staging/docker-compose.staging.yml ps          # all healthy after ~1 minute
 curl -fsS https://$(grep ^STAGING_DOMAIN deploy/staging/.env | cut -d= -f2 | awk '{print $1}')/healthz
+curl -fsS https://$(grep ^STAGING_WEB_DOMAIN deploy/staging/.env | cut -d= -f2 | awk '{print $1}')/api/healthz
 ```
 
 `/healthz` answers 200 when the database, Redis and R2 are all reachable. Caddy gets the HTTPS certificate on
@@ -109,8 +112,9 @@ On GitHub: **Settings → Secrets and variables → Actions → New repository s
 | `STAGING_SSH_KEY` | a new private key: `ssh-keygen -t ed25519 -N "" -f staging_deploy`; put `staging_deploy.pub` in `/home/deploy/.ssh/authorized_keys` on the server |
 | `STAGING_KNOWN_HOSTS` | the output of `ssh-keyscan -t ed25519 <server IP>` |
 | `STAGING_DOMAIN` | e.g. `api-staging.ibackhome.ng` |
+| `STAGING_WEB_DOMAIN` | e.g. `staging.ibackhome.ng` (optional; the web health check is skipped while unset) |
 
-From then on, each merge to `main` that passes `backend-ci` (or changes `deploy/staging/`) checks out that
+From then on, each merge to `main` that passes `backend-ci` or `web-ci` (or changes `deploy/staging/`) checks out that
 commit on the server, rebuilds, restarts and waits for `/healthz`. Run it by hand from Actions → deploy-staging
 → Run workflow. Until the secrets exist the workflow only prints a notice.
 

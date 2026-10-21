@@ -1,0 +1,108 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CLIENT-005",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /projects/{id}/boq": {
+      "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+      "currency": "NGN",
+      "budget_minor": 2500000,
+      "budget_currency": "GBP",
+      "total_minor": 5440500000,
+      "milestones": [
+        {
+          "milestone_sequence": 3,
+          "milestone_name": "Roofing",
+          "total_minor": 1326000000,
+          "lines": [
+            {
+              "line_no": 1,
+              "description": "Long-span aluminium roofing sheet, 0.55 mm",
+              "unit": "m2",
+              "quantity": "210.000",
+              "unit_price_minor": 2600000,
+              "total_minor": 546000000
+            },
+            {
+              "line_no": 2,
+              "description": "Roof trusses, treated hardwood",
+              "unit": "item",
+              "quantity": "1.000",
+              "unit_price_minor": 780000000,
+              "total_minor": 780000000
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "role": "contractor",
+          "user": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+          "approved_at": "2026-10-27T09:00:00Z"
+        },
+        {
+          "role": "ops",
+          "user": "8f897360-7095-58ad-9883-7a8e42e0a564",
+          "approved_at": "2026-10-27T15:00:00Z"
+        }
+      ],
+      "_note": "Only one milestone group is shown; the full BoQ has 5 groups and totals NGN 54,405,000."
+    },
+    "POST /projects/{id}/boq/approve": {
+      "request": {},
+      "response": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "status": "active",
+        "approvals": [
+          {
+            "role": "contractor",
+            "user": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+            "approved_at": "2026-10-27T09:00:00Z"
+          },
+          {
+            "role": "ops",
+            "user": "8f897360-7095-58ad-9883-7a8e42e0a564",
+            "approved_at": "2026-10-27T15:00:00Z"
+          },
+          {
+            "role": "client",
+            "user": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+            "approved_at": "2026-10-28T08:00:00Z"
+          }
+        ]
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-08": {
+      "request": {
+        "reason": "Roofing sheet price is above the index; please re-quote."
+      }
+    }
+  },
+  "errors": {
+    "site_not_set": {
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "site_not_set",
+          "message": "Save the site before the final BoQ approval."
+        }
+      }
+    },
+    "conflict_409": {
+      "status": 409,
+      "body": {
+        "error": {
+          "code": "PLACEHOLDER_invalid_transition",
+          "message": "This milestone changed state; refresh to see it."
+        }
+      }
+    }
+  }
+}

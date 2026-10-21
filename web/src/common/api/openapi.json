@@ -1,0 +1,6404 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "iBackHome API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Healthz",
+        "operationId": "healthz_healthz_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ops/audit": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Search Audit Log",
+        "operationId": "search_audit_log_api_v1_ops_audit_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "actor_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Actor Id"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Action"
+            }
+          },
+          {
+            "name": "object_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Object Type"
+            }
+          },
+          {
+            "name": "object_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Object Id"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Since"
+            }
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Until"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/stripe": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Stripe Webhook",
+        "description": "Stripe events, signed with STRIPE_WEBHOOK_SECRET (`Stripe-Signature`).",
+        "operationId": "stripe_webhook_api_v1_webhooks_stripe_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookAck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/paystack": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Paystack Webhook",
+        "description": "Paystack events, signed with PAYSTACK_SECRET_KEY (`x-paystack-signature`).",
+        "operationId": "paystack_webhook_api_v1_webhooks_paystack_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookAck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/escrow": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Escrow Webhook",
+        "description": "Escrow partner events, signed with ESCROW_WEBHOOK_SECRET (`X-Escrow-Signature`).",
+        "operationId": "escrow_webhook_api_v1_webhooks_escrow_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookAck"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/request": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Request Otp",
+        "operationId": "request_otp_api_v1_auth_otp_request_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpRequestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/otp/verify": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Verify Otp",
+        "operationId": "verify_otp_api_v1_auth_otp_verify_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpVerifyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Refresh",
+        "operationId": "refresh_api_v1_auth_refresh_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Me",
+        "operationId": "me_api_v1_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/projects/{project_id}/funding": {
+      "post": {
+        "tags": [
+          "escrow"
+        ],
+        "summary": "Create Funding",
+        "description": "Client: get a Stripe Checkout link to pay for one pending milestone (its naira amount + fee).\n\nNothing is recorded as paid until Stripe confirms by webhook. Send an `Idempotency-Key`:\na retry with the same key returns the same checkout link (also passed on to Stripe).",
+        "operationId": "create_funding_api_v1_projects__project_id__funding_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FundingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundingCheckoutOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/ledger": {
+      "get": {
+        "tags": [
+          "escrow"
+        ],
+        "summary": "Project Ledger",
+        "description": "The project's client or ops: funding, releases and payouts, newest first (`?cursor=&limit=`).",
+        "operationId": "project_ledger_api_v1_projects__project_id__ledger_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive, ISO 8601 date or time",
+              "title": "Since"
+            },
+            "description": "Inclusive, ISO 8601 date or time"
+          },
+          {
+            "name": "until",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exclusive, ISO 8601",
+              "title": "Until"
+            },
+            "description": "Exclusive, ISO 8601"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/milestones/{milestone_id}/disputes": {
+      "post": {
+        "tags": [
+          "escrow"
+        ],
+        "summary": "Raise Dispute",
+        "description": "Client: dispute a verified milestone. It becomes `disputed`; nothing is released until resolved.",
+        "operationId": "raise_dispute_api_v1_milestones__milestone_id__disputes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "milestone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Milestone Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disputes/{dispute_id}/resolve": {
+      "post": {
+        "tags": [
+          "escrow"
+        ],
+        "summary": "Resolve Dispute",
+        "description": "Ops: resolve a dispute. Needs two different ops users choosing the same outcome; the first\ncall records a proposal (`resolved: false`), the second resolves it.",
+        "operationId": "resolve_dispute_api_v1_disputes__dispute_id__resolve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dispute_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Dispute Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeResolve"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeResolutionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/devices": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Register Device",
+        "operationId": "register_device_api_v1_devices_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/devices/{device_pk}/revoke": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Revoke Device",
+        "operationId": "revoke_device_api_v1_devices__device_pk__revoke_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_pk",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Device Pk"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evidence/upload-url": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Get Upload Url",
+        "description": "A 15-minute pre-signed URL to PUT one photo (JPEG, max 10 MB) or video (MP4, max 60 MB).",
+        "operationId": "get_upload_url_api_v1_evidence_upload_url_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadUrlRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadUrlOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evidence": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Submit Evidence",
+        "description": "Save a capture's metadata and signature once the file is uploaded; checks run in the background.",
+        "operationId": "submit_evidence_api_v1_evidence_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/evidence": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Evidence Gallery",
+        "description": "The project's photos and videos with 15-minute view links. Clients see accepted ones, EXIF-free.",
+        "operationId": "evidence_gallery_api_v1_projects__project_id__evidence_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "milestone_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Milestone Id"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending_checks",
+                    "accepted",
+                    "flagged",
+                    "rejected"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "photo",
+                    "video"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "name": "captured_by_role",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "supervisor",
+                    "contractor"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Captured By Role"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/evidence/{evidence_id}/decision": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Decide Evidence",
+        "description": "Ops: accept or reject evidence the server flagged. Rejecting needs notes.",
+        "operationId": "decide_evidence_api_v1_evidence__evidence_id__decision_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "evidence_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Evidence Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecisionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/milestones/{milestone_id}/claim": {
+      "post": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "Claim Milestone",
+        "description": "Contractor: the work for this milestone is done. The supervisor verifies it next.\n\nSend an `Idempotency-Key` header: a retry with the same key returns the first answer.",
+        "operationId": "claim_milestone_api_v1_milestones__milestone_id__claim_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "milestone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Milestone Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/milestones/{milestone_id}/verify": {
+      "post": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "Verify Milestone",
+        "description": "Assigned supervisor: verify a claimed milestone with a checklist, or reject it with a reason.\n\n`verified` moves it to `verified` (the client approves next); `rejected` sends it back to\n`funded` so the contractor can rework and claim again. Every photo in the checklist must be\naccepted supervisor evidence for this milestone. Send an `Idempotency-Key` header: the\noffline sync queue retries with the same key and gets the first answer back.",
+        "operationId": "verify_milestone_api_v1_milestones__milestone_id__verify_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "milestone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Milestone Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/milestones/{milestone_id}/approve": {
+      "post": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "Approve Milestone",
+        "description": "Client: approve a verified milestone. Escrow is asked to release its money to the contractor.\n\nThe milestone shows `approved` until the escrow partner confirms, then `released`.\nSend an `Idempotency-Key` header: a retry with the same key returns the first answer.",
+        "operationId": "approve_milestone_api_v1_milestones__milestone_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "milestone_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Milestone Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/milestones": {
+      "get": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "List Project Milestones",
+        "description": "The project's milestones in order, each with its newest verification.\n\nFor the project's client, contractor and assigned supervisor, and for ops (others get 403).",
+        "operationId": "list_project_milestones_api_v1_projects__project_id__milestones_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectMilestoneOut"
+                  },
+                  "title": "Response List Project Milestones Api V1 Projects  Project Id  Milestones Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ops/queue": {
+      "get": {
+        "tags": [
+          "ops"
+        ],
+        "summary": "Ops Queue",
+        "description": "Vetting requests, flagged evidence and open disputes, oldest first.",
+        "operationId": "ops_queue_api_v1_ops_queue_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpsQueue"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/price-index": {
+      "get": {
+        "tags": [
+          "price index"
+        ],
+        "summary": "Get Price Index",
+        "operationId": "get_price_index_api_v1_price_index_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CurrentPrice"
+                  },
+                  "type": "array",
+                  "title": "Response Get Price Index Api V1 Price Index Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Create Project",
+        "description": "Client: create a draft project, optionally inviting the contractor by phone number.\n\nSend an `Idempotency-Key` header: a retry with the same key returns the first answer.",
+        "operationId": "create_project_api_v1_projects_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "List Projects",
+        "description": "The projects you are on (all projects for ops), newest first.",
+        "operationId": "list_projects_api_v1_projects_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Project",
+        "description": "One project with its site. Its client, contractor and supervisor, and ops.",
+        "operationId": "get_project_api_v1_projects__project_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/site": {
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Set Site",
+        "description": "The project's client, or ops: set or replace the pin and geofence (GeoJSON Polygon, [lon, lat]).\n\nThe pin must be inside the geofence. Send an `Idempotency-Key` header to make retries safe.",
+        "operationId": "set_site_api_v1_projects__project_id__site_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteSet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/boq": {
+      "get": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Get Boq",
+        "description": "The BoQ grouped by milestone, with totals, budget and approvals. Project members and ops.",
+        "operationId": "get_boq_api_v1_projects__project_id__boq_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoqOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Submit Boq",
+        "description": "The project's contractor: submit the BoQ (lines grouped into milestones, in build order).\n\nLine totals are computed by the server (quantity x unit price, rounded half-up). Submitting again\nwhile the BoQ is in review replaces it and clears every approval.",
+        "operationId": "submit_boq_api_v1_projects__project_id__boq_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoqSubmit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoqOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/boq/approve": {
+      "post": {
+        "tags": [
+          "projects"
+        ],
+        "summary": "Approve Boq",
+        "description": "Client, contractor or ops: approve the BoQ in review.\n\nWhen all three have approved, the project becomes `active` and its milestones are created.",
+        "operationId": "approve_boq_api_v1_projects__project_id__boq_approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoqOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/quotes/check": {
+      "post": {
+        "tags": [
+          "quotes"
+        ],
+        "summary": "Check Quote",
+        "description": "Client, contractor or ops: flag the lines of a quote that are more than 15% above the price index.\n\nSend the PDF as base64 (`pdf_base64`) or the quote as `text`. The model only reads the lines;\nthe comparison is plain code, and every price shown comes from the quote or the index.",
+        "operationId": "check_quote_api_v1_quotes_check_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuoteCheckIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/reports": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "List Reports",
+        "description": "A project's weekly reports, newest first (its client, contractor, supervisor, or ops).",
+        "operationId": "list_reports_api_v1_projects__project_id__reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReportOut"
+                  },
+                  "title": "Response List Reports Api V1 Projects  Project Id  Reports Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{report_id}/review": {
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Review Report",
+        "description": "The project's supervisor (or ops) approves the draft; its PDF is made and it is queued to send.",
+        "operationId": "review_report_api_v1_reports__report_id__review_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supervisors/me/profile": {
+      "put": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Submit Application",
+        "description": "Apply for vetting (or re-apply after a rejection). The application goes to ops as pending.",
+        "operationId": "submit_application_api_v1_supervisors_me_profile_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupervisorApplication"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "My Profile",
+        "operationId": "my_profile_api_v1_supervisors_me_profile_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorProfileOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supervisors/{supervisor_id}/vetting": {
+      "post": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Vet Supervisor",
+        "description": "Approve (every check passed) or reject (with a reason) a supervisor's application.",
+        "operationId": "vet_supervisor_api_v1_supervisors__supervisor_id__vetting_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supervisor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Supervisor Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VettingDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorProfileOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/supervisor": {
+      "post": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Assign Supervisor",
+        "description": "Ops: assign a vetted supervisor who isn't related to the project's contractor.",
+        "operationId": "assign_supervisor_api_v1_projects__project_id__supervisor_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignSupervisor"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectSupervisorOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/spot-checks": {
+      "post": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Schedule Spot Check",
+        "description": "Ops: schedule an unannounced visit. Never shown to the contractor.",
+        "operationId": "schedule_spot_check_api_v1_projects__project_id__spot_checks_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotCheckCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpotCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supervisors/me/spot-checks": {
+      "get": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "My Spot Checks",
+        "description": "The visits this supervisor still has to make, soonest first.",
+        "operationId": "my_spot_checks_api_v1_supervisors_me_spot_checks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SpotCheckOut"
+                  },
+                  "type": "array",
+                  "title": "Response My Spot Checks Api V1 Supervisors Me Spot Checks Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/spot-checks/{spot_check_id}/complete": {
+      "post": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Complete Spot Check",
+        "description": "The visiting supervisor records what they found (once).",
+        "operationId": "complete_spot_check_api_v1_spot_checks__spot_check_id__complete_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "spot_check_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Spot Check Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotCheckComplete"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpotCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/orders": {
+      "post": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "Request Order",
+        "description": "Contractor: request materials from a supplier. The total is worked out by the server.",
+        "operationId": "request_order_api_v1_projects__project_id__orders_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{order_id}/approve": {
+      "post": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "Approve Order",
+        "description": "Client: approve a requested order.",
+        "operationId": "approve_order_api_v1_orders__order_id__approve_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{order_id}/delivery": {
+      "post": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "Confirm Delivery",
+        "description": "Supervisor: confirm an approved order arrived, with the quantities counted and photo evidence.\n\nThis starts the supplier payment, so it only succeeds when the payment can be started.",
+        "operationId": "confirm_delivery_api_v1_orders__order_id__delivery_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssignSupervisor": {
+        "properties": {
+          "supervisor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supervisor Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supervisor_id"
+        ],
+        "title": "AssignSupervisor"
+      },
+      "AuditEntryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "object_type": {
+            "type": "string",
+            "title": "Object Type"
+          },
+          "object_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Object Id"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Before"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "After"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "device_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device Id"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "actor_id",
+          "action",
+          "object_type",
+          "object_id",
+          "before",
+          "after",
+          "ip",
+          "device_id",
+          "at"
+        ],
+        "title": "AuditEntryOut"
+      },
+      "AuditPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEntryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "AuditPage"
+      },
+      "BoqApprovalOut": {
+        "properties": {
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "approved_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Approved At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "role",
+          "user_id",
+          "approved_at"
+        ],
+        "title": "BoqApprovalOut"
+      },
+      "BoqLineIn": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Description",
+            "examples": [
+              "Concrete 1:2:4 for strip foundation"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Unit",
+            "examples": [
+              "m3"
+            ]
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "examples": [
+              "12.5"
+            ]
+          },
+          "unit_price_minor": {
+            "type": "integer",
+            "maximum": 10000000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Price Minor",
+            "examples": [
+              9500000
+            ]
+          },
+          "total_minor": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Minor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "description",
+          "unit",
+          "quantity",
+          "unit_price_minor"
+        ],
+        "title": "BoqLineIn"
+      },
+      "BoqLineOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "line_no": {
+            "type": "integer",
+            "title": "Line No"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "unit_price_minor": {
+            "type": "integer",
+            "title": "Unit Price Minor"
+          },
+          "total_minor": {
+            "type": "integer",
+            "title": "Total Minor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "line_no",
+          "description",
+          "unit",
+          "quantity",
+          "unit_price_minor",
+          "total_minor"
+        ],
+        "title": "BoqLineOut"
+      },
+      "BoqMilestoneIn": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "examples": [
+              "Foundation"
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BoqLineIn"
+            },
+            "type": "array",
+            "maxItems": 200,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "items"
+        ],
+        "title": "BoqMilestoneIn"
+      },
+      "BoqMilestoneOut": {
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "milestone_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Milestone Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BoqLineOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sequence",
+          "name",
+          "amount_minor",
+          "milestone_id",
+          "items"
+        ],
+        "title": "BoqMilestoneOut"
+      },
+      "BoqOut": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "project_status": {
+            "type": "string",
+            "title": "Project Status"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "budget_minor": {
+            "type": "integer",
+            "title": "Budget Minor"
+          },
+          "boq_total_minor": {
+            "type": "integer",
+            "title": "Boq Total Minor"
+          },
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/BoqMilestoneOut"
+            },
+            "type": "array",
+            "title": "Milestones"
+          },
+          "approvals": {
+            "items": {
+              "$ref": "#/components/schemas/BoqApprovalOut"
+            },
+            "type": "array",
+            "title": "Approvals"
+          },
+          "approvals_missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Approvals Missing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "project_status",
+          "currency",
+          "budget_minor",
+          "boq_total_minor",
+          "milestones",
+          "approvals",
+          "approvals_missing"
+        ],
+        "title": "BoqOut"
+      },
+      "BoqSubmit": {
+        "properties": {
+          "milestones": {
+            "items": {
+              "$ref": "#/components/schemas/BoqMilestoneIn"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Milestones"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestones"
+        ],
+        "title": "BoqSubmit",
+        "description": "The whole BoQ, milestones in build order. Submitting again replaces it."
+      },
+      "ChecklistItem": {
+        "properties": {
+          "item": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Item",
+            "description": "e.g. 'Foundation trench depth as drawn'"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Evidence Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item",
+          "passed"
+        ],
+        "title": "ChecklistItem",
+        "description": "One thing the supervisor checked on site, and the photos that show it."
+      },
+      "CurrentPrice": {
+        "properties": {
+          "item_key": {
+            "type": "string",
+            "title": "Item Key"
+          },
+          "item": {
+            "type": "string",
+            "title": "Item"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "price_minor": {
+            "type": "integer",
+            "title": "Price Minor"
+          },
+          "low_minor": {
+            "type": "integer",
+            "title": "Low Minor"
+          },
+          "high_minor": {
+            "type": "integer",
+            "title": "High Minor"
+          },
+          "supplier_count": {
+            "type": "integer",
+            "title": "Supplier Count"
+          },
+          "last_observed_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Last Observed On"
+          },
+          "stale": {
+            "type": "boolean",
+            "title": "Stale",
+            "description": "True when the newest observation is older than 14 days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_key",
+          "item",
+          "unit",
+          "currency",
+          "price_minor",
+          "low_minor",
+          "high_minor",
+          "supplier_count",
+          "last_observed_on",
+          "stale"
+        ],
+        "title": "CurrentPrice",
+        "description": "The index price of one item: the median of each supplier's latest price."
+      },
+      "DecisionIn": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "rejected"
+            ],
+            "title": "Decision"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 1000,
+            "title": "Notes",
+            "default": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "DecisionIn"
+      },
+      "DeclaredRelation": {
+        "properties": {
+          "contractor_phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Contractor Phone",
+            "examples": [
+              "08031234567"
+            ]
+          },
+          "relationship": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "Relationship",
+            "examples": [
+              "brother-in-law"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "contractor_phone",
+          "relationship"
+        ],
+        "title": "DeclaredRelation"
+      },
+      "DeliveryIn": {
+        "properties": {
+          "quantities": {
+            "items": {
+              "$ref": "#/components/schemas/DeliveryItem"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Quantities"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "Evidence Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "quantities",
+          "evidence_ids"
+        ],
+        "title": "DeliveryIn"
+      },
+      "DeliveryItem": {
+        "properties": {
+          "item": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Item"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item",
+          "quantity"
+        ],
+        "title": "DeliveryItem"
+      },
+      "DeliveryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "order_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Order Id"
+          },
+          "confirmed_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Confirmed By"
+          },
+          "quantities": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Quantities"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Confirmed At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_id",
+          "confirmed_by",
+          "quantities",
+          "evidence_ids",
+          "confirmed_at"
+        ],
+        "title": "DeliveryOut"
+      },
+      "DeviceIn": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Device Id"
+          },
+          "public_key": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Public Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id",
+          "public_key"
+        ],
+        "title": "DeviceIn"
+      },
+      "DeviceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "public_key": {
+            "type": "string",
+            "title": "Public Key"
+          },
+          "registered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registered At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "device_id",
+          "public_key",
+          "registered_at",
+          "revoked_at"
+        ],
+        "title": "DeviceOut"
+      },
+      "DisputeCreate": {
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 3,
+            "title": "Reason",
+            "description": "What is wrong with the work"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "title": "DisputeCreate"
+      },
+      "DisputeItem": {
+        "properties": {
+          "dispute_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Dispute Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "milestone_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Milestone Id"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "opened_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Opened At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispute_id",
+          "project_id",
+          "milestone_id",
+          "reason",
+          "opened_at"
+        ],
+        "title": "DisputeItem",
+        "description": "A milestone dispute that is still open."
+      },
+      "DisputeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "milestone_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Milestone Id"
+          },
+          "raised_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Raised By"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "open, resolved_release or resolved_reject"
+          },
+          "proposed_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Outcome",
+            "description": "The first ops approval's outcome"
+          },
+          "proposed_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed By"
+          },
+          "proposed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed At"
+          },
+          "resolution_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Notes"
+          },
+          "resolved_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "milestone_id",
+          "raised_by",
+          "reason",
+          "status",
+          "proposed_outcome",
+          "proposed_by",
+          "proposed_at",
+          "resolution_notes",
+          "resolved_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "DisputeOut"
+      },
+      "DisputeResolutionOut": {
+        "properties": {
+          "dispute": {
+            "$ref": "#/components/schemas/DisputeOut"
+          },
+          "resolved": {
+            "type": "boolean",
+            "title": "Resolved",
+            "description": "False: first ops approval recorded; a second ops user must confirm"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id",
+            "description": "The release requested when resolved for release"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dispute",
+          "resolved",
+          "release_id"
+        ],
+        "title": "DisputeResolutionOut"
+      },
+      "DisputeResolve": {
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "release",
+              "rework"
+            ],
+            "title": "Outcome",
+            "description": "release: the contractor is paid; rework: back to funded, the contractor fixes it"
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "outcome",
+          "notes"
+        ],
+        "title": "DisputeResolve"
+      },
+      "EvidenceIn": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "milestone_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Milestone Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "photo",
+              "video"
+            ],
+            "title": "Kind"
+          },
+          "storage_key": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Storage Key"
+          },
+          "file_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "File Sha256"
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Captured At"
+          },
+          "gps_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Gps Time"
+          },
+          "latitude": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude"
+          },
+          "accuracy_m": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Accuracy M"
+          },
+          "device_id": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Device Id"
+          },
+          "signature": {
+            "type": "string",
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Signature"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "kind",
+          "storage_key",
+          "file_sha256",
+          "captured_at",
+          "gps_time",
+          "latitude",
+          "longitude",
+          "accuracy_m",
+          "device_id",
+          "signature"
+        ],
+        "title": "EvidenceIn"
+      },
+      "EvidenceOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "milestone_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Milestone Id"
+          },
+          "captured_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Captured By"
+          },
+          "captured_by_role": {
+            "type": "string",
+            "title": "Captured By Role"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "storage_key": {
+            "type": "string",
+            "title": "Storage Key"
+          },
+          "content_type": {
+            "type": "string",
+            "title": "Content Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "file_sha256": {
+            "type": "string",
+            "title": "File Sha256"
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Captured At"
+          },
+          "gps_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Gps Time"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "accuracy_m": {
+            "type": "number",
+            "title": "Accuracy M"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "milestone_id",
+          "captured_by",
+          "captured_by_role",
+          "kind",
+          "storage_key",
+          "content_type",
+          "size_bytes",
+          "file_sha256",
+          "captured_at",
+          "gps_time",
+          "latitude",
+          "longitude",
+          "accuracy_m",
+          "device_id",
+          "status",
+          "reject_reason",
+          "created_at"
+        ],
+        "title": "EvidenceOut"
+      },
+      "FlaggedEvidenceItem": {
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Evidence Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "captured_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Captured By"
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Captured At"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "flagged_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Flagged At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "evidence_id",
+          "project_id",
+          "kind",
+          "captured_by",
+          "captured_at",
+          "reason",
+          "flagged_at"
+        ],
+        "title": "FlaggedEvidenceItem",
+        "description": "A capture the server flagged (decide it with POST /evidence/{id}/decision)."
+      },
+      "FundingCheckoutOut": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "milestone_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Milestone Id"
+          },
+          "checkout_session_id": {
+            "type": "string",
+            "title": "Checkout Session Id"
+          },
+          "checkout_url": {
+            "type": "string",
+            "title": "Checkout Url"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_ngn_minor": {
+            "type": "integer",
+            "title": "Amount Ngn Minor",
+            "description": "What the escrow will hold, in kobo"
+          },
+          "net_minor": {
+            "type": "integer",
+            "title": "Net Minor",
+            "description": "amount_ngn_minor converted at fx_rate, rounded up"
+          },
+          "fee_minor": {
+            "type": "integer",
+            "title": "Fee Minor"
+          },
+          "fee_bps": {
+            "type": "integer",
+            "title": "Fee Bps"
+          },
+          "total_minor": {
+            "type": "integer",
+            "title": "Total Minor",
+            "description": "net_minor + fee_minor: what the client pays"
+          },
+          "fx_rate": {
+            "type": "string",
+            "title": "Fx Rate",
+            "description": "NGN per 1 unit of currency"
+          },
+          "fx_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fx As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "milestone_id",
+          "checkout_session_id",
+          "checkout_url",
+          "currency",
+          "amount_ngn_minor",
+          "net_minor",
+          "fee_minor",
+          "fee_bps",
+          "total_minor",
+          "fx_rate",
+          "fx_as_of"
+        ],
+        "title": "FundingCheckoutOut",
+        "description": "What the client is about to pay. Nothing is in the ledger until Stripe confirms."
+      },
+      "FundingCreate": {
+        "properties": {
+          "milestone_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Milestone Id"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "GBP",
+              "USD",
+              "EUR"
+            ],
+            "title": "Currency",
+            "description": "The currency the client pays in: GBP, USD or EUR"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "milestone_id",
+          "currency"
+        ],
+        "title": "FundingCreate"
+      },
+      "GalleryItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "milestone_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Milestone Id"
+          },
+          "captured_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Captured By"
+          },
+          "captured_by_role": {
+            "type": "string",
+            "title": "Captured By Role"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "storage_key": {
+            "type": "string",
+            "title": "Storage Key"
+          },
+          "content_type": {
+            "type": "string",
+            "title": "Content Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "file_sha256": {
+            "type": "string",
+            "title": "File Sha256"
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Captured At"
+          },
+          "gps_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Gps Time"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "accuracy_m": {
+            "type": "number",
+            "title": "Accuracy M"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "read_url": {
+            "type": "string",
+            "title": "Read Url"
+          },
+          "read_url_expires_in": {
+            "type": "integer",
+            "title": "Read Url Expires In"
+          },
+          "is_client_copy": {
+            "type": "boolean",
+            "title": "Is Client Copy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "milestone_id",
+          "captured_by",
+          "captured_by_role",
+          "kind",
+          "storage_key",
+          "content_type",
+          "size_bytes",
+          "file_sha256",
+          "captured_at",
+          "gps_time",
+          "latitude",
+          "longitude",
+          "accuracy_m",
+          "device_id",
+          "status",
+          "reject_reason",
+          "created_at",
+          "read_url",
+          "read_url_expires_in",
+          "is_client_copy"
+        ],
+        "title": "GalleryItem",
+        "description": "A capture plus a short-lived link to view it (clients get an EXIF-stripped copy)."
+      },
+      "GalleryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GalleryItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "GalleryPage"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LedgerEntryOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "transaction_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Transaction Id"
+          },
+          "account": {
+            "type": "string",
+            "title": "Account"
+          },
+          "direction": {
+            "type": "string",
+            "title": "Direction",
+            "description": "debit or credit"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "fx_rate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fx Rate"
+          },
+          "ref_type": {
+            "type": "string",
+            "title": "Ref Type"
+          },
+          "ref_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Ref Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "transaction_id",
+          "account",
+          "direction",
+          "amount_minor",
+          "currency",
+          "fx_rate",
+          "ref_type",
+          "ref_id",
+          "created_at"
+        ],
+        "title": "LedgerEntryOut",
+        "description": "One ledger line. Amounts are integer minor units; fx_rate is a decimal string."
+      },
+      "LedgerPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LedgerEntryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "LedgerPage"
+      },
+      "MeOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "role": {
+            "type": "string",
+            "title": "Role"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "phone",
+          "email",
+          "full_name",
+          "role",
+          "status",
+          "timezone",
+          "country"
+        ],
+        "title": "MeOut"
+      },
+      "MilestoneOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MilestoneStatus"
+          },
+          "funded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funded At"
+          },
+          "claimed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed At"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "sequence",
+          "name",
+          "amount_minor",
+          "currency",
+          "status",
+          "funded_at",
+          "claimed_at",
+          "verified_at",
+          "approved_at",
+          "released_at"
+        ],
+        "title": "MilestoneOut"
+      },
+      "MilestoneStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "funded",
+          "claimed",
+          "verified",
+          "approved",
+          "disputed",
+          "released"
+        ],
+        "title": "MilestoneStatus"
+      },
+      "OpsQueue": {
+        "properties": {
+          "vetting": {
+            "items": {
+              "$ref": "#/components/schemas/VettingItem"
+            },
+            "type": "array",
+            "title": "Vetting"
+          },
+          "flagged_evidence": {
+            "items": {
+              "$ref": "#/components/schemas/FlaggedEvidenceItem"
+            },
+            "type": "array",
+            "title": "Flagged Evidence"
+          },
+          "disputes": {
+            "items": {
+              "$ref": "#/components/schemas/DisputeItem"
+            },
+            "type": "array",
+            "title": "Disputes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vetting",
+          "flagged_evidence",
+          "disputes"
+        ],
+        "title": "OpsQueue",
+        "description": "Everything waiting for ops in one place, oldest first."
+      },
+      "OrderItem": {
+        "properties": {
+          "item": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Item"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Unit"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "unit_price_minor": {
+            "type": "integer",
+            "maximum": 1000000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Unit Price Minor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item",
+          "unit",
+          "quantity",
+          "unit_price_minor"
+        ],
+        "title": "OrderItem"
+      },
+      "OrderOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Requested By"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_minor": {
+            "type": "integer",
+            "title": "Total Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "supplier_id",
+          "requested_by",
+          "items",
+          "total_minor",
+          "currency",
+          "status",
+          "approved_by",
+          "approved_at",
+          "created_at"
+        ],
+        "title": "OrderOut"
+      },
+      "OrderRequest": {
+        "properties": {
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "items"
+        ],
+        "title": "OrderRequest"
+      },
+      "OtpRequestIn": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Identifier",
+            "description": "Phone number (Nigerian local such as 0803..., or any country with its code, such as +44...) or email address."
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "sms",
+                  "whatsapp",
+                  "email"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel",
+            "description": "How to send the code: sms (default) or whatsapp for a phone number, email for an email."
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier"
+        ],
+        "title": "OtpRequestIn"
+      },
+      "OtpRequestOut": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "default": "sent"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Seconds until the code expires."
+          }
+        },
+        "type": "object",
+        "required": [
+          "expires_in"
+        ],
+        "title": "OtpRequestOut"
+      },
+      "OtpVerifyIn": {
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 3,
+            "title": "Identifier",
+            "description": "Phone number (Nigerian local such as 0803..., or any country with its code, such as +44...) or email address."
+          },
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$",
+            "title": "Code",
+            "description": "The 6-digit code that was sent."
+          }
+        },
+        "type": "object",
+        "required": [
+          "identifier",
+          "code"
+        ],
+        "title": "OtpVerifyIn"
+      },
+      "Pin": {
+        "properties": {
+          "lat": {
+            "type": "number",
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Lat",
+            "examples": [
+              6.4483
+            ]
+          },
+          "lon": {
+            "type": "number",
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Lon",
+            "examples": [
+              7.5139
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "Pin"
+      },
+      "ProjectCreate": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "examples": [
+              "4-bedroom duplex, Independence Layout"
+            ]
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Address",
+            "examples": [
+              "12 Chime Avenue, Enugu"
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Z]{3}$",
+            "title": "Currency",
+            "examples": [
+              "NGN"
+            ]
+          },
+          "budget_minor": {
+            "type": "integer",
+            "maximum": 1000000000000000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Budget Minor",
+            "examples": [
+              4500000000
+            ]
+          },
+          "contractor_phone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "minLength": 7
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Phone",
+            "examples": [
+              "08031234567"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "address",
+          "currency",
+          "budget_minor"
+        ],
+        "title": "ProjectCreate"
+      },
+      "ProjectDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "budget_minor": {
+            "type": "integer",
+            "title": "Budget Minor"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "site": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SiteOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "client_id",
+          "contractor_id",
+          "supervisor_id",
+          "title",
+          "address",
+          "status",
+          "currency",
+          "budget_minor",
+          "created_at",
+          "updated_at",
+          "site"
+        ],
+        "title": "ProjectDetail"
+      },
+      "ProjectMilestoneOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "sequence": {
+            "type": "integer",
+            "title": "Sequence"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MilestoneStatus"
+          },
+          "funded_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Funded At"
+          },
+          "claimed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed At"
+          },
+          "verified_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verified At"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "released_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Released At"
+          },
+          "latest_verification": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerificationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "sequence",
+          "name",
+          "amount_minor",
+          "currency",
+          "status",
+          "funded_at",
+          "claimed_at",
+          "verified_at",
+          "approved_at",
+          "released_at"
+        ],
+        "title": "ProjectMilestoneOut",
+        "description": "A milestone in the project list, with its newest verification (if any).\n\nAfter a rejection the milestone is back to `funded`; `latest_verification.notes` says why."
+      },
+      "ProjectOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          },
+          "contractor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contractor Id"
+          },
+          "supervisor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "budget_minor": {
+            "type": "integer",
+            "title": "Budget Minor"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "client_id",
+          "contractor_id",
+          "supervisor_id",
+          "title",
+          "address",
+          "status",
+          "currency",
+          "budget_minor",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProjectOut"
+      },
+      "ProjectPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ProjectPage"
+      },
+      "ProjectSupervisorOut": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "supervisor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supervisor Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "supervisor_id"
+        ],
+        "title": "ProjectSupervisorOut"
+      },
+      "QuoteCheckIn": {
+        "properties": {
+          "pdf_base64": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 7000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Base64",
+            "description": "The quote PDF, base64"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30000,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "Or the quote as text"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "QuoteCheckIn",
+        "description": "Send the quote as a PDF (base64) or as plain text: exactly one of them."
+      },
+      "QuoteCheckOut": {
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Run Id",
+            "description": "The agent_runs row of the parse"
+          },
+          "currency": {
+            "type": "string",
+            "const": "NGN",
+            "title": "Currency",
+            "default": "NGN"
+          },
+          "threshold_percent": {
+            "type": "integer",
+            "title": "Threshold Percent"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/QuoteLineCheck"
+            },
+            "type": "array",
+            "title": "Lines"
+          },
+          "flagged_count": {
+            "type": "integer",
+            "title": "Flagged Count"
+          },
+          "quote_total_minor": {
+            "type": "integer",
+            "title": "Quote Total Minor",
+            "description": "Sum of line_total_minor, computed here"
+          }
+        },
+        "type": "object",
+        "required": [
+          "run_id",
+          "threshold_percent",
+          "lines",
+          "flagged_count",
+          "quote_total_minor"
+        ],
+        "title": "QuoteCheckOut"
+      },
+      "QuoteLineCheck": {
+        "properties": {
+          "item": {
+            "type": "string",
+            "title": "Item"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "unit_price_minor": {
+            "type": "integer",
+            "title": "Unit Price Minor",
+            "description": "From the quote's text (checked to appear in it), in kobo"
+          },
+          "line_total_minor": {
+            "type": "integer",
+            "title": "Line Total Minor",
+            "description": "quantity x unit_price_minor, rounded half up, computed here"
+          },
+          "flag": {
+            "type": "string",
+            "enum": [
+              "over_index",
+              "within_index",
+              "not_in_index",
+              "unit_differs",
+              "not_found_in_quote"
+            ],
+            "title": "Flag",
+            "description": "over_index: more than 15% above the index; within_index; not_in_index: no index price; unit_differs: the index prices another unit; not_found_in_quote: the model's numbers are not in the quote text, so the line is not compared"
+          },
+          "index_item": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Item"
+          },
+          "index_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Unit"
+          },
+          "index_price_minor": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Price Minor",
+            "description": "The price index median, in kobo"
+          },
+          "percent_above_index": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent Above Index",
+            "description": "(quote - index) / index x 100, one decimal place; negative when cheaper"
+          },
+          "index_stale": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Index Stale",
+            "description": "The index price is older than 14 days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item",
+          "unit",
+          "quantity",
+          "unit_price_minor",
+          "line_total_minor",
+          "flag"
+        ],
+        "title": "QuoteLineCheck"
+      },
+      "RefreshIn": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Refresh Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshIn"
+      },
+      "ReportOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "week_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Week Start"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "body_md": {
+            "type": "string",
+            "title": "Body Md"
+          },
+          "evidence_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Evidence Ids"
+          },
+          "pdf_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pdf Url"
+          },
+          "sent_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sent At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "week_start",
+          "status",
+          "body_md",
+          "evidence_ids",
+          "pdf_url",
+          "sent_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ReportOut"
+      },
+      "SiteOut": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "geofence": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Geofence"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "geofence",
+          "updated_at"
+        ],
+        "title": "SiteOut"
+      },
+      "SiteSet": {
+        "properties": {
+          "location": {
+            "$ref": "#/components/schemas/Pin"
+          },
+          "geofence": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Geofence",
+            "examples": [
+              {
+                "coordinates": [
+                  [
+                    [
+                      7.5135,
+                      6.448
+                    ],
+                    [
+                      7.5143,
+                      6.448
+                    ],
+                    [
+                      7.5143,
+                      6.4487
+                    ],
+                    [
+                      7.5135,
+                      6.4487
+                    ],
+                    [
+                      7.5135,
+                      6.448
+                    ]
+                  ]
+                ],
+                "type": "Polygon"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "location",
+          "geofence"
+        ],
+        "title": "SiteSet"
+      },
+      "SpotCheckComplete": {
+        "properties": {
+          "findings": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 10,
+            "title": "Findings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "findings"
+        ],
+        "title": "SpotCheckComplete"
+      },
+      "SpotCheckCreate": {
+        "properties": {
+          "supervisor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supervisor Id"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled For"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supervisor_id",
+          "scheduled_for"
+        ],
+        "title": "SpotCheckCreate"
+      },
+      "SpotCheckOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "supervisor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supervisor Id"
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Scheduled For"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "findings": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Findings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "supervisor_id",
+          "scheduled_for",
+          "completed_at",
+          "findings"
+        ],
+        "title": "SpotCheckOut"
+      },
+      "SupervisorApplication": {
+        "properties": {
+          "registration_body": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Registration Body",
+            "examples": [
+              "COREN"
+            ]
+          },
+          "registration_no": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "Registration No"
+          },
+          "guarantor_1": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 5,
+            "title": "Guarantor 1",
+            "examples": [
+              "Ngozi Eze, +2348031234567"
+            ]
+          },
+          "guarantor_2": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 5,
+            "title": "Guarantor 2"
+          },
+          "related_contractors": {
+            "items": {
+              "$ref": "#/components/schemas/DeclaredRelation"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Related Contractors"
+          }
+        },
+        "type": "object",
+        "required": [
+          "registration_body",
+          "registration_no",
+          "guarantor_1",
+          "guarantor_2"
+        ],
+        "title": "SupervisorApplication",
+        "description": "What a supervisor submits to be vetted."
+      },
+      "SupervisorProfileOut": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "registration_body": {
+            "type": "string",
+            "title": "Registration Body"
+          },
+          "registration_no": {
+            "type": "string",
+            "title": "Registration No"
+          },
+          "registration_verified": {
+            "type": "boolean",
+            "title": "Registration Verified"
+          },
+          "nin_verified": {
+            "type": "boolean",
+            "title": "Nin Verified"
+          },
+          "guarantor_1_verified": {
+            "type": "boolean",
+            "title": "Guarantor 1 Verified"
+          },
+          "guarantor_2_verified": {
+            "type": "boolean",
+            "title": "Guarantor 2 Verified"
+          },
+          "vetting_status": {
+            "$ref": "#/components/schemas/VettingStatus"
+          },
+          "vetted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vetted At"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "registration_body",
+          "registration_no",
+          "registration_verified",
+          "nin_verified",
+          "guarantor_1_verified",
+          "guarantor_2_verified",
+          "vetting_status",
+          "vetted_at",
+          "rejection_reason",
+          "rating"
+        ],
+        "title": "SupervisorProfileOut"
+      },
+      "TokenPair": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Seconds until the access token expires."
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in"
+        ],
+        "title": "TokenPair"
+      },
+      "UploadUrlOut": {
+        "properties": {
+          "storage_key": {
+            "type": "string",
+            "title": "Storage Key"
+          },
+          "upload_url": {
+            "type": "string",
+            "title": "Upload Url"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "default": "PUT"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Headers"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          },
+          "max_bytes": {
+            "type": "integer",
+            "title": "Max Bytes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "storage_key",
+          "upload_url",
+          "headers",
+          "expires_in",
+          "max_bytes"
+        ],
+        "title": "UploadUrlOut"
+      },
+      "UploadUrlRequest": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "photo",
+              "video"
+            ],
+            "title": "Kind"
+          },
+          "content_type": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "video/mp4"
+            ],
+            "title": "Content Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "kind",
+          "content_type"
+        ],
+        "title": "UploadUrlRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerificationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "milestone_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Milestone Id"
+          },
+          "supervisor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supervisor Id"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "rejected"
+            ],
+            "title": "Decision"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItem"
+            },
+            "type": "array",
+            "title": "Checklist"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "milestone_id",
+          "supervisor_id",
+          "decision",
+          "checklist",
+          "notes",
+          "created_at"
+        ],
+        "title": "VerificationOut"
+      },
+      "VerifyIn": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "rejected"
+            ],
+            "title": "Decision"
+          },
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistItem"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Checklist"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "VerifyIn",
+        "description": "The supervisor's decision on a claimed milestone.\n\n- `verified`: every checklist item passed and has at least one photo.\n- `rejected`: `notes` gives the reason the contractor sees; the checklist is optional."
+      },
+      "VerifyOut": {
+        "properties": {
+          "milestone": {
+            "$ref": "#/components/schemas/MilestoneOut"
+          },
+          "verification": {
+            "$ref": "#/components/schemas/VerificationOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestone",
+          "verification"
+        ],
+        "title": "VerifyOut"
+      },
+      "VettingDecision": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "rejected"
+            ],
+            "title": "Decision"
+          },
+          "registration_verified": {
+            "type": "boolean",
+            "title": "Registration Verified",
+            "default": false
+          },
+          "nin_verified": {
+            "type": "boolean",
+            "title": "Nin Verified",
+            "default": false
+          },
+          "guarantor_1_verified": {
+            "type": "boolean",
+            "title": "Guarantor 1 Verified",
+            "default": false
+          },
+          "guarantor_2_verified": {
+            "type": "boolean",
+            "title": "Guarantor 2 Verified",
+            "default": false
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "VettingDecision",
+        "description": "Ops' decision. Approval needs every check ticked; rejection needs a reason."
+      },
+      "VettingItem": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "registration_body": {
+            "type": "string",
+            "title": "Registration Body"
+          },
+          "registration_no": {
+            "type": "string",
+            "title": "Registration No"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "registration_body",
+          "registration_no",
+          "submitted_at"
+        ],
+        "title": "VettingItem",
+        "description": "A supervisor application waiting for ops (decide it with POST /supervisors/{id}/vetting)."
+      },
+      "VettingStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "VettingStatus"
+      },
+      "WebhookAck": {
+        "properties": {
+          "received": {
+            "type": "boolean",
+            "title": "Received"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "title": "Duplicate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "received",
+          "duplicate"
+        ],
+        "title": "WebhookAck"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

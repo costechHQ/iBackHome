@@ -39,3 +39,7 @@
 /backend/app/base/payments/           @gabrielnjoku @costechHQ
 /backend/app/features/escrow/         @gabrielnjoku @costechHQ
 /backend/app/features/quotes/         @gabrielnjoku
+
+# Gabriel: the web app and the Android app (decided 2026-10-21)
+/web/                                 @gabrielnjoku
+/mobile/                              @gabrielnjoku
