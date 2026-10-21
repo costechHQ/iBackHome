@@ -1,0 +1,139 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CLIENT-012",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /projects/{id}": {
+      "id": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+      "title": "Chioma's bungalow",
+      "address": "14 Chime Avenue, Independence Layout, Enugu",
+      "status": "active",
+      "currency": "GBP",
+      "budget_minor": 2500000,
+      "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+      "contractor": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+      "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+      "created_at": "2026-10-20T09:00:00Z",
+      "updated_at": "2026-12-10T14:20:00Z",
+      "site": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "location": {
+          "type": "Point",
+          "coordinates": [
+            7.4931,
+            6.4562
+          ]
+        },
+        "geofence": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                7.4929,
+                6.4564
+              ],
+              [
+                7.49335,
+                6.45637
+              ],
+              [
+                7.49338,
+                6.45598
+              ],
+              [
+                7.49292,
+                6.45601
+              ],
+              [
+                7.4929,
+                6.4564
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "GET /projects/{id}/evidence": {
+      "items": [
+        {
+          "id": "90114654-5167-5843-9430-3a1f625f9b6e",
+          "display_ref": "EV-2118",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "captured_by": "49049b09-6203-5142-be1c-7b454d53b1c5",
+          "captured_by_role": "supervisor",
+          "kind": "photo",
+          "content_type": "image/jpeg",
+          "captured_at": "2026-12-10T14:58:40Z",
+          "latitude": 6.45621,
+          "longitude": 7.49312,
+          "accuracy_m": 6.0,
+          "status": "accepted",
+          "reject_reason": null,
+          "read_url": "https://storage.example.com/signed/EV-2118?expires=900",
+          "read_url_expires_in_s": 900
+        },
+        {
+          "id": "fa21682d-3d31-53ca-a886-aefcc3f28e21",
+          "display_ref": "EV-2119",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "captured_by": "49049b09-6203-5142-be1c-7b454d53b1c5",
+          "captured_by_role": "supervisor",
+          "kind": "video",
+          "content_type": "video/mp4",
+          "captured_at": "2026-12-10T15:06:12Z",
+          "latitude": 6.45621,
+          "longitude": 7.49312,
+          "accuracy_m": 6.0,
+          "status": "accepted",
+          "reject_reason": null,
+          "read_url": "https://storage.example.com/signed/EV-2119?expires=900",
+          "read_url_expires_in_s": 900
+        },
+        {
+          "id": "bf3c3c70-5a87-57d3-9cb8-9dd56baeec60",
+          "display_ref": "EV-2121",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "captured_by": "49049b09-6203-5142-be1c-7b454d53b1c5",
+          "captured_by_role": "supervisor",
+          "kind": "photo",
+          "content_type": "image/jpeg",
+          "captured_at": "2026-12-10T15:09:03Z",
+          "latitude": 6.45621,
+          "longitude": 7.49312,
+          "accuracy_m": 6.0,
+          "status": "flagged",
+          "reject_reason": null,
+          "read_url": "https://storage.example.com/signed/EV-2121?expires=900",
+          "read_url_expires_in_s": 900
+        },
+        {
+          "id": "4e9354ab-48de-5f86-95e6-dfc968dadf6e",
+          "display_ref": "EV-2102",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "captured_by": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+          "captured_by_role": "contractor",
+          "kind": "photo",
+          "content_type": "image/jpeg",
+          "captured_at": "2026-12-08T10:31:00Z",
+          "latitude": 6.45621,
+          "longitude": 7.49312,
+          "accuracy_m": 6.0,
+          "status": "accepted",
+          "reject_reason": null,
+          "read_url": "https://storage.example.com/signed/EV-2102?expires=900",
+          "read_url_expires_in_s": 900
+        }
+      ],
+      "next_cursor": null
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "AND-SUPERVISOR-009",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "POST /orders/{id}/delivery": {
+      "request": {
+        "quantities": {
+          "Cement, 50 kg bag": "120",
+          "Sharp sand": "20"
+        },
+        "evidence_ids": [
+          "dd204dd3-e965-5d3f-8736-cc04b2da78ae"
+        ]
+      },
+      "response": {
+        "order": "eb7a9525-6db5-53f0-b0b8-e82a9ac4c1e8",
+        "confirmed_by": "5339927e-8e0c-55cf-b562-232aca963ca4",
+        "quantities": {
+          "Cement, 50 kg bag": "120",
+          "Sharp sand": "20"
+        },
+        "evidence_ids": [
+          "dd204dd3-e965-5d3f-8736-cc04b2da78ae"
+        ],
+        "confirmed_at": "2026-12-18T11:15:00Z"
+      }
+    },
+    "POST /evidence/upload-url": {
+      "request": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "content_type": "image/jpeg",
+        "size_bytes": 412233
+      },
+      "response": {
+        "upload_url": "https://storage.example.com/upload/PLACEHOLDER",
+        "storage_key": "evidence/1ea40965-81fa-5d97-ab91-e14b230415b0/PLACEHOLDER.jpg"
+      }
+    },
+    "POST /evidence": {
+      "request": {
+        "storage_key": "evidence/1ea40965-81fa-5d97-ab91-e14b230415b0/PLACEHOLDER.jpg",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+        "kind": "photo",
+        "captured_at": "2026-12-10T14:58:40Z",
+        "gps_time": "2026-12-10T14:58:39Z",
+        "latitude": 6.45621,
+        "longitude": 7.49312,
+        "accuracy_m": 6.0,
+        "device_id": "tecno-spark-10-7f3a",
+        "file_sha256": "PLACEHOLDER",
+        "signature": "PLACEHOLDER"
+      },
+      "response": {
+        "id": "90114654-5167-5843-9430-3a1f625f9b6e",
+        "display_ref": "EV-2118",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+        "captured_by": "49049b09-6203-5142-be1c-7b454d53b1c5",
+        "captured_by_role": "supervisor",
+        "kind": "photo",
+        "content_type": "image/jpeg",
+        "captured_at": "2026-12-10T14:58:40Z",
+        "latitude": 6.45621,
+        "longitude": 7.49312,
+        "accuracy_m": 6.0,
+        "status": "pending_checks",
+        "reject_reason": null,
+        "read_url": "https://storage.example.com/signed/EV-2118?expires=900",
+        "read_url_expires_in_s": 900
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-05": {
+      "orders": {
+        "items": [
+          {
+            "id": "eb7a9525-6db5-53f0-b0b8-e82a9ac4c1e8",
+            "display_ref": "O-0141",
+            "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+            "supplier": "dad34148-28cb-5789-b8af-e404357113d2",
+            "requested_by": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+            "currency": "NGN",
+            "status": "requested",
+            "items": [
+              {
+                "item": "Cement, 50 kg bag",
+                "unit": "bag",
+                "quantity": "120",
+                "unit_price_minor": 1030000
+              },
+              {
+                "item": "Sharp sand",
+                "unit": "tonne",
+                "quantity": "20",
+                "unit_price_minor": 2150000
+              }
+            ],
+            "total_minor": 217200000,
+            "approved_by": null,
+            "approved_at": null,
+            "created_at": "2026-12-15T14:22:00Z"
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  }
+}

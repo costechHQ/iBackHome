@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-OPS-011",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /ops/audit": {
+      "items": [
+        {
+          "actor": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+          "action": "milestone.approve",
+          "object_type": "milestone",
+          "object_id": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "before": {
+            "status": "verified"
+          },
+          "after": {
+            "status": "approved"
+          },
+          "ip": "203.0.113.24",
+          "device_id": null,
+          "at": "2026-12-12T09:12:00Z"
+        }
+      ],
+      "next_cursor": null
+    }
+  },
+  "mock_adapters": {
+    "MX-18": {
+      "_mock": "MX-18",
+      "id": "run_88412",
+      "agent": "report",
+      "user": null,
+      "model": "PLACEHOLDER: [model version]",
+      "status": "succeeded",
+      "duration_ms": 41000,
+      "tool_calls": [
+        {
+          "tool": "get_project",
+          "arguments": {
+            "project_id": "1ea40965-81fa-5d97-ab91-e14b230415b0"
+          }
+        },
+        {
+          "tool": "list_milestones",
+          "arguments": {
+            "project_id": "1ea40965-81fa-5d97-ab91-e14b230415b0"
+          }
+        }
+      ],
+      "output": "report draft saved"
+    },
+    "MX-22": {
+      "receipt": {
+        "display_ref": "R-3307",
+        "pdf_url": "https://storage.example.com/signed/R-3307.pdf?expires=900"
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-OPS-006",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /ops/queue": {
+      "vetting": [
+        {
+          "supervisor_profile": "5496a078-2a00-583d-aa21-032dd09fc83b",
+          "applied_at": "2027-01-09T13:20:00Z"
+        }
+      ],
+      "flagged_evidence": [
+        {
+          "evidence": "e3a0bfdd-3820-5f1e-8c99-6c758d3c9a8e",
+          "display_ref": "EV-2243",
+          "match": "EV-2241",
+          "distance": 6
+        }
+      ],
+      "disputes": [
+        {
+          "dispute": "be06d2b5-1b4f-5438-b66e-2475a6fad0b0",
+          "display_ref": "D-0064",
+          "status": "open"
+        }
+      ]
+    },
+    "POST /disputes/{id}/resolve": {
+      "request": {
+        "outcome": "release",
+        "notes": "East wall at lintel level on revisit EV-2279."
+      },
+      "response": {
+        "id": "be06d2b5-1b4f-5438-b66e-2475a6fad0b0",
+        "display_ref": "D-0064",
+        "status": "open",
+        "_derived_approvals": 1,
+        "_note": "The Spec says resolve needs two ops approvals; how the first approval is returned is not specified (MX-10)."
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-10": {
+      "dispute": {
+        "id": "c0e5ac6e-63e1-5fa3-b2ca-8df5fded54d8",
+        "display_ref": "D-0057",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "milestone": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+        "raised_by": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+        "reason": "Rear gutter outlet is blocked; please check before release.",
+        "status": "open",
+        "resolution_notes": null,
+        "resolved_by": null,
+        "created_at": "2026-12-12T09:20:00Z"
+      },
+      "proposal": {
+        "by": "8f897360-7095-58ad-9883-7a8e42e0a564",
+        "outcome": "release",
+        "at": "2027-01-11T08:10:00Z"
+      }
+    }
+  }
+}

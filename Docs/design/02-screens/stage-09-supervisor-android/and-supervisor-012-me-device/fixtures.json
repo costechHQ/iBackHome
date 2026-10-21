@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "AND-SUPERVISOR-012",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /supervisors/me/profile": {
+      "user": "5496a078-2a00-583d-aa21-032dd09fc83b",
+      "registration_body": "NIOB",
+      "registration_no": "NIOB/EN/2291",
+      "guarantor_1": "Paul Eze, +234 803 *** 7710",
+      "guarantor_2": "Ijeoma Obi, +234 806 *** 2048",
+      "registration_verified": true,
+      "nin_verified": true,
+      "guarantor_1_verified": true,
+      "guarantor_2_verified": false,
+      "vetting_status": "pending",
+      "vetted_by": null,
+      "vetted_at": null,
+      "rejection_reason": null,
+      "relations": [
+        {
+          "contractor_phone": "+2348000000101",
+          "relationship": "cousin"
+        }
+      ]
+    },
+    "POST /devices/{id}/revoke": {
+      "request": {},
+      "response": {
+        "id": "1128dee7-e512-5ee2-bf9a-3c8b82bd6c11",
+        "user": "49049b09-6203-5142-be1c-7b454d53b1c5",
+        "device_id": "tecno-spark-10-7f3a",
+        "registered_at": "2026-10-16T08:30:00Z",
+        "revoked_at": "2027-01-10T09:00:00Z"
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-12": {
+      "devices": {
+        "items": [
+          {
+            "id": "1128dee7-e512-5ee2-bf9a-3c8b82bd6c11",
+            "user": "49049b09-6203-5142-be1c-7b454d53b1c5",
+            "device_id": "tecno-spark-10-7f3a",
+            "registered_at": "2026-10-16T08:30:00Z",
+            "revoked_at": null
+          }
+        ],
+        "next_cursor": null
+      }
+    }
+  }
+}

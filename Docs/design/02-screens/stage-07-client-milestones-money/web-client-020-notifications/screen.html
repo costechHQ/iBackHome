@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WEB-CLIENT-020 · Notifications</title>
+<link rel="stylesheet" href="../../../01-design-system/tokens.css">
+<style>
+/* styles from approved board Notifications.dc.html */
+
+</style>
+<style>
+body.ibh-pkg{margin:0;background:var(--ibh-canvas);font-family:var(--ibh-font-sans);color:var(--ibh-slate)}
+.ibh-pkg-head{background:var(--ibh-white);border-bottom:1px solid var(--ibh-line);padding:12px 24px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.ibh-pkg-head b{color:var(--ibh-ink);font-size:16px}.ibh-pkg-head code{font:500 13px/20px var(--ibh-font-mono);color:var(--ibh-ink)}
+.ibh-pkg-head a{color:var(--ibh-accent);font-size:14px;font-weight:600}.ibh-pkg-head span{font-size:13px;color:var(--ibh-muted)}
+.ibh-pkg-note{margin:16px 24px 0;font-size:13px;line-height:19px;color:var(--ibh-muted);max-width:980px}
+.ibh-pkg-frame{margin:24px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.ibh-pkg-frame>h2{margin:0;font:600 14px/20px var(--ibh-font-sans);color:var(--ibh-ink)}
+.ibh-pkg-frame>h2 small{font-weight:400;color:var(--ibh-muted);margin-left:8px}
+.ibh-pkg-scroll{max-width:100%;overflow-x:auto}
+</style>
+</head>
+<body class="ibh-pkg">
+<header class="ibh-pkg-head"><code>WEB-CLIENT-020</code><b>Notifications</b><span>Stage 7 · web · client · P1</span><a href="spec.md">spec.md</a><a href="fixtures.json">fixtures.json</a><a href="../../../index.html">All screens</a></header>
+<p class="ibh-pkg-note">Static export of the approved design. Every frame below is one designed state. Colours use the tokens in 01-design-system/tokens.css; buttons and links do nothing except navigate to other exported screens. Sample names and figures are PLACEHOLDER data.</p>
+<section class="ibh-pkg-frame" id="desktop"><h2>Desktop<small>desktop · 1280×1080 · desktop.png</small></h2><div class="ibh-pkg-scroll"><div style="width:1280px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 1280px; height: 1080px; border-radius: 12px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-mist); display: flex; flex-direction: column" data-ibh-frame="desktop">
+        <!-- dc-import ClientTop -->
+
+<header style="width: 100%; height: 64px; box-sizing: border-box; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line); padding: 0 32px; display: flex; align-items: center; gap: 16px; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: var(--ibh-ink)">
+  <a href="#" aria-label="iBackHome home" style="display: flex; align-items: center; gap: 10px; text-decoration: none; flex: none">
+    <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--ibh-navy-900); color: var(--ibh-white); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"></path><path d="M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z"></path></svg></span>
+    <span style="font-size: 19px; font-weight: 700; letter-spacing: -0.035em; color: var(--ibh-navy-900)">iBackHome</span>
+  </a>
+  
+  <span style="flex: 1"></span>
+  <a href="#" style="font-size: 14px; font-weight: 500; color: var(--ibh-slate); text-decoration: none">Help</a>
+  <a href="screen.html" aria-label="Notifications, 2 unread" style="position: relative; width: 40px; height: 40px; border-radius: 999px; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center; flex: none"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0 M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg><span aria-hidden="true" style="position: absolute; top: 6px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--ibh-navy-900); color: var(--ibh-white); border: 2px solid var(--ibh-white); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">2</span></a>
+  <button type="button" aria-label="Account" style="height: 40px; padding: 0 10px 0 4px; border-radius: 999px; border: 1px solid var(--ibh-line); background: var(--ibh-white); display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 Inter, sans-serif; color: var(--ibh-ink)"><span style="width: 32px; height: 32px; border-radius: 999px; background: var(--ibh-neutral-bg); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">CN</span>Chioma</button>
+</header>
+
+        <div style="padding: 28px 40px; display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start">
+          <nav aria-label="Filter notifications" style="display: flex; flex-direction: column; gap: 4px">
+            <a href="#" aria-current="page" style="height: 40px; padding: 0 12px; border-radius: 8px; background: var(--ibh-white); color: var(--ibh-ink); font-size: 14px; font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: space-between">All<span style="font-size: 13px; color: var(--ibh-muted)">8</span></a><a href="#" aria-current="false" style="height: 40px; padding: 0 12px; border-radius: 8px; background: transparent; color: var(--ibh-ink); font-size: 14px; font-weight: 500; text-decoration: none; display: flex; align-items: center; justify-content: space-between">Needs action<span style="font-size: 13px; color: var(--ibh-muted)">1</span></a><a href="#" aria-current="false" style="height: 40px; padding: 0 12px; border-radius: 8px; background: transparent; color: var(--ibh-ink); font-size: 14px; font-weight: 500; text-decoration: none; display: flex; align-items: center; justify-content: space-between">Money<span style="font-size: 13px; color: var(--ibh-muted)">3</span></a><a href="#" aria-current="false" style="height: 40px; padding: 0 12px; border-radius: 8px; background: transparent; color: var(--ibh-ink); font-size: 14px; font-weight: 500; text-decoration: none; display: flex; align-items: center; justify-content: space-between">Milestones<span style="font-size: 13px; color: var(--ibh-muted)">3</span></a><a href="#" aria-current="false" style="height: 40px; padding: 0 12px; border-radius: 8px; background: transparent; color: var(--ibh-ink); font-size: 14px; font-weight: 500; text-decoration: none; display: flex; align-items: center; justify-content: space-between">Reports<span style="font-size: 13px; color: var(--ibh-muted)">1</span></a>
+            <div style="height: 1px; background: var(--ibh-line); margin: 10px 0"></div>
+            <span style="padding: 0 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted)">Projects</span>
+            <a href="#" style="height: 36px; padding: 0 12px; font-size: 14px; color: var(--ibh-ink); text-decoration: none; display: flex; align-items: center">Chioma's bungalow</a>
+            <a href="#" style="height: 36px; padding: 0 12px; font-size: 14px; color: var(--ibh-ink); text-decoration: none; display: flex; align-items: center">Mum's house</a>
+            <div style="height: 1px; background: var(--ibh-line); margin: 10px 0"></div>
+            <a href="#" style="padding: 0 12px; font-size: 14px; font-weight: 600; color: var(--ibh-accent)">Notification settings ›</a>
+          </nav>
+          <div style="background: var(--ibh-white); border: 1px solid var(--ibh-line); border-radius: 12px; overflow: hidden">
+            <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ibh-line)"><h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--ibh-ink)">All notifications <span style="font-weight: 500; font-size: 15px; color: var(--ibh-muted)">· 2 unread</span></h2><button type="button" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 0; background: var(--ibh-mist); color: var(--ibh-navy-900); font: 600 13px/1 Inter, sans-serif">Mark all as read</button></div>
+            
+              <div style="padding: 10px 20px; background: var(--ibh-mist); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted); border-bottom: 1px solid var(--ibh-line)">Today · Tue 15 Dec</div>
+              <ul style="list-style: none; margin: 0; padding: 0">
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-row-highlight)">
+                    <span aria-label="Unread" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: var(--ibh-accent)"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z M12 22V12 M3.29 7 12 12l8.71-5"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 700">Engr. Obi requested materials for Plastering</b><span style="display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 999px; background: var(--ibh-warn-bg); color: var(--ibh-warn-fg); font-size: 11px; font-weight: 600">Needs action</span></span><span style="font-size: 14px; line-height: 21px">Order O-0141 from Ugwu Building Materials, ₦2,172,000 (≈ £1,106.75). One line is more than 15% above the price index.</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · 14:22 · sent on WhatsApp and email</span></span>
+                    <a href="../web-client-019-material-orders/screen.html" style="height: 36px; padding: 0 14px; border-radius: 8px; background: var(--ibh-navy-900); color: var(--ibh-white); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap">Review order</a>
+                  </li>
+                
+              </ul>
+            
+              <div style="padding: 10px 20px; background: var(--ibh-mist); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted); border-bottom: 1px solid var(--ibh-line)">Mon 14 Dec</div>
+              <ul style="list-style: none; margin: 0; padding: 0">
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-row-highlight)">
+                    <span aria-label="Unread" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: var(--ibh-accent)"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z M7 11V7a5 5 0 0 1 10 0v4"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 700">Plastering is funded</b></span><span style="font-size: 14px; line-height: 21px">The escrow partner is holding ₦7,605,000 (£3,875.16 at £1 = ₦1,962.50). Engr. Obi can start work.</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · 10:09 · sent on WhatsApp and email</span></span>
+                    <a href="../web-client-013-milestone-detail/screen.html" style="height: 36px; padding: 0 14px; border-radius: 8px; background: var(--ibh-mist); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap">View milestone</a>
+                  </li>
+                
+              </ul>
+            
+              <div style="padding: 10px 20px; background: var(--ibh-mist); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted); border-bottom: 1px solid var(--ibh-line)">Sat 12 Dec</div>
+              <ul style="list-style: none; margin: 0; padding: 0">
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-white)">
+                    <span aria-label="Read" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: transparent"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 22h18 M6 18v-7 M10 18v-7 M14 18v-7 M18 18v-7 M12 2l8 5H4z"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 600">Roofing is released</b></span><span style="font-size: 14px; line-height: 21px">₦13,260,000 (£6,800.00) paid to Obi Building Works. Receipt R-3307.</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · 09:26 · sent on WhatsApp and email</span></span>
+                    <a href="../web-client-014-approve-release/screen.html" style="height: 36px; padding: 0 14px; border-radius: 8px; background: var(--ibh-mist); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap">View receipt</a>
+                  </li>
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-white)">
+                    <span aria-label="Read" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: transparent"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2 M16 7a4 4 0 1 1-8 0a4 4 0 1 1 8 0"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 600">Chidi Nnaji is your supervisor from Plastering</b></span><span style="font-size: 14px; line-height: 21px">We rotate supervisors every two milestones. He has no link to your contractor.</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · 09:40 · sent on email</span></span>
+                    
+                  </li>
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-white)">
+                    <span aria-label="Read" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: transparent"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M22 6l-10 7L2 6"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 600">Your contractor invitation expired</b></span><span style="font-size: 14px; line-height: 21px">The contractor didn’t accept within 7 days. You can send it again.</span><span style="font-size: 12px; color: var(--ibh-muted)">Mum’s house · 08:00 · sent on email</span></span>
+                    <a href="#" style="height: 36px; padding: 0 14px; border-radius: 8px; background: var(--ibh-mist); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap">Send again</a>
+                  </li>
+                
+              </ul>
+            
+              <div style="padding: 10px 20px; background: var(--ibh-mist); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted); border-bottom: 1px solid var(--ibh-line)">Earlier this week</div>
+              <ul style="list-style: none; margin: 0; padding: 0">
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-white)">
+                    <span aria-label="Read" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: transparent"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z M14 2v4a2 2 0 0 0 2 2h4 M16 13H8 M16 17H8"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 600">Your weekly report is ready</b></span><span style="font-size: 14px; line-height: 21px">Week of 7 Dec. AI-generated, reviewed by Ifeanyi Okafor.</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · Fri 11 Dec, 17:20 · sent on WhatsApp and email</span></span>
+                    <a href="../web-client-018-weekly-reports/screen.html" style="height: 36px; padding: 0 14px; border-radius: 8px; background: var(--ibh-mist); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap">Read report</a>
+                  </li>
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-white)">
+                    <span aria-label="Read" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: transparent"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z M9 12l2 2 4-4"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 600">Roofing is verified</b></span><span style="font-size: 14px; line-height: 21px">Ifeanyi Okafor checked it on site. Approve to release £6,800.00 (₦13,260,000).</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · Thu 10 Dec, 15:21 · sent on WhatsApp and email</span></span>
+                    
+                  </li>
+                
+                  <li style="display: grid; grid-template-columns: 10px 40px minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 16px 20px; border-bottom: 1px solid var(--ibh-line); background: var(--ibh-white)">
+                    <span aria-label="Read" style="width: 8px; height: 8px; margin-top: 16px; border-radius: 999px; background: transparent"></span>
+                    <span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0 M14 10V4a2 2 0 0 0-4 0v2 M10 10.5V6a2 2 0 0 0-4 0v8 M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"></path></svg></span>
+                    <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><span style="display: flex; gap: 8px; align-items: center"><b style="font-size: 15px; color: var(--ibh-ink); font-weight: 600">Engr. Obi says Roofing is finished</b></span><span style="font-size: 14px; line-height: 21px">A supervisor visit is booked for Thu 10 Dec.</span><span style="font-size: 12px; color: var(--ibh-muted)">Chioma’s bungalow · Wed 9 Dec, 11:41 · sent on WhatsApp</span></span>
+                    
+                  </li>
+                
+              </ul>
+            
+            <div style="padding: 14px 20px; font-size: 13px; color: var(--ibh-muted)">Money in these messages is held by a licensed escrow partner, never by iBackHome. We never send login codes or bank details in notifications.</div>
+          </div>
+        </div>
+      </div></div></div></section>
+<section class="ibh-pkg-frame" id="mobile"><h2>Mobile web<small>mobile · 390×1080 · mobile.png</small></h2><div class="ibh-pkg-scroll"><div style="width:390px;font-family:Inter, 'Segoe UI', Roboto, Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 390px; height: 1080px; border-radius: 24px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-mist); display: flex; flex-direction: column" data-ibh-frame="mobile">
+        <div style="height: 56px; padding: 0 4px; display: flex; align-items: center; gap: 4px; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line)"><button type="button" aria-label="Back" style="width: 44px; height: 44px; border: 0; background: transparent; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button><span style="flex: 1; font-size: 17px; font-weight: 600; color: var(--ibh-ink)">Notifications</span><button type="button" style="height: 36px; margin-right: 8px; padding: 0 10px; border-radius: 8px; border: 0; background: transparent; color: var(--ibh-accent); font: 600 13px/1 Inter, sans-serif">Mark all read</button></div>
+        <div style="padding: 12px 16px; display: flex; gap: 8px; overflow: hidden; background: var(--ibh-white); border-bottom: 1px solid var(--ibh-line)"><span style="flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: var(--ibh-navy-900); color: var(--ibh-white); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center">All</span><span style="flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center">Needs action</span><span style="flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center">Money</span><span style="flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center">Milestones</span><span style="flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--ibh-frame); background: var(--ibh-white); color: var(--ibh-navy-900); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center">Reports</span></div>
+        <div style="flex: 1; overflow: hidden">
+          
+            <div style="padding: 10px 16px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted)">Today · Tue 15 Dec</div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 2px solid var(--ibh-accent); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: var(--ibh-accent); flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 700">Engr. Obi requested materials for Plastering</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">Order O-0141 from Ugwu Building Materials, ₦2,172,000 (≈ £1,106.75). One line is more than 15% above the price index.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">14:22 · WhatsApp and email</span><a href="../web-client-019-material-orders/screen.html" style="font-size: 13px; font-weight: 600; color: var(--ibh-accent)">Review order ›</a></span>
+              </div>
+            
+          
+            <div style="padding: 10px 16px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted)">Mon 14 Dec</div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: var(--ibh-accent); flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 700">Plastering is funded</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">The escrow partner is holding ₦7,605,000 (£3,875.16 at £1 = ₦1,962.50). Engr. Obi can start work.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">10:09 · WhatsApp and email</span><a href="../web-client-013-milestone-detail/screen.html" style="font-size: 13px; font-weight: 600; color: var(--ibh-accent)">View milestone ›</a></span>
+              </div>
+            
+          
+            <div style="padding: 10px 16px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted)">Sat 12 Dec</div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: transparent; flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 600">Roofing is released</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">₦13,260,000 (£6,800.00) paid to Obi Building Works. Receipt R-3307.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">09:26 · WhatsApp and email</span><a href="../web-client-014-approve-release/screen.html" style="font-size: 13px; font-weight: 600; color: var(--ibh-accent)">View receipt ›</a></span>
+              </div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: transparent; flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 600">Chidi Nnaji is your supervisor from Plastering</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">We rotate supervisors every two milestones. He has no link to your contractor.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">09:40 · email</span></span>
+              </div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: transparent; flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 600">Your contractor invitation expired</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">The contractor didn’t accept within 7 days. You can send it again.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">08:00 · email</span><a href="#" style="font-size: 13px; font-weight: 600; color: var(--ibh-accent)">Send again ›</a></span>
+              </div>
+            
+          
+            <div style="padding: 10px 16px 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ibh-muted)">Earlier this week</div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: transparent; flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 600">Your weekly report is ready</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">Week of 7 Dec. AI-generated, reviewed by Ifeanyi Okafor.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">Fri 11 Dec, 17:20 · WhatsApp and email</span><a href="../web-client-018-weekly-reports/screen.html" style="font-size: 13px; font-weight: 600; color: var(--ibh-accent)">Read report ›</a></span>
+              </div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: transparent; flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 600">Roofing is verified</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">Ifeanyi Okafor checked it on site. Approve to release £6,800.00 (₦13,260,000).</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">Thu 10 Dec, 15:21 · WhatsApp and email</span></span>
+              </div>
+            
+              <div style="margin: 0 16px 8px; padding: 12px 14px; border-radius: 12px; background: var(--ibh-white); border: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; gap: 8px; align-items: flex-start"><span style="width: 8px; height: 8px; margin-top: 7px; border-radius: 999px; background: transparent; flex: none"></span><b style="font-size: 14px; line-height: 20px; color: var(--ibh-ink); font-weight: 600">Engr. Obi says Roofing is finished</b></span>
+                <span style="font-size: 13px; line-height: 19px; padding-left: 16px">A supervisor visit is booked for Thu 10 Dec.</span>
+                <span style="display: flex; justify-content: space-between; align-items: center; padding-left: 16px"><span style="font-size: 12px; color: var(--ibh-muted)">Wed 9 Dec, 11:41 · WhatsApp</span></span>
+              </div>
+            
+          
+        </div>
+        <!-- dc-import ClientNav -->
+
+<nav aria-label="Project" style="width: 100%; height: 72px; box-sizing: border-box; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--ibh-line); background: var(--ibh-white); font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif">
+  
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: var(--ibh-ink); font-size: 11px; font-weight: 600"><span style="position: relative; width: 52px; height: 28px; border-radius: 999px; background: var(--ibh-accent-tint); color: var(--ibh-accent); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8 M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></span>Home</a>
+  
+    <a href="#" aria-current="false" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: var(--ibh-muted); font-size: 11px; font-weight: 500"><span style="position: relative; width: 52px; height: 28px; border-radius: 999px; background: transparent; color: var(--ibh-muted); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5"></path></svg><span aria-label="1 waiting" style="position: absolute; top: -2px; right: 6px; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 999px; background: var(--ibh-navy-900); color: var(--ibh-white); border: 2px solid var(--ibh-white); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">1</span></span>Milestones</a>
+  
+    <a href="#" aria-current="false" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: var(--ibh-muted); font-size: 11px; font-weight: 500"><span style="position: relative; width: 52px; height: 28px; border-radius: 999px; background: transparent; color: var(--ibh-muted); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z M15 13a3 3 0 1 1-6 0a3 3 0 1 1 6 0"></path></svg></span>Evidence</a>
+  
+    <a href="#" aria-current="false" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: var(--ibh-muted); font-size: 11px; font-weight: 500"><span style="position: relative; width: 52px; height: 28px; border-radius: 999px; background: transparent; color: var(--ibh-muted); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1 M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg></span>Money</a>
+  
+    <a href="#" aria-current="false" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; color: var(--ibh-muted); font-size: 11px; font-weight: 500"><span style="position: relative; width: 52px; height: 28px; border-radius: 999px; background: transparent; color: var(--ibh-muted); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z M14 2v4a2 2 0 0 0 2 2h4 M16 13H8 M16 17H8 M10 9H8"></path></svg></span>Reports</a>
+  
+</nav>
+
+      </div></div></div></section>
+</body>
+</html>

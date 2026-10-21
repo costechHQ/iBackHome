@@ -1,0 +1,68 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "AND-SUPERVISOR-001",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "PUT /supervisors/me/profile": {
+      "request": {
+        "registration_body": "NIOB",
+        "registration_no": "NIOB/EN/2291",
+        "guarantor_1": "Paul Eze, +234 803 *** 7710",
+        "guarantor_2": "Ijeoma Obi, +234 806 *** 2048",
+        "relations": [
+          {
+            "contractor_phone": "+2348000000101",
+            "relationship": "cousin"
+          }
+        ]
+      },
+      "response": {
+        "user": "5496a078-2a00-583d-aa21-032dd09fc83b",
+        "registration_body": "NIOB",
+        "registration_no": "NIOB/EN/2291",
+        "guarantor_1": "Paul Eze, +234 803 *** 7710",
+        "guarantor_2": "Ijeoma Obi, +234 806 *** 2048",
+        "registration_verified": true,
+        "nin_verified": true,
+        "guarantor_1_verified": true,
+        "guarantor_2_verified": false,
+        "vetting_status": "pending",
+        "vetted_by": null,
+        "vetted_at": null,
+        "rejection_reason": null,
+        "relations": [
+          {
+            "contractor_phone": "+2348000000101",
+            "relationship": "cousin"
+          }
+        ]
+      }
+    },
+    "GET /supervisors/me/profile": {
+      "user": "5496a078-2a00-583d-aa21-032dd09fc83b",
+      "registration_body": "NIOB",
+      "registration_no": "NIOB/EN/2291",
+      "guarantor_1": "Paul Eze, +234 803 *** 7710",
+      "guarantor_2": "Ijeoma Obi, +234 806 *** 2048",
+      "registration_verified": true,
+      "nin_verified": true,
+      "guarantor_1_verified": true,
+      "guarantor_2_verified": false,
+      "vetting_status": "pending",
+      "vetted_by": null,
+      "vetted_at": null,
+      "rejection_reason": null,
+      "relations": [
+        {
+          "contractor_phone": "+2348000000101",
+          "relationship": "cousin"
+        }
+      ]
+    }
+  }
+}

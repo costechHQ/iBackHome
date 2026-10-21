@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CONTRACTOR-001",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "POST /auth/otp/request": {
+      "request": {
+        "identifier": "+447700900321",
+        "channel": "whatsapp"
+      },
+      "response": {
+        "sent": true,
+        "channel": "whatsapp",
+        "expires_in_s": 300
+      }
+    },
+    "POST /auth/otp/verify": {
+      "request": {
+        "identifier": "+447700900321",
+        "code": "000000"
+      },
+      "response": {
+        "access_token": "PLACEHOLDER.jwt",
+        "refresh_token": "PLACEHOLDER-refresh",
+        "token_type": "bearer",
+        "expires_in_s": 900
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-02": {
+      "invitation": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "role": "contractor",
+        "phone": "+2348000000101",
+        "status": "pending",
+        "expires_at": "2026-10-27T09:00:00Z"
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-OPS-012",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {},
+  "mock_adapters": {
+    "MX-17": {
+      "users": {
+        "items": [
+          {
+            "id": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+            "full_name": "Chioma Nwosu",
+            "role": "client",
+            "status": "active",
+            "phone": "+447700900321",
+            "email": "chioma.nwosu@example.com",
+            "timezone": "Europe/London",
+            "country": "GB"
+          },
+          {
+            "id": "fc09c860-62d9-5fb1-84a3-ea3adb143f82",
+            "full_name": "Emeka",
+            "role": "client",
+            "status": "active",
+            "phone": "+12025550142",
+            "email": "emeka@example.com",
+            "timezone": "America/Chicago",
+            "country": "US"
+          },
+          {
+            "id": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+            "full_name": "Obinna Obi",
+            "role": "contractor",
+            "status": "active",
+            "phone": "+2348000000101",
+            "email": "obi.building@example.com",
+            "timezone": "Africa/Lagos",
+            "country": "NG"
+          },
+          {
+            "id": "49049b09-6203-5142-be1c-7b454d53b1c5",
+            "full_name": "Ifeanyi Okafor",
+            "role": "supervisor",
+            "status": "active",
+            "phone": "+2348000000202",
+            "email": null,
+            "timezone": "Africa/Lagos",
+            "country": "NG"
+          }
+        ],
+        "next_cursor": null
+      }
+    },
+    "MX-02": {
+      "invitation": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "role": "contractor",
+        "phone": "+2348000000101",
+        "status": "pending",
+        "expires_at": "2026-10-27T09:00:00Z"
+      }
+    }
+  }
+}

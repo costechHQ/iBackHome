@@ -1,0 +1,5215 @@
+{
+  "package": "ibackhome-design-handoff",
+  "generated": "2026-10-21",
+  "screen_count": 98,
+  "id_format": "<SURFACE>-<ROLE>-<NNN>; SURFACE is WEB (desktop and mobile web), AND (Android), WA (WhatsApp) or EMAIL",
+  "screens": [
+    {
+      "id": "WEB-PUBLIC-001",
+      "title": "Landing page",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [],
+      "route": "/",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-001-landing/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-001-landing/desktop.png",
+        "02-screens/stage-03-public-site/web-public-001-landing/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-001-landing/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-001-landing/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-01 · Landing"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-01"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Evidence card",
+        "Three-checks list",
+        "Geofence map",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteLanding.dc.html",
+        "SiteMobile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-001-landing/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-002",
+      "title": "How it works",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [
+        "FR-08",
+        "FR-10",
+        "FR-14"
+      ],
+      "route": "/how-it-works",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-002-how-it-works/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-002-how-it-works/desktop.png",
+        "02-screens/stage-03-public-site/web-public-002-how-it-works/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-002-how-it-works/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-002-how-it-works/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-02 · How it works"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Escrow trust line",
+        "Checklist row",
+        "AI-generated label",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteHowItWorks.dc.html",
+        "SiteMobile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-002-how-it-works/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-003",
+      "title": "Pricing",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [
+        "FR-21",
+        "FR-22"
+      ],
+      "route": "/pricing",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-003-pricing/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-003-pricing/desktop.png",
+        "02-screens/stage-03-public-site/web-public-003-pricing/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-003-pricing/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-003-pricing/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-03 · Pricing"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Status chip",
+        "Escrow trust line",
+        "Coming soon placeholder",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteMobile.dc.html",
+        "SitePricing.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-003-pricing/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-004",
+      "title": "For contractors",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [],
+      "route": "/contractors",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-004-for-contractors/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-004-for-contractors/desktop.png",
+        "02-screens/stage-03-public-site/web-public-004-for-contractors/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-004-for-contractors/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-004-for-contractors/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-04a · For contractors"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Status chip",
+        "Escrow trust line",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteContractors.dc.html",
+        "SiteMobile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-004-for-contractors/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-005",
+      "title": "Become a supervisor",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [
+        "FR-02"
+      ],
+      "route": "/supervisors",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-005-become-a-supervisor/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-005-become-a-supervisor/desktop.png",
+        "02-screens/stage-03-public-site/web-public-005-become-a-supervisor/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-005-become-a-supervisor/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-005-become-a-supervisor/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-04b · Become a supervisor"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Escrow trust line",
+        "Checklist row",
+        "AI-generated label",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteMobile.dc.html",
+        "SiteSupervisors.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-005-become-a-supervisor/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-006",
+      "title": "Trust and safety",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [
+        "FR-07",
+        "FR-08",
+        "FR-10",
+        "FR-14",
+        "FR-23"
+      ],
+      "route": "/trust",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-006-trust-and-safety/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-006-trust-and-safety/desktop.png",
+        "02-screens/stage-03-public-site/web-public-006-trust-and-safety/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-006-trust-and-safety/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-006-trust-and-safety/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-05a · Trust and safety"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Escrow trust line",
+        "Three-checks list",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteMobile.dc.html",
+        "SiteTrust.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-006-trust-and-safety/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-007",
+      "title": "Contact",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P1",
+      "fr": [],
+      "route": "/contact",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-007-contact/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-007-contact/desktop.png",
+        "02-screens/stage-03-public-site/web-public-007-contact/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-007-contact/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-007-contact/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-05b · Contact"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Text input and select",
+        "Toggle, checkbox and radio card",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteContact.dc.html",
+        "SiteMobile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-007-contact/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-008",
+      "title": "Privacy policy",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P0",
+      "fr": [],
+      "route": "/privacy",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-008-privacy-policy/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-008-privacy-policy/desktop.png",
+        "02-screens/stage-03-public-site/web-public-008-privacy-policy/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-008-privacy-policy/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-008-privacy-policy/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-05c · Privacy policy"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Escrow trust line",
+        "Reviewed-by badge",
+        "Quote check result",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteMobile.dc.html",
+        "SitePrivacy.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-008-privacy-policy/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-009",
+      "title": "Terms",
+      "stage": 3,
+      "surface": "web",
+      "role": "public",
+      "priority": "P0",
+      "fr": [],
+      "route": "/terms",
+      "suggested_target": "web/src/features/public/ (new folder; the Spec lists no public-site feature)",
+      "api": [],
+      "html": "02-screens/stage-03-public-site/web-public-009-terms/screen.html",
+      "screenshots": [
+        "02-screens/stage-03-public-site/web-public-009-terms/desktop.png",
+        "02-screens/stage-03-public-site/web-public-009-terms/mobile.png"
+      ],
+      "spec": "02-screens/stage-03-public-site/web-public-009-terms/spec.md",
+      "fixtures": "02-screens/stage-03-public-site/web-public-009-terms/fixtures.json",
+      "states": [
+        "Desktop",
+        "PUB-05d · Terms"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-002",
+        "WEB-PUBLIC-003",
+        "WEB-PUBLIC-004",
+        "WEB-PUBLIC-005",
+        "WEB-PUBLIC-006",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "PUB-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Site header and footer",
+        "Buttons",
+        "Escrow trust line",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Card"
+      ],
+      "source_boards": [
+        "SiteMobile.dc.html",
+        "SiteTerms.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-03-public-site/web-public-009-terms/desktop.png"
+    },
+    {
+      "id": "WEB-PUBLIC-010",
+      "title": "Sign in or sign up",
+      "stage": 4,
+      "surface": "web",
+      "role": "public",
+      "priority": "P0",
+      "fr": [
+        "FR-01"
+      ],
+      "route": "/sign-in",
+      "suggested_target": "web/src/features/auth/",
+      "api": [
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify",
+        "GET /me"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/desktop.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/mobile.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/mobile-02-code.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-02-email-code-by-email-only.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-03-code-entry-5-minute-countdown-resend.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-04-wrong-code-attempts-left-shown.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-05-too-many-attempts-code-cancelled.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-06-code-expired-after-5-minutes.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-07-rate-limited-per-number-and-device.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-08-channel-unavailable-server-503.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-09-send-failed-server-502.png",
+        "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/card-10-consent-first-sign-up-ndpa-2023.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/fixtures.json",
+      "states": [
+        "Enter phone",
+        "Enter phone",
+        "Code",
+        "Country selector Search, common countries first",
+        "Email Code by email only",
+        "Code entry 5-minute countdown, resend after 30 s",
+        "Wrong code Attempts left shown",
+        "Too many attempts Code cancelled",
+        "Code expired After 5 minutes",
+        "Rate limited Per number and device",
+        "Channel unavailable Server: 503",
+        "Send failed Server: 502",
+        "Consent — first sign-up NDPA 2023"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-007",
+        "WEB-PUBLIC-008",
+        "WEB-PUBLIC-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "AU-01",
+        "AU-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Buttons",
+        "Text input and select",
+        "OTP code input",
+        "Segmented control and tabs",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "Auth-SignIn.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-public-010-sign-in/desktop.png"
+    },
+    {
+      "id": "AND-PUBLIC-001",
+      "title": "Sign in (Android)",
+      "stage": 4,
+      "surface": "android",
+      "role": "public",
+      "priority": "P0",
+      "fr": [
+        "FR-01"
+      ],
+      "route": "SignInScreen",
+      "suggested_target": "mobile/lib/features/auth/",
+      "api": [
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify",
+        "GET /me"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/and-public-001-sign-in/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/and-public-001-sign-in/android.png",
+        "02-screens/stage-04-auth-onboarding/and-public-001-sign-in/android-02-code.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/and-public-001-sign-in/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/and-public-001-sign-in/fixtures.json",
+      "states": [
+        "Enter phone",
+        "Code"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "AU-01",
+        "AU-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Buttons",
+        "Text input and select",
+        "OTP code input",
+        "Segmented control and tabs"
+      ],
+      "source_boards": [
+        "Auth-SignIn.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/and-public-001-sign-in/android.png"
+    },
+    {
+      "id": "WA-CONTRACTOR-001",
+      "title": "Invitation message (WhatsApp)",
+      "stage": 4,
+      "surface": "whatsapp",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-03"
+      ],
+      "route": "template: project_invitation",
+      "suggested_target": "backend/app/base/notifications/ (template)",
+      "api": [],
+      "html": "02-screens/stage-04-auth-onboarding/wa-contractor-001-invitation-message/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/wa-contractor-001-invitation-message/whatsapp.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/wa-contractor-001-invitation-message/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/wa-contractor-001-invitation-message/fixtures.json",
+      "states": [
+        "1 · Invitation message (WhatsApp template)"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-02"
+      ],
+      "inventory_refs": [
+        "AU-05",
+        "NS-01"
+      ],
+      "components": [
+        "Wordmark",
+        "WhatsApp message"
+      ],
+      "source_boards": [
+        "Auth-Invite.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/wa-contractor-001-invitation-message/whatsapp.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-001",
+      "title": "Accept an invitation",
+      "stage": 4,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-03",
+        "FR-01"
+      ],
+      "route": "/invite/:token",
+      "suggested_target": "web/src/features/auth/",
+      "api": [
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile-02-3-confirm-its-you.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile-03-4-joined.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile-04-5-declined.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile-05-6-expired-or-already-used.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile-06-7-signed-in-with-another-number.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/desktop.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/fixtures.json",
+      "states": [
+        "2 · Invitation with project preview",
+        "3 · Confirm it's you",
+        "4 · Joined",
+        "5 · Declined",
+        "6 · Expired or already used",
+        "7 · Signed in with another number",
+        "Invitation (contractor at a computer)"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-002"
+      ],
+      "missing_endpoints": [
+        "MX-02"
+      ],
+      "inventory_refs": [
+        "AU-05"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Card"
+      ],
+      "source_boards": [
+        "Auth-Invite.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-contractor-001-accept-invitation/mobile.png"
+    },
+    {
+      "id": "WEB-CLIENT-001",
+      "title": "Client onboarding",
+      "stage": 4,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-01"
+      ],
+      "route": "/welcome",
+      "suggested_target": "web/src/features/auth/",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/desktop.png",
+        "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/desktop-02-step-2-of-3-location-and-currency.png",
+        "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/desktop-03-step-3-of-3-notifications.png",
+        "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/desktop-04-empty-dashboard.png",
+        "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/mobile.png",
+        "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/mobile-02-empty-dashboard.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/fixtures.json",
+      "states": [
+        "Step 1 of 3 — Your details",
+        "Step 2 of 3 — Location and currency",
+        "Step 3 of 3 — Notifications",
+        "Empty dashboard",
+        "Step 2",
+        "Empty dashboard"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01"
+      ],
+      "inventory_refs": [
+        "AU-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Empty state",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "Onboard-Client.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-client-001-client-onboarding/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-002",
+      "title": "Contractor onboarding",
+      "stage": 4,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-01",
+        "FR-03"
+      ],
+      "route": "/welcome",
+      "suggested_target": "web/src/features/auth/",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/desktop.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/desktop-02-step-2-payout-account-name-checked.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/desktop-03-step-2-saved-number-masked.png",
+        "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/desktop-04-home-waiting-for-your-boq.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/fixtures.json",
+      "states": [
+        "Step 1 — your details",
+        "Step 2 — payout account, name checked",
+        "Step 2 — saved, number masked",
+        "Home — waiting for your BoQ"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01",
+        "MX-03"
+      ],
+      "inventory_refs": [
+        "AU-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Milestone stepper",
+        "Card"
+      ],
+      "source_boards": [
+        "Onboard-Contractor.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-contractor-002-contractor-onboarding/desktop.png"
+    },
+    {
+      "id": "AND-CONTRACTOR-001",
+      "title": "Contractor onboarding (Android)",
+      "stage": 4,
+      "surface": "android",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-01",
+        "FR-03"
+      ],
+      "route": "ContractorOnboardingScreen",
+      "suggested_target": "mobile/lib/features/auth/",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/android.png",
+        "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/android-02-payout-not-found.png",
+        "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/android-03-home-waiting-for-boq.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/fixtures.json",
+      "states": [
+        "Payout — name found",
+        "Payout — not found",
+        "Home — waiting for BoQ"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01",
+        "MX-03"
+      ],
+      "inventory_refs": [
+        "AU-04"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Card"
+      ],
+      "source_boards": [
+        "Onboard-Contractor.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/and-contractor-001-contractor-onboarding/android.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-001",
+      "title": "Supplier onboarding",
+      "stage": 4,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16",
+        "FR-01"
+      ],
+      "route": "/welcome",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/desktop.png",
+        "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/desktop-02-step-2-address-and-map.png",
+        "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/desktop-03-step-3-payout-recipient.png",
+        "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/desktop-04-awaiting-ops-verification.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/fixtures.json",
+      "states": [
+        "Step 1 — business profile",
+        "Step 2 — address and map",
+        "Step 3 — payout recipient",
+        "Awaiting ops verification"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-02",
+        "MX-03",
+        "MX-04"
+      ],
+      "inventory_refs": [
+        "AU-04",
+        "AU-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Card"
+      ],
+      "source_boards": [
+        "Onboard-Supplier.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-supplier-001-supplier-onboarding/desktop.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-001",
+      "title": "Supervisor application and vetting status",
+      "stage": 4,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-02"
+      ],
+      "route": "SupervisorApplicationScreen",
+      "suggested_target": "mobile/lib/features/auth/ (vetting; Spec puts vetting under backend supervision/)",
+      "api": [
+        "PUT /supervisors/me/profile",
+        "GET /supervisors/me/profile"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-02-2-registration.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-03-3-nin.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-04-4-guarantors.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-05-5-relatives-who-are-contractors.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-06-6-review-and-submit.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-07-7-pending.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-08-8-rejected-with-reason.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android-09-9-approved.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/fixtures.json",
+      "states": [
+        "1 · Start application",
+        "2 · Registration",
+        "3 · NIN",
+        "4 · Guarantors",
+        "5 · Relatives who are contractors",
+        "6 · Review and submit",
+        "7 · Pending",
+        "8 · Rejected, with reason",
+        "9 · Approved"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "AU-07",
+        "AU-08"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Card"
+      ],
+      "source_boards": [
+        "Onboard-Supervisor.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/and-supervisor-001-supervisor-application/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-002",
+      "title": "Permissions and capture key",
+      "stage": 4,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-06",
+        "FR-07"
+      ],
+      "route": "PermissionsScreen, DeviceKeyScreen",
+      "suggested_target": "mobile/lib/core/ (signing keys) + mobile/lib/features/auth/",
+      "api": [
+        "POST /devices"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/android.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/android-02-11-secure-capture-key.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/android-03-12-key-ready.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/fixtures.json",
+      "states": [
+        "10 · Permissions",
+        "11 · Secure capture key",
+        "12 · Key ready"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "AU-06"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Card"
+      ],
+      "source_boards": [
+        "Onboard-Supervisor.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/and-supervisor-002-permissions-device-key/android.png"
+    },
+    {
+      "id": "WEB-OPS-001",
+      "title": "Ops sign-in and session",
+      "stage": 4,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-01",
+        "FR-19"
+      ],
+      "route": "/ops/sign-in",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify",
+        "POST /auth/refresh",
+        "GET /me",
+        "GET /ops/queue"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/desktop.png",
+        "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/desktop-02-ops-landing-work-queue.png",
+        "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/desktop-03-session-expired-desktop-return-to-th.png",
+        "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/desktop-04-signed-out-desktop.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/fixtures.json",
+      "states": [
+        "Ops · sign-in (desktop only)",
+        "Ops · landing — work queue",
+        "Session expired · desktop (return to the same page)",
+        "Signed out · desktop"
+      ],
+      "links_to": [
+        "WEB-PUBLIC-001",
+        "WEB-PUBLIC-010"
+      ],
+      "missing_endpoints": [
+        "MX-19"
+      ],
+      "inventory_refs": [
+        "AU-01",
+        "AU-02",
+        "NS-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Evidence card",
+        "Card"
+      ],
+      "source_boards": [
+        "Auth-OpsSession.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-ops-001-ops-sign-in/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-002",
+      "title": "Session expired (mobile web)",
+      "stage": 4,
+      "surface": "mobile-web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-01"
+      ],
+      "route": "(overlay on any client route)",
+      "suggested_target": "web/src/common/ (auth)",
+      "api": [
+        "POST /auth/refresh",
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/web-client-002-session-expired-mobile/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/web-client-002-session-expired-mobile/mobile.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/web-client-002-session-expired-mobile/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/web-client-002-session-expired-mobile/fixtures.json",
+      "states": [
+        "Session expired · mobile web (bottom sheet)"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Buttons",
+        "Dialog and alert dialog",
+        "Bottom sheet and side panel"
+      ],
+      "source_boards": [
+        "Auth-OpsSession.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/web-client-002-session-expired-mobile/mobile.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-003",
+      "title": "Session expired and sign out (Android)",
+      "stage": 4,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-01",
+        "FR-09"
+      ],
+      "route": "SessionExpiredSheet, SignOutDialog",
+      "suggested_target": "mobile/lib/features/auth/",
+      "api": [
+        "POST /auth/refresh",
+        "POST /auth/otp/request",
+        "POST /auth/otp/verify"
+      ],
+      "html": "02-screens/stage-04-auth-onboarding/and-supervisor-003-session-sign-out/screen.html",
+      "screenshots": [
+        "02-screens/stage-04-auth-onboarding/and-supervisor-003-session-sign-out/android.png",
+        "02-screens/stage-04-auth-onboarding/and-supervisor-003-session-sign-out/android-02-sign-out-android-with-unsent-capture.png"
+      ],
+      "spec": "02-screens/stage-04-auth-onboarding/and-supervisor-003-session-sign-out/spec.md",
+      "fixtures": "02-screens/stage-04-auth-onboarding/and-supervisor-003-session-sign-out/fixtures.json",
+      "states": [
+        "Session expired · Android (queue is safe)",
+        "Sign out · Android (with unsent captures)"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-19"
+      ],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Buttons",
+        "Dialog and alert dialog",
+        "Sync row",
+        "Card"
+      ],
+      "source_boards": [
+        "Auth-OpsSession.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-04-auth-onboarding/and-supervisor-003-session-sign-out/android.png"
+    },
+    {
+      "id": "WEB-CLIENT-003",
+      "title": "Projects and create project",
+      "stage": 5,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-03",
+        "FR-05"
+      ],
+      "route": "/projects, /projects/new, /projects/:id/setup",
+      "suggested_target": "web/src/features/projects/",
+      "api": [
+        "GET /projects",
+        "POST /projects",
+        "GET /projects/{id}",
+        "GET /projects/{id}/boq"
+      ],
+      "html": "02-screens/stage-05-client-setup/web-client-003-projects-create/screen.html",
+      "screenshots": [
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/desktop.png",
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/desktop-02-cs-01-projects-populated.png",
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/desktop-03-cs-02-cs-03-create-project-with-one.png",
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/desktop-04-cs-05-set-up-tracker-with-supervisor.png",
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/mobile.png",
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/mobile-02-create-project.png",
+        "02-screens/stage-05-client-setup/web-client-003-projects-create/panel.png"
+      ],
+      "spec": "02-screens/stage-05-client-setup/web-client-003-projects-create/spec.md",
+      "fixtures": "02-screens/stage-05-client-setup/web-client-003-projects-create/fixtures.json",
+      "states": [
+        "CS-01 · Projects — empty",
+        "CS-01 · Projects — populated",
+        "CS-02, CS-03 · Create project — with one inline error",
+        "CS-05 · Set-up tracker, with supervisor assigned",
+        "Projects",
+        "Create project",
+        "What Chioma sees meanwhile (set-up tracker row)"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-02"
+      ],
+      "inventory_refs": [
+        "CS-01",
+        "CS-02",
+        "CS-03",
+        "CS-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Empty state",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "Auth-Invite.dc.html",
+        "Setup-Projects.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-05-client-setup/web-client-003-projects-create/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-004",
+      "title": "Site pin and geofence",
+      "stage": 5,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-04"
+      ],
+      "route": "/projects/:id/site",
+      "suggested_target": "web/src/features/projects/ (geofence drawing) + web/src/common/ (map component)",
+      "api": [
+        "PUT /projects/{id}/site",
+        "GET /projects/{id}"
+      ],
+      "html": "02-screens/stage-05-client-setup/web-client-004-site-geofence/screen.html",
+      "screenshots": [
+        "02-screens/stage-05-client-setup/web-client-004-site-geofence/desktop.png",
+        "02-screens/stage-05-client-setup/web-client-004-site-geofence/desktop-02-error-pin-outside-the-boundary.png",
+        "02-screens/stage-05-client-setup/web-client-004-site-geofence/desktop-03-saved.png",
+        "02-screens/stage-05-client-setup/web-client-004-site-geofence/desktop-04-locked-project-active.png",
+        "02-screens/stage-05-client-setup/web-client-004-site-geofence/mobile.png",
+        "02-screens/stage-05-client-setup/web-client-004-site-geofence/mobile-02-locked.png"
+      ],
+      "spec": "02-screens/stage-05-client-setup/web-client-004-site-geofence/spec.md",
+      "fixtures": "02-screens/stage-05-client-setup/web-client-004-site-geofence/fixtures.json",
+      "states": [
+        "Drawing the boundary",
+        "Error — pin outside the boundary",
+        "Saved",
+        "Locked — project active",
+        "Drawing",
+        "Locked"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CS-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Status chip",
+        "Geofence map",
+        "Card"
+      ],
+      "source_boards": [
+        "Setup-Site.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-05-client-setup/web-client-004-site-geofence/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-005",
+      "title": "BoQ review and approval",
+      "stage": 5,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-05"
+      ],
+      "route": "/projects/:id/boq",
+      "suggested_target": "web/src/features/projects/",
+      "api": [
+        "GET /projects/{id}/boq",
+        "POST /projects/{id}/boq/approve"
+      ],
+      "html": "02-screens/stage-05-client-setup/web-client-005-boq-review/screen.html",
+      "screenshots": [
+        "02-screens/stage-05-client-setup/web-client-005-boq-review/desktop.png",
+        "02-screens/stage-05-client-setup/web-client-005-boq-review/desktop-02-cs-08-send-back-for-changes.png",
+        "02-screens/stage-05-client-setup/web-client-005-boq-review/desktop-03-all-three-approved-project-active.png",
+        "02-screens/stage-05-client-setup/web-client-005-boq-review/mobile.png",
+        "02-screens/stage-05-client-setup/web-client-005-boq-review/mobile-02-confirm-approval.png"
+      ],
+      "spec": "02-screens/stage-05-client-setup/web-client-005-boq-review/spec.md",
+      "fixtures": "02-screens/stage-05-client-setup/web-client-005-boq-review/fixtures.json",
+      "states": [
+        "CS-06 · BoQ review — over budget, waiting for the client",
+        "CS-08 · Send back for changes",
+        "All three approved — project active",
+        "BoQ summary",
+        "Confirm approval"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-08"
+      ],
+      "inventory_refs": [
+        "CS-06",
+        "CS-08"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Money display",
+        "Escrow trust line",
+        "Milestone stepper",
+        "Quote check result",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Setup-BoQ.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-05-client-setup/web-client-005-boq-review/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-006",
+      "title": "Quote checker",
+      "stage": 5,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-17",
+        "FR-05"
+      ],
+      "route": "/projects/:id/boq/check",
+      "suggested_target": "web/src/features/projects/ (calls quotes/check) ",
+      "api": [
+        "POST /quotes/check",
+        "GET /price-index",
+        "GET /projects/{id}/boq"
+      ],
+      "html": "02-screens/stage-05-client-setup/web-client-006-quote-checker/screen.html",
+      "screenshots": [
+        "02-screens/stage-05-client-setup/web-client-006-quote-checker/desktop.png",
+        "02-screens/stage-05-client-setup/web-client-006-quote-checker/desktop-02-2-checking.png",
+        "02-screens/stage-05-client-setup/web-client-006-quote-checker/desktop-03-3-results-flagged-lines-first.png",
+        "02-screens/stage-05-client-setup/web-client-006-quote-checker/desktop-04-4-price-index-reference.png",
+        "02-screens/stage-05-client-setup/web-client-006-quote-checker/mobile.png"
+      ],
+      "spec": "02-screens/stage-05-client-setup/web-client-006-quote-checker/spec.md",
+      "fixtures": "02-screens/stage-05-client-setup/web-client-006-quote-checker/fixtures.json",
+      "states": [
+        "1 · Choose what to check",
+        "2 · Checking",
+        "3 · Results — flagged lines first",
+        "4 · Price index reference",
+        "Results"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CS-07"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Status chip",
+        "Skeleton loader",
+        "Quote check result",
+        "Card"
+      ],
+      "source_boards": [
+        "Setup-Quote.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-05-client-setup/web-client-006-quote-checker/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-007",
+      "title": "Fund the first milestone",
+      "stage": 5,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-13"
+      ],
+      "route": "/projects/:id/fund/:milestoneId",
+      "suggested_target": "web/src/features/dashboard/ (no escrow feature folder on web in the Spec)",
+      "api": [
+        "POST /projects/{id}/funding",
+        "GET /projects/{id}/milestones",
+        "GET /projects/{id}/ledger"
+      ],
+      "html": "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/screen.html",
+      "screenshots": [
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/desktop.png",
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/desktop-02-hand-off-to-stripe-checkout.png",
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/desktop-03-cs-10-payment-received-waiting-for-e.png",
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/desktop-04-funded-success.png",
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/desktop-05-payment-failed-or-cancelled.png",
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/mobile.png",
+        "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/mobile-02-waiting-for-escrow.png"
+      ],
+      "spec": "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/spec.md",
+      "fixtures": "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/fixtures.json",
+      "states": [
+        "CS-09 · Before you pay",
+        "Hand-off to Stripe Checkout",
+        "CS-10 · Payment received — waiting for escrow",
+        "Funded — success",
+        "Payment failed or cancelled",
+        "Before you pay",
+        "Waiting for escrow"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-20"
+      ],
+      "inventory_refs": [
+        "CS-09",
+        "CS-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "Setup-Funding.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-05-client-setup/web-client-007-fund-first-milestone/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-008",
+      "title": "Home: needs your attention",
+      "stage": 6,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-15"
+      ],
+      "route": "/",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [
+        "GET /projects",
+        "GET /projects/{id}/milestones",
+        "GET /projects/{id}/reports"
+      ],
+      "html": "02-screens/stage-06-client-dashboard-evidence/web-client-008-home/screen.html",
+      "screenshots": [
+        "02-screens/stage-06-client-dashboard-evidence/web-client-008-home/desktop.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-008-home/mobile.png"
+      ],
+      "spec": "02-screens/stage-06-client-dashboard-evidence/web-client-008-home/spec.md",
+      "fixtures": "02-screens/stage-06-client-dashboard-evidence/web-client-008-home/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-014",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-02",
+        "MX-11"
+      ],
+      "inventory_refs": [
+        "CD-01"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Client bottom nav",
+        "Buttons",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Reviewed-by badge",
+        "Card"
+      ],
+      "source_boards": [
+        "Dash-Home.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-06-client-dashboard-evidence/web-client-008-home/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-009",
+      "title": "Project overview",
+      "stage": 6,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-15",
+        "FR-11",
+        "FR-18"
+      ],
+      "route": "/projects/:id",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [
+        "GET /projects/{id}",
+        "GET /projects/{id}/milestones",
+        "GET /projects/{id}/evidence",
+        "GET /projects/{id}/reports",
+        "GET /projects/{id}/ledger"
+      ],
+      "html": "02-screens/stage-06-client-dashboard-evidence/web-client-009-project-overview/screen.html",
+      "screenshots": [
+        "02-screens/stage-06-client-dashboard-evidence/web-client-009-project-overview/desktop.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-009-project-overview/mobile.png"
+      ],
+      "spec": "02-screens/stage-06-client-dashboard-evidence/web-client-009-project-overview/spec.md",
+      "fixtures": "02-screens/stage-06-client-dashboard-evidence/web-client-009-project-overview/fixtures.json",
+      "states": [
+        "Desktop",
+        "The screen that matters most"
+      ],
+      "links_to": [
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-14",
+        "MX-20",
+        "MX-24"
+      ],
+      "inventory_refs": [
+        "CD-01",
+        "CD-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Escrow balance card",
+        "Spend vs budget bar",
+        "Milestone stepper",
+        "Evidence card",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Coming soon placeholder",
+        "Card"
+      ],
+      "source_boards": [
+        "Dash-Overview.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-06-client-dashboard-evidence/web-client-009-project-overview/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-010",
+      "title": "Evidence gallery",
+      "stage": 6,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-06",
+        "FR-07",
+        "FR-08",
+        "FR-09",
+        "FR-10",
+        "FR-15"
+      ],
+      "route": "/projects/:id/evidence",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [
+        "GET /projects/{id}/evidence"
+      ],
+      "html": "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/screen.html",
+      "screenshots": [
+        "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/desktop.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/desktop-02-empty-filters-match-nothing.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/mobile.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/mobile-02-filters-sheet.png"
+      ],
+      "spec": "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/spec.md",
+      "fixtures": "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/fixtures.json",
+      "states": [
+        "Gallery",
+        "Empty (filters match nothing)",
+        "Gallery",
+        "Filters sheet"
+      ],
+      "links_to": [
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CD-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Buttons",
+        "Search and filters",
+        "Status chip",
+        "Empty state",
+        "Dialog and alert dialog",
+        "Bottom sheet and side panel",
+        "Evidence card",
+        "Card"
+      ],
+      "source_boards": [
+        "Dash-Evidence.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-06-client-dashboard-evidence/web-client-010-evidence-gallery/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-011",
+      "title": "Evidence detail",
+      "stage": 6,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-07",
+        "FR-08",
+        "FR-10"
+      ],
+      "route": "/projects/:id/evidence/:evidenceId",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [
+        "GET /projects/{id}/evidence"
+      ],
+      "html": "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/screen.html",
+      "screenshots": [
+        "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/desktop.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/desktop-02-uploaded-by-the-contractor.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/desktop-03-flagged-as-the-client-sees-it.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/mobile.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/mobile-02-under-review.png"
+      ],
+      "spec": "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/spec.md",
+      "fixtures": "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/fixtures.json",
+      "states": [
+        "Accepted supervisor video · UTC shown on hover",
+        "Uploaded by the contractor",
+        "Flagged — as the client sees it",
+        "Accepted",
+        "Under review"
+      ],
+      "links_to": [
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-07"
+      ],
+      "inventory_refs": [
+        "CD-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Status chip",
+        "Evidence card",
+        "Three-checks list",
+        "Geofence map",
+        "Card"
+      ],
+      "source_boards": [
+        "Dash-EvidenceDetail.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-06-client-dashboard-evidence/web-client-011-evidence-detail/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-012",
+      "title": "Project site map",
+      "stage": 6,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-04"
+      ],
+      "route": "/projects/:id/site-map",
+      "suggested_target": "web/src/features/dashboard/ + web/src/common/ (map component)",
+      "api": [
+        "GET /projects/{id}",
+        "GET /projects/{id}/evidence"
+      ],
+      "html": "02-screens/stage-06-client-dashboard-evidence/web-client-012-site-map/screen.html",
+      "screenshots": [
+        "02-screens/stage-06-client-dashboard-evidence/web-client-012-site-map/desktop.png",
+        "02-screens/stage-06-client-dashboard-evidence/web-client-012-site-map/mobile.png"
+      ],
+      "spec": "02-screens/stage-06-client-dashboard-evidence/web-client-012-site-map/spec.md",
+      "fixtures": "02-screens/stage-06-client-dashboard-evidence/web-client-012-site-map/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CD-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Client bottom nav",
+        "Status chip",
+        "Geofence map",
+        "Card"
+      ],
+      "source_boards": [
+        "Dash-SiteMap.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-06-client-dashboard-evidence/web-client-012-site-map/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-013",
+      "title": "Milestone detail (every state)",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-12",
+        "FR-14",
+        "FR-15"
+      ],
+      "route": "/projects/:id/milestones/:milestoneId",
+      "suggested_target": "web/src/features/milestones/",
+      "api": [
+        "GET /projects/{id}/milestones",
+        "GET /projects/{id}/evidence",
+        "GET /projects/{id}/ledger"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop-02-funded-plastering-work-can-start.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop-03-claimed-roofing-waiting-for-the-supe.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop-04-verified-roofing-needs-your-approval.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop-05-disputed-roofing-release-paused.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop-06-released-blockwork-to-lintel.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/mobile.png",
+        "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/mobile-02-pending.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/fixtures.json",
+      "states": [
+        "Pending · Plastering, not funded yet",
+        "Funded · Plastering, work can start",
+        "Claimed · Roofing, waiting for the supervisor",
+        "Verified · Roofing, needs your approval",
+        "Disputed · Roofing, release paused",
+        "Released · Blockwork to Lintel",
+        "Verified",
+        "Pending"
+      ],
+      "links_to": [
+        "WEB-CLIENT-005",
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-017",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-019",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-07",
+        "MX-20"
+      ],
+      "inventory_refs": [
+        "CM-01",
+        "CM-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Milestone detail panel (MsDetail)",
+        "Evidence card",
+        "Three-checks list",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "Ms-Detail.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-013-milestone-detail/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-014",
+      "title": "Approve a release",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-14",
+        "FR-15"
+      ],
+      "route": "/projects/:id/milestones/:milestoneId/approve",
+      "suggested_target": "web/src/features/milestones/",
+      "api": [
+        "POST /milestones/{id}/approve",
+        "GET /projects/{id}/milestones",
+        "GET /projects/{id}/ledger"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/mobile.png",
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/mobile-02-2-review.png",
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/mobile-03-3-confirm.png",
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/mobile-04-pending-release.png",
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/mobile-05-released-receipt.png",
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/desktop-02-released-with-receipt.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/fixtures.json",
+      "states": [
+        "1 · Home: the approval card",
+        "2 · Review",
+        "3 · Confirm",
+        "Pending release",
+        "Released · receipt",
+        "Confirm dialog",
+        "Released, with receipt"
+      ],
+      "links_to": [
+        "WEB-CLIENT-005",
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-013",
+        "WEB-CLIENT-017",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-019",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-22"
+      ],
+      "inventory_refs": [
+        "CM-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Buttons",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Milestone detail panel (MsDetail)",
+        "Evidence card",
+        "Three-checks list",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "Ms-Approve.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-014-approve-release/mobile.png"
+    },
+    {
+      "id": "WEB-CLIENT-015",
+      "title": "Raise a dispute and outcomes",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-14"
+      ],
+      "route": "/projects/:id/milestones/:milestoneId/dispute",
+      "suggested_target": "web/src/features/milestones/",
+      "api": [
+        "POST /milestones/{id}/disputes",
+        "GET /projects/{id}/milestones"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-015-dispute/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/mobile.png",
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/mobile-02-release-paused.png",
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/mobile-03-outcome-a-released.png",
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/mobile-04-outcome-b-rework-required.png",
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/desktop-02-milestone-with-release-paused.png",
+        "02-screens/stage-07-client-milestones-money/web-client-015-dispute/desktop-03-dispute-page-both-outcomes.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-015-dispute/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-015-dispute/fixtures.json",
+      "states": [
+        "Raise a dispute",
+        "Release paused",
+        "Outcome A · released",
+        "Outcome B · rework required",
+        "Raise a dispute",
+        "Milestone with release paused",
+        "Dispute page, both outcomes"
+      ],
+      "links_to": [
+        "WEB-CLIENT-005",
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-013",
+        "WEB-CLIENT-017",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-019",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-10"
+      ],
+      "inventory_refs": [
+        "CM-04",
+        "CM-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Dialog and alert dialog",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Milestone detail panel (MsDetail)",
+        "Evidence card",
+        "Three-checks list",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "Ms-Dispute.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-015-dispute/mobile.png"
+    },
+    {
+      "id": "WEB-CLIENT-016",
+      "title": "Fund the next milestone",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-13"
+      ],
+      "route": "/projects/:id/fund/:milestoneId",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [
+        "POST /projects/{id}/funding",
+        "GET /projects/{id}/milestones"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-016-fund-next-milestone/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-016-fund-next-milestone/desktop.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-016-fund-next-milestone/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-016-fund-next-milestone/fixtures.json",
+      "states": [
+        "Fund Plastering · Mon 14 Dec"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CS-09"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "Ms-Fund.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-016-fund-next-milestone/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-017",
+      "title": "Ledger",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-13",
+        "FR-23"
+      ],
+      "route": "/projects/:id/ledger",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [
+        "GET /projects/{id}/ledger"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-017-ledger/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-017-ledger/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-017-ledger/mobile.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-017-ledger/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-017-ledger/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-CLIENT-005",
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-013",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-019",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-22"
+      ],
+      "inventory_refs": [
+        "CM-06"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Segmented control and tabs",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Escrow balance card",
+        "Ledger row and receipt",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Money-Ledger.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-017-ledger/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-018",
+      "title": "Weekly reports",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-18"
+      ],
+      "route": "/projects/:id/reports, /projects/:id/reports/:reportId",
+      "suggested_target": "web/src/features/reports/",
+      "api": [
+        "GET /projects/{id}/reports"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/mobile.png",
+        "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/desktop-02-report-viewer.png",
+        "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/mobile-02-report-viewer.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/fixtures.json",
+      "states": [
+        "List",
+        "List",
+        "Report viewer",
+        "Report viewer"
+      ],
+      "links_to": [
+        "WEB-CLIENT-005",
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-013",
+        "WEB-CLIENT-017",
+        "WEB-CLIENT-019",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-13"
+      ],
+      "inventory_refs": [
+        "CM-08",
+        "CM-09"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Milestone stepper",
+        "Evidence card",
+        "Checklist row",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Reports.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-018-weekly-reports/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-019",
+      "title": "Material orders",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P1",
+      "fr": [
+        "FR-16",
+        "FR-17"
+      ],
+      "route": "/projects/:id/orders",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [
+        "POST /orders/{id}/approve",
+        "POST /quotes/check",
+        "GET /price-index"
+      ],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/desktop-02-orders-and-delivery-confirmation-fri.png",
+        "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/mobile.png",
+        "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/mobile-02-delivery-status.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/fixtures.json",
+      "states": [
+        "Approve an order · Tue 15 Dec",
+        "Orders and delivery confirmation · Fri 18 Dec",
+        "Approve an order",
+        "Delivery status"
+      ],
+      "links_to": [
+        "WEB-CLIENT-005",
+        "WEB-CLIENT-009",
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-011",
+        "WEB-CLIENT-012",
+        "WEB-CLIENT-013",
+        "WEB-CLIENT-017",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [
+        "MX-05"
+      ],
+      "inventory_refs": [
+        "CM-07"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Project tabs",
+        "Client bottom nav",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Money display",
+        "Escrow trust line",
+        "Escrow balance card",
+        "Ledger row and receipt",
+        "Evidence card",
+        "Three-checks list",
+        "Quote check result",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Orders.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-019-material-orders/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-020",
+      "title": "Notifications",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "/notifications",
+      "suggested_target": "web/src/features/dashboard/ (no notifications feature on web in the Spec)",
+      "api": [],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-020-notifications/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-020-notifications/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-020-notifications/mobile.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-020-notifications/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-020-notifications/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-CLIENT-013",
+        "WEB-CLIENT-014",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-019"
+      ],
+      "missing_endpoints": [
+        "MX-11"
+      ],
+      "inventory_refs": [
+        "NS-02",
+        "NS-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Client bottom nav",
+        "Buttons",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Quote check result",
+        "Card"
+      ],
+      "source_boards": [
+        "Notifications.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-020-notifications/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-021",
+      "title": "Live walkthrough (coming soon)",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P2",
+      "fr": [
+        "FR-21"
+      ],
+      "route": "/projects/:id/walkthrough",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-021-live-walkthrough/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-021-live-walkthrough/desktop.png",
+        "02-screens/stage-07-client-milestones-money/web-client-021-live-walkthrough/mobile.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-021-live-walkthrough/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-021-live-walkthrough/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-CLIENT-010",
+        "WEB-CLIENT-018",
+        "WEB-CLIENT-020"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CD-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Client bottom nav",
+        "Buttons",
+        "Status chip",
+        "Coming soon placeholder",
+        "Card"
+      ],
+      "source_boards": [
+        "Walkthrough.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-021-live-walkthrough/desktop.png"
+    },
+    {
+      "id": "WEB-CLIENT-022",
+      "title": "Land and title verification (coming soon)",
+      "stage": 7,
+      "surface": "web",
+      "role": "client",
+      "priority": "P2",
+      "fr": [
+        "FR-22"
+      ],
+      "route": "/add-ons/land-verification",
+      "suggested_target": "web/src/features/dashboard/",
+      "api": [],
+      "html": "02-screens/stage-07-client-milestones-money/web-client-022-land-verification/screen.html",
+      "screenshots": [
+        "02-screens/stage-07-client-milestones-money/web-client-022-land-verification/desktop.png"
+      ],
+      "spec": "02-screens/stage-07-client-milestones-money/web-client-022-land-verification/spec.md",
+      "fixtures": "02-screens/stage-07-client-milestones-money/web-client-022-land-verification/fixtures.json",
+      "states": [
+        "Add-on placeholder (FR-22, P2)"
+      ],
+      "links_to": [
+        "WEB-CLIENT-020",
+        "WEB-PUBLIC-003"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CD-06"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Status chip",
+        "Coming soon placeholder",
+        "Card"
+      ],
+      "source_boards": [
+        "Walkthrough.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-07-client-milestones-money/web-client-022-land-verification/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-003",
+      "title": "Projects dashboard",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-03",
+        "FR-12"
+      ],
+      "route": "/c",
+      "suggested_target": "web/src/features/projects/ (contractor views; no contractor feature folder in the Spec)",
+      "api": [
+        "GET /projects",
+        "GET /projects/{id}/milestones"
+      ],
+      "html": "02-screens/stage-08-contractor/web-contractor-003-dashboard/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-003-dashboard/desktop.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-003-dashboard/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-003-dashboard/fixtures.json",
+      "states": [
+        "Desktop"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-004",
+        "WEB-CONTRACTOR-005",
+        "WEB-CONTRACTOR-006",
+        "WEB-CONTRACTOR-007",
+        "WEB-CONTRACTOR-008",
+        "WEB-CONTRACTOR-009"
+      ],
+      "missing_endpoints": [
+        "MX-02",
+        "MX-06"
+      ],
+      "inventory_refs": [
+        "CO-01",
+        "CO-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Buttons",
+        "Status chip",
+        "Escrow trust line",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Dashboard.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-003-dashboard/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-004",
+      "title": "BoQ editor",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-05"
+      ],
+      "route": "/c/projects/:id/boq",
+      "suggested_target": "web/src/features/projects/ (BoQ editor)",
+      "api": [
+        "GET /projects/{id}/boq",
+        "PUT /projects/{id}/boq",
+        "POST /projects/{id}/boq/approve",
+        "POST /quotes/check"
+      ],
+      "html": "02-screens/stage-08-contractor/web-contractor-004-boq-editor/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-004-boq-editor/desktop.png",
+        "02-screens/stage-08-contractor/web-contractor-004-boq-editor/desktop-02-sent-back-sat-2-jan.png",
+        "02-screens/stage-08-contractor/web-contractor-004-boq-editor/desktop-03-submitted-in-review-tue-29-dec.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-004-boq-editor/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-004-boq-editor/fixtures.json",
+      "states": [
+        "Editing version 2 · validation errors · Wed 6 Jan",
+        "Sent back · Sat 2 Jan",
+        "Submitted · in review · Tue 29 Dec"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-003",
+        "WEB-CONTRACTOR-005",
+        "WEB-CONTRACTOR-007",
+        "WEB-CONTRACTOR-008",
+        "WEB-CONTRACTOR-009"
+      ],
+      "missing_endpoints": [
+        "MX-08"
+      ],
+      "inventory_refs": [
+        "CO-03",
+        "CO-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Alert and banner",
+        "Quote check result",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-BoQ.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-004-boq-editor/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-005",
+      "title": "Milestones and claim",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-12"
+      ],
+      "route": "/c/projects/:id/milestones",
+      "suggested_target": "web/src/features/milestones/",
+      "api": [
+        "GET /projects/{id}/milestones",
+        "POST /milestones/{id}/claim"
+      ],
+      "html": "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/desktop.png",
+        "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/desktop-02-claim-confirmation.png",
+        "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/desktop-03-claimed-waiting-for-the-supervisor.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/fixtures.json",
+      "states": [
+        "Milestone list · Plastering ready to claim",
+        "Claim confirmation",
+        "Claimed · waiting for the supervisor"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-003",
+        "WEB-CONTRACTOR-004",
+        "WEB-CONTRACTOR-007",
+        "WEB-CONTRACTOR-008",
+        "WEB-CONTRACTOR-009"
+      ],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CO-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Buttons",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Milestone stepper",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Milestones.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-005-milestones-claim/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-006",
+      "title": "Rework and dispute",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-12",
+        "FR-14"
+      ],
+      "route": "/c/projects/:id/milestones/:milestoneId",
+      "suggested_target": "web/src/features/milestones/",
+      "api": [
+        "GET /projects/{id}/milestones",
+        "POST /milestones/{id}/claim",
+        "POST /milestones/{id}/disputes"
+      ],
+      "html": "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/desktop.png",
+        "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/desktop-02-reworked-claim-again-mon-11-jan.png",
+        "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/desktop-03-or-instead-dispute-the-rejection-thu.png",
+        "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/desktop-04-dispute-open.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/fixtures.json",
+      "states": [
+        "Rejected with reasons · Wed 6 Jan",
+        "Reworked · claim again · Mon 11 Jan",
+        "Or instead: dispute the rejection · Thu 7 Jan",
+        "Dispute open"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-003",
+        "WEB-CONTRACTOR-004",
+        "WEB-CONTRACTOR-005",
+        "WEB-CONTRACTOR-007",
+        "WEB-CONTRACTOR-008",
+        "WEB-CONTRACTOR-009"
+      ],
+      "missing_endpoints": [
+        "MX-10"
+      ],
+      "inventory_refs": [
+        "CO-07",
+        "CO-08"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Dialog and alert dialog",
+        "Escrow trust line",
+        "Evidence card",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Rework.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-006-rework-dispute/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-007",
+      "title": "Material requests",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P1",
+      "fr": [
+        "FR-16",
+        "FR-17"
+      ],
+      "route": "/c/orders",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [
+        "POST /projects/{id}/orders",
+        "GET /price-index",
+        "POST /quotes/check"
+      ],
+      "html": "02-screens/stage-08-contractor/web-contractor-007-material-requests/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-007-material-requests/desktop.png",
+        "02-screens/stage-08-contractor/web-contractor-007-material-requests/desktop-02-orders-statuses.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-007-material-requests/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-007-material-requests/fixtures.json",
+      "states": [
+        "New request · Thu 7 Jan",
+        "Orders · statuses"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-003",
+        "WEB-CONTRACTOR-008",
+        "WEB-CONTRACTOR-009"
+      ],
+      "missing_endpoints": [
+        "MX-05"
+      ],
+      "inventory_refs": [
+        "CO-09",
+        "CO-10",
+        "CO-11"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Escrow trust line",
+        "Quote check result",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Orders.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-007-material-requests/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-008",
+      "title": "Payouts",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P1",
+      "fr": [
+        "FR-14"
+      ],
+      "route": "/c/payouts",
+      "suggested_target": "web/src/features/dashboard/ (no payouts feature on web in the Spec)",
+      "api": [],
+      "html": "02-screens/stage-08-contractor/web-contractor-008-payouts/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-008-payouts/desktop.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-008-payouts/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-008-payouts/fixtures.json",
+      "states": [
+        "Desktop"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-003",
+        "WEB-CONTRACTOR-007",
+        "WEB-CONTRACTOR-009"
+      ],
+      "missing_endpoints": [
+        "MX-03",
+        "MX-06"
+      ],
+      "inventory_refs": [
+        "CO-12"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Status chip",
+        "Escrow trust line",
+        "Escrow balance card",
+        "Ledger row and receipt",
+        "Milestone stepper",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Payouts.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-008-payouts/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-009",
+      "title": "Profile and track record",
+      "stage": 8,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P1",
+      "fr": [
+        "FR-01"
+      ],
+      "route": "/c/profile",
+      "suggested_target": "web/src/features/auth/ (profile)",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-08-contractor/web-contractor-009-profile/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/web-contractor-009-profile/desktop.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/web-contractor-009-profile/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/web-contractor-009-profile/fixtures.json",
+      "states": [
+        "Desktop"
+      ],
+      "links_to": [
+        "WEB-CONTRACTOR-003",
+        "WEB-CONTRACTOR-007",
+        "WEB-CONTRACTOR-008"
+      ],
+      "missing_endpoints": [
+        "MX-01",
+        "MX-23"
+      ],
+      "inventory_refs": [],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Status chip",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Profile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/web-contractor-009-profile/desktop.png"
+    },
+    {
+      "id": "AND-CONTRACTOR-002",
+      "title": "Projects and claim (Android)",
+      "stage": 8,
+      "surface": "android",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-12",
+        "FR-03"
+      ],
+      "route": "ProjectsScreen, MilestoneScreen",
+      "suggested_target": "mobile/lib/features/projects/ + mobile/lib/features/milestones/",
+      "api": [
+        "GET /projects",
+        "GET /projects/{id}/milestones",
+        "POST /milestones/{id}/claim"
+      ],
+      "html": "02-screens/stage-08-contractor/and-contractor-002-projects-claim/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/and-contractor-002-projects-claim/android.png",
+        "02-screens/stage-08-contractor/and-contractor-002-projects-claim/android-02-milestone-ready-to-claim.png",
+        "02-screens/stage-08-contractor/and-contractor-002-projects-claim/android-03-claim-confirmation.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/and-contractor-002-projects-claim/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/and-contractor-002-projects-claim/fixtures.json",
+      "states": [
+        "Projects · Mon 4 Jan",
+        "Milestone · ready to claim",
+        "Claim confirmation"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CO-01",
+        "CO-02",
+        "CO-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor app bottom nav",
+        "Buttons",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Android.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/and-contractor-002-projects-claim/android.png"
+    },
+    {
+      "id": "AND-CONTRACTOR-003",
+      "title": "Contractor capture",
+      "stage": 8,
+      "surface": "android",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-06",
+        "FR-07",
+        "FR-08"
+      ],
+      "route": "CaptureScreen (contractor mode)",
+      "suggested_target": "mobile/lib/features/capture/",
+      "api": [
+        "POST /evidence/upload-url",
+        "POST /evidence"
+      ],
+      "html": "02-screens/stage-08-contractor/and-contractor-003-contractor-capture/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/and-contractor-003-contractor-capture/android.png",
+        "02-screens/stage-08-contractor/and-contractor-003-contractor-capture/android-02-after-the-shot-saved-waiting-to-uplo.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/and-contractor-003-contractor-capture/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/and-contractor-003-contractor-capture/fixtures.json",
+      "states": [
+        "Camera · contractor evidence",
+        "After the shot · saved, waiting to upload"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CO-06"
+      ],
+      "components": [
+        "Buttons",
+        "Camera and capture bar",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Android.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/and-contractor-003-contractor-capture/android.png"
+    },
+    {
+      "id": "AND-CONTRACTOR-004",
+      "title": "Orders (Android)",
+      "stage": 8,
+      "surface": "android",
+      "role": "contractor",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "OrdersScreen",
+      "suggested_target": "mobile/lib/features/orders/ (new folder; not in the Spec)",
+      "api": [
+        "POST /projects/{id}/orders"
+      ],
+      "html": "02-screens/stage-08-contractor/and-contractor-004-orders/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/and-contractor-004-orders/android.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/and-contractor-004-orders/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/and-contractor-004-orders/fixtures.json",
+      "states": [
+        "Orders · Thu 7 Jan"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-05"
+      ],
+      "inventory_refs": [
+        "CO-10"
+      ],
+      "components": [
+        "Contractor app bottom nav",
+        "Buttons",
+        "Status chip",
+        "Escrow trust line",
+        "Card"
+      ],
+      "source_boards": [
+        "Con-Android.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/and-contractor-004-orders/android.png"
+    },
+    {
+      "id": "AND-CONTRACTOR-005",
+      "title": "Alerts (Android)",
+      "stage": 8,
+      "surface": "android",
+      "role": "contractor",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "AlertsScreen",
+      "suggested_target": "mobile/lib/features/notifications/ (new folder; not in the Spec)",
+      "api": [],
+      "html": "02-screens/stage-08-contractor/and-contractor-005-alerts/screen.html",
+      "screenshots": [
+        "02-screens/stage-08-contractor/and-contractor-005-alerts/android.png"
+      ],
+      "spec": "02-screens/stage-08-contractor/and-contractor-005-alerts/spec.md",
+      "fixtures": "02-screens/stage-08-contractor/and-contractor-005-alerts/fixtures.json",
+      "states": [
+        "Alerts · Wed 6 Jan"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-11"
+      ],
+      "inventory_refs": [
+        "NS-04"
+      ],
+      "components": [
+        "Contractor app bottom nav",
+        "Status chip"
+      ],
+      "source_boards": [
+        "Con-Android.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-08-contractor/and-contractor-005-alerts/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-004",
+      "title": "Assigned projects and checklist",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-03",
+        "FR-12"
+      ],
+      "route": "ProjectsScreen, ProjectDetailScreen, ChecklistScreen",
+      "suggested_target": "mobile/lib/features/projects/",
+      "api": [
+        "GET /projects",
+        "GET /projects/{id}",
+        "GET /projects/{id}/milestones"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/android-02-project-detail.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/android-03-milestone-checklist.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/fixtures.json",
+      "states": [
+        "Assigned projects · Wed 6 Jan, 08:40",
+        "Project detail",
+        "Milestone checklist"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SV-01",
+        "SV-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Status chip",
+        "Milestone stepper",
+        "Checklist row",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Projects.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-004-projects-checklist/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-005",
+      "title": "Arrival check",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-08"
+      ],
+      "route": "ArrivalScreen",
+      "suggested_target": "mobile/lib/features/capture/",
+      "api": [
+        "GET /projects/{id}"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/android-02-inside-the-site-boundary.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/android-03-outside-the-site-boundary.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/fixtures.json",
+      "states": [
+        "Finding your location",
+        "Inside the site boundary",
+        "Outside the site boundary"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SV-02",
+        "SV-10"
+      ],
+      "components": [
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Alert and banner",
+        "Geofence map",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Arrival.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-005-arrival-check/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-006",
+      "title": "Capture",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-06",
+        "FR-07",
+        "FR-08"
+      ],
+      "route": "CaptureScreen, CaptureReviewScreen",
+      "suggested_target": "mobile/lib/features/capture/",
+      "api": [
+        "POST /evidence/upload-url",
+        "POST /evidence"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/android-02-refused-gps-too-weak.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/android-03-refused-mock-location.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/android-04-warning-capturing-outside-site.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/android-05-review-and-notes.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/fixtures.json",
+      "states": [
+        "Ready to capture",
+        "Refused · GPS too weak",
+        "Refused · mock location",
+        "Warning · capturing outside site",
+        "Review and notes"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SV-03",
+        "SV-04",
+        "SV-10"
+      ],
+      "components": [
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Text input and select",
+        "Segmented control and tabs",
+        "Status chip",
+        "Alert and banner",
+        "Checklist row",
+        "Camera and capture bar",
+        "Sync row",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Capture.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-006-capture/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-007",
+      "title": "Sync queue",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-09",
+        "FR-08",
+        "FR-10"
+      ],
+      "route": "SyncScreen",
+      "suggested_target": "mobile/lib/features/sync/",
+      "api": [
+        "POST /evidence/upload-url",
+        "POST /evidence"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/android-02-offline-48-hour-warning-fri-8-jan-08.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/android-03-retry-states.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/android-04-rejected-capture-reason.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/fixtures.json",
+      "states": [
+        "Sync queue · online · Wed 6 Jan, 15:45",
+        "Offline · 48-hour warning · Fri 8 Jan, 08:10",
+        "Retry states",
+        "Rejected capture · reason"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SV-05",
+        "SV-06",
+        "SV-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Evidence card",
+        "Three-checks list",
+        "Checklist row",
+        "Sync row",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Sync.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-007-sync-queue/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-008",
+      "title": "Verify or send back",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-12",
+        "FR-14"
+      ],
+      "route": "VerifyScreen",
+      "suggested_target": "mobile/lib/features/milestones/",
+      "api": [
+        "POST /milestones/{id}/verify",
+        "GET /projects/{id}/milestones"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/android-02-send-back-with-reasons-wed-6-jan.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/android-03-confirm-verification.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/android-04-conflict-changed-while-offline.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/fixtures.json",
+      "states": [
+        "Verify · re-check Tue 12 Jan",
+        "Send back with reasons · Wed 6 Jan",
+        "Confirm verification",
+        "Conflict · changed while offline"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SV-07",
+        "SV-08"
+      ],
+      "components": [
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Alert and banner",
+        "Dialog and alert dialog",
+        "Bottom sheet and side panel",
+        "Evidence card",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Verify.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-008-verify/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-009",
+      "title": "Confirm delivery",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "DeliveryScreen",
+      "suggested_target": "mobile/lib/features/deliveries/ (new folder; not in the Spec)",
+      "api": [
+        "POST /orders/{id}/delivery",
+        "POST /evidence/upload-url",
+        "POST /evidence"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/android-02-count-and-photograph.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/android-03-delivery-confirmed.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/fixtures.json",
+      "states": [
+        "Delivery to confirm · Fri 18 Dec, 12:15",
+        "Count and photograph",
+        "Delivery confirmed"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-05"
+      ],
+      "inventory_refs": [
+        "SV-13"
+      ],
+      "components": [
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Escrow trust line",
+        "Evidence card",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Delivery.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-009-confirm-delivery/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-010",
+      "title": "Spot checks",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P1",
+      "fr": [
+        "FR-11"
+      ],
+      "route": "SpotChecksScreen",
+      "suggested_target": "mobile/lib/features/spot_checks/",
+      "api": [
+        "GET /supervisors/me/spot-checks",
+        "POST /spot-checks/{id}/complete",
+        "POST /evidence/upload-url",
+        "POST /evidence"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/android-02-complete-with-findings.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/android-03-findings-submitted.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/fixtures.json",
+      "states": [
+        "Spot checks · Thu 7 Jan, 09:00",
+        "Complete with findings",
+        "Findings submitted"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SV-11",
+        "SV-12"
+      ],
+      "components": [
+        "Wordmark",
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Alert and banner",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-SpotChecks.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-010-spot-checks/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-011",
+      "title": "Weekly report review",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-18"
+      ],
+      "route": "ReportReviewScreen",
+      "suggested_target": "mobile/lib/features/reports/ (new folder; not in the Spec)",
+      "api": [
+        "GET /projects/{id}/reports",
+        "POST /reports/{id}/review"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/android-02-edit-the-draft.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/android-03-mark-reviewed.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/fixtures.json",
+      "states": [
+        "Read the AI draft · Fri 8 Jan, 16:10",
+        "Edit the draft",
+        "Mark reviewed"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-13"
+      ],
+      "inventory_refs": [
+        "SV-09"
+      ],
+      "components": [
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Bottom sheet and side panel",
+        "Escrow trust line",
+        "Evidence card",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Report.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-011-report-review/android.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-012",
+      "title": "Me, device and system states",
+      "stage": 9,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-02",
+        "FR-07"
+      ],
+      "route": "MeScreen",
+      "suggested_target": "mobile/lib/features/auth/ (profile)",
+      "api": [
+        "GET /supervisors/me/profile",
+        "POST /devices/{id}/revoke"
+      ],
+      "html": "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/screen.html",
+      "screenshots": [
+        "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/android.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/android-02-storage-low.png",
+        "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/android-03-session-expired.png"
+      ],
+      "spec": "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/spec.md",
+      "fixtures": "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/fixtures.json",
+      "states": [
+        "Me · profile, vetting, device",
+        "Storage low",
+        "Session expired"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-12"
+      ],
+      "inventory_refs": [
+        "NS-08",
+        "NS-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Card"
+      ],
+      "source_boards": [
+        "Sup-Profile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-09-supervisor-android/and-supervisor-012-me-device/android.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-002",
+      "title": "Supplier dashboard",
+      "stage": 10,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16",
+        "FR-17"
+      ],
+      "route": "/s",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [],
+      "html": "02-screens/stage-10-supplier/web-supplier-002-dashboard/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/web-supplier-002-dashboard/desktop.png",
+        "02-screens/stage-10-supplier/web-supplier-002-dashboard/mobile.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/web-supplier-002-dashboard/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/web-supplier-002-dashboard/fixtures.json",
+      "states": [
+        "Mon 11 Jan 2027, 09:00 WAT",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-SUPPLIER-003",
+        "WEB-SUPPLIER-005",
+        "WEB-SUPPLIER-006",
+        "WEB-SUPPLIER-007"
+      ],
+      "missing_endpoints": [
+        "MX-05",
+        "MX-06"
+      ],
+      "inventory_refs": [
+        "SU-01"
+      ],
+      "components": [
+        "Wordmark",
+        "Supplier top bar and mobile nav",
+        "Buttons",
+        "Status chip",
+        "Escrow trust line",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Sp-Dashboard.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/web-supplier-002-dashboard/desktop.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-003",
+      "title": "Incoming orders",
+      "stage": 10,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "/s/orders",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [],
+      "html": "02-screens/stage-10-supplier/web-supplier-003-orders/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/web-supplier-003-orders/desktop.png",
+        "02-screens/stage-10-supplier/web-supplier-003-orders/mobile.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/web-supplier-003-orders/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/web-supplier-003-orders/fixtures.json",
+      "states": [
+        "Incoming orders",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-SUPPLIER-002",
+        "WEB-SUPPLIER-005",
+        "WEB-SUPPLIER-006",
+        "WEB-SUPPLIER-007"
+      ],
+      "missing_endpoints": [
+        "MX-05"
+      ],
+      "inventory_refs": [
+        "SU-01"
+      ],
+      "components": [
+        "Wordmark",
+        "Supplier top bar and mobile nav",
+        "Status chip",
+        "Escrow trust line",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Sp-Orders.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/web-supplier-003-orders/desktop.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-004",
+      "title": "Order detail, delivery and payment",
+      "stage": 10,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "/s/orders/:orderId",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [],
+      "html": "02-screens/stage-10-supplier/web-supplier-004-order-detail/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/web-supplier-004-order-detail/desktop.png",
+        "02-screens/stage-10-supplier/web-supplier-004-order-detail/desktop-02-delivered-confirmed-and-paid.png",
+        "02-screens/stage-10-supplier/web-supplier-004-order-detail/mobile.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/web-supplier-004-order-detail/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/web-supplier-004-order-detail/fixtures.json",
+      "states": [
+        "Approved, to deliver",
+        "Delivered, confirmed and paid",
+        "On hold"
+      ],
+      "links_to": [
+        "WEB-SUPPLIER-002",
+        "WEB-SUPPLIER-003",
+        "WEB-SUPPLIER-005",
+        "WEB-SUPPLIER-006",
+        "WEB-SUPPLIER-007"
+      ],
+      "missing_endpoints": [
+        "MX-05",
+        "MX-06"
+      ],
+      "inventory_refs": [
+        "SU-02",
+        "SU-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Supplier top bar and mobile nav",
+        "Buttons",
+        "Status chip",
+        "Alert and banner",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Evidence card",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Sp-OrderDetail.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/web-supplier-004-order-detail/desktop.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-005",
+      "title": "Payouts history",
+      "stage": 10,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "/s/payouts",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [],
+      "html": "02-screens/stage-10-supplier/web-supplier-005-payouts/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/web-supplier-005-payouts/desktop.png",
+        "02-screens/stage-10-supplier/web-supplier-005-payouts/mobile.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/web-supplier-005-payouts/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/web-supplier-005-payouts/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-SUPPLIER-002",
+        "WEB-SUPPLIER-003",
+        "WEB-SUPPLIER-006",
+        "WEB-SUPPLIER-007"
+      ],
+      "missing_endpoints": [
+        "MX-06",
+        "MX-22"
+      ],
+      "inventory_refs": [
+        "SU-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Supplier top bar and mobile nav",
+        "Status chip",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Sp-Payouts.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/web-supplier-005-payouts/desktop.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-006",
+      "title": "Business profile and bank",
+      "stage": 10,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "/s/profile",
+      "suggested_target": "web/src/features/suppliers/",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-10-supplier/web-supplier-006-profile/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/web-supplier-006-profile/desktop.png",
+        "02-screens/stage-10-supplier/web-supplier-006-profile/mobile.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/web-supplier-006-profile/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/web-supplier-006-profile/fixtures.json",
+      "states": [
+        "Desktop",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-SUPPLIER-002",
+        "WEB-SUPPLIER-003",
+        "WEB-SUPPLIER-005",
+        "WEB-SUPPLIER-007"
+      ],
+      "missing_endpoints": [
+        "MX-01",
+        "MX-03",
+        "MX-04"
+      ],
+      "inventory_refs": [
+        "SU-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Supplier top bar and mobile nav",
+        "Buttons",
+        "Status chip",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Sp-Profile.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/web-supplier-006-profile/desktop.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-007",
+      "title": "Price list contribution",
+      "stage": 10,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-17"
+      ],
+      "route": "/s/prices",
+      "suggested_target": "web/src/features/suppliers/ (price index)",
+      "api": [
+        "GET /price-index"
+      ],
+      "html": "02-screens/stage-10-supplier/web-supplier-007-price-list/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/web-supplier-007-price-list/desktop.png",
+        "02-screens/stage-10-supplier/web-supplier-007-price-list/mobile.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/web-supplier-007-price-list/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/web-supplier-007-price-list/fixtures.json",
+      "states": [
+        "Mon 11 Jan",
+        "Mobile web"
+      ],
+      "links_to": [
+        "WEB-SUPPLIER-002",
+        "WEB-SUPPLIER-003",
+        "WEB-SUPPLIER-005",
+        "WEB-SUPPLIER-006"
+      ],
+      "missing_endpoints": [
+        "MX-16"
+      ],
+      "inventory_refs": [],
+      "components": [
+        "Wordmark",
+        "Supplier top bar and mobile nav",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Alert and banner",
+        "Quote check result",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Sp-PriceList.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/web-supplier-007-price-list/desktop.png"
+    },
+    {
+      "id": "WA-SUPPLIER-001",
+      "title": "WhatsApp order notification",
+      "stage": 10,
+      "surface": "whatsapp",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16",
+        "FR-20"
+      ],
+      "route": "template: supplier_new_order, supplier_paid",
+      "suggested_target": "backend/app/base/notifications/ (templates)",
+      "api": [],
+      "html": "02-screens/stage-10-supplier/wa-supplier-001-whatsapp-order/screen.html",
+      "screenshots": [
+        "02-screens/stage-10-supplier/wa-supplier-001-whatsapp-order/whatsapp.png"
+      ],
+      "spec": "02-screens/stage-10-supplier/wa-supplier-001-whatsapp-order/spec.md",
+      "fixtures": "02-screens/stage-10-supplier/wa-supplier-001-whatsapp-order/fixtures.json",
+      "states": [
+        "WhatsApp chat (mock)"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "SU-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "WhatsApp message"
+      ],
+      "source_boards": [
+        "Sp-WhatsApp.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-10-supplier/wa-supplier-001-whatsapp-order/whatsapp.png"
+    },
+    {
+      "id": "WEB-OPS-002",
+      "title": "Overview, live map and money alerts",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-19",
+        "FR-14",
+        "FR-23"
+      ],
+      "route": "/ops",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /ops/queue",
+        "GET /projects"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-002-overview/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-002-overview/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-002-overview/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-002-overview/fixtures.json",
+      "states": [
+        "Overview · Mon 11 Jan 2027, 09:30 WAT"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-21"
+      ],
+      "inventory_refs": [
+        "OP-01",
+        "OP-09",
+        "OP-11"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Segmented control and tabs",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Ledger row and receipt",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Overview.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-002-overview/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-003",
+      "title": "Supervisor vetting",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-02",
+        "FR-19"
+      ],
+      "route": "/ops/vetting, /ops/vetting/:id",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /ops/queue",
+        "POST /supervisors/{id}/vetting"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-003-vetting/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-003-vetting/desktop.png",
+        "02-screens/stage-11-ops-console/web-ops-003-vetting/desktop-02-vetting-detail-decide.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-003-vetting/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-003-vetting/fixtures.json",
+      "states": [
+        "Vetting queue",
+        "Vetting detail · decide"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-15"
+      ],
+      "inventory_refs": [
+        "OP-02"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Segmented control and tabs",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Vetting.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-003-vetting/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-004",
+      "title": "Projects, BoQ approval and rotation",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-03",
+        "FR-04",
+        "FR-05",
+        "FR-11",
+        "FR-19"
+      ],
+      "route": "/ops/projects, /ops/projects/:id",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /projects",
+        "GET /projects/{id}",
+        "POST /projects/{id}/supervisor",
+        "PUT /projects/{id}/site",
+        "GET /projects/{id}/boq",
+        "POST /projects/{id}/boq/approve"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-004-projects/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-004-projects/desktop.png",
+        "02-screens/stage-11-ops-console/web-ops-004-projects/desktop-02-project-detail-pause-site-supervisor.png",
+        "02-screens/stage-11-ops-console/web-ops-004-projects/desktop-03-boq-ops-approval-emekas-duplex-v2.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-004-projects/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-004-projects/fixtures.json",
+      "states": [
+        "Projects list",
+        "Project detail · pause, site, supervisor rotation",
+        "BoQ ops approval · Emeka's duplex v2"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-08",
+        "MX-09",
+        "MX-15"
+      ],
+      "inventory_refs": [
+        "OP-03",
+        "OP-04",
+        "OP-05",
+        "OP-06"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Segmented control and tabs",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Escrow trust line",
+        "Milestone stepper",
+        "Geofence map",
+        "Quote check result",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Projects.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-004-projects/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-005",
+      "title": "Flagged evidence review",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-10",
+        "FR-19"
+      ],
+      "route": "/ops/evidence/:id",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /ops/queue",
+        "POST /evidence/{id}/decision"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-005-flagged-evidence/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-005-flagged-evidence/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-005-flagged-evidence/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-005-flagged-evidence/fixtures.json",
+      "states": [
+        "Flagged evidence review"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-07"
+      ],
+      "inventory_refs": [
+        "OP-07"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Search and filters",
+        "Status chip",
+        "Evidence card",
+        "Checklist row",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Evidence.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-005-flagged-evidence/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-006",
+      "title": "Disputes and two-approver resolution",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-14",
+        "FR-19",
+        "FR-23"
+      ],
+      "route": "/ops/disputes, /ops/disputes/:id",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /ops/queue",
+        "POST /disputes/{id}/resolve"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-006-disputes/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-006-disputes/desktop.png",
+        "02-screens/stage-11-ops-console/web-ops-006-disputes/desktop-02-resolution-two-approver-flow.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-006-disputes/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-006-disputes/fixtures.json",
+      "states": [
+        "Dispute queue",
+        "Resolution · two-approver flow"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-10"
+      ],
+      "inventory_refs": [
+        "OP-08"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Segmented control and tabs",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Escrow trust line",
+        "Evidence card",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Disputes.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-006-disputes/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-007",
+      "title": "Spot-check scheduler",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P1",
+      "fr": [
+        "FR-11",
+        "FR-19"
+      ],
+      "route": "/ops/spot-checks",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "POST /projects/{id}/spot-checks"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-007-spot-checks/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-007-spot-checks/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-007-spot-checks/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-007-spot-checks/fixtures.json",
+      "states": [
+        "Spot-check scheduler and results"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-14",
+        "MX-15"
+      ],
+      "inventory_refs": [
+        "OP-14"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-SpotChecks.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-007-spot-checks/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-008",
+      "title": "Supplier verification",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "/ops/suppliers",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [],
+      "html": "02-screens/stage-11-ops-console/web-ops-008-suppliers/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-008-suppliers/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-008-suppliers/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-008-suppliers/fixtures.json",
+      "states": [
+        "Supplier verification and onboarding"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-02",
+        "MX-03",
+        "MX-04"
+      ],
+      "inventory_refs": [
+        "OP-15"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Quote check result",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Suppliers.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-008-suppliers/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-009",
+      "title": "Price index management",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-17"
+      ],
+      "route": "/ops/price-index",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /price-index"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-009-price-index/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-009-price-index/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-009-price-index/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-009-price-index/fixtures.json",
+      "states": [
+        "Price index management"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-16"
+      ],
+      "inventory_refs": [
+        "OP-13"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Segmented control and tabs",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Quote check result",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-PriceIndex.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-009-price-index/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-010",
+      "title": "Weekly report review (ops)",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-18"
+      ],
+      "route": "/ops/reports",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /projects/{id}/reports",
+        "POST /reports/{id}/review"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-010-report-review/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-010-report-review/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-010-report-review/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-010-report-review/fixtures.json",
+      "states": [
+        "Weekly report review"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-13"
+      ],
+      "inventory_refs": [
+        "OP-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Escrow trust line",
+        "Evidence card",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Reports.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-010-report-review/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-011",
+      "title": "Audit log and agent runs",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-23"
+      ],
+      "route": "/ops/audit, /ops/agent-runs",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /ops/audit"
+      ],
+      "html": "02-screens/stage-11-ops-console/web-ops-011-audit/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-011-audit/desktop.png",
+        "02-screens/stage-11-ops-console/web-ops-011-audit/desktop-02-agent-runs-log.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-011-audit/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-011-audit/fixtures.json",
+      "states": [
+        "Audit log",
+        "Agent runs log"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-18",
+        "MX-22"
+      ],
+      "inventory_refs": [
+        "OP-12",
+        "OP-16"
+      ],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Ledger row and receipt",
+        "Evidence card",
+        "Quote check result",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Audit.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-011-audit/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-012",
+      "title": "Users and status",
+      "stage": 11,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P1",
+      "fr": [
+        "FR-01",
+        "FR-23"
+      ],
+      "route": "/ops/users",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [],
+      "html": "02-screens/stage-11-ops-console/web-ops-012-users/screen.html",
+      "screenshots": [
+        "02-screens/stage-11-ops-console/web-ops-012-users/desktop.png"
+      ],
+      "spec": "02-screens/stage-11-ops-console/web-ops-012-users/spec.md",
+      "fixtures": "02-screens/stage-11-ops-console/web-ops-012-users/fixtures.json",
+      "states": [
+        "User management · role and status"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-17",
+        "MX-02"
+      ],
+      "inventory_refs": [],
+      "components": [
+        "Wordmark",
+        "Ops sidebar",
+        "Buttons",
+        "Text input and select",
+        "Segmented control and tabs",
+        "Search and filters",
+        "Status chip",
+        "Alert and banner",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "Op-Users.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-11-ops-console/web-ops-012-users/desktop.png"
+    },
+    {
+      "id": "WA-CLIENT-001",
+      "title": "Client WhatsApp messages",
+      "stage": 12,
+      "surface": "whatsapp",
+      "role": "client",
+      "priority": "P1",
+      "fr": [
+        "FR-20",
+        "FR-18"
+      ],
+      "route": "templates: milestone_claimed, milestone_verified, release_completed, weekly_report_ready",
+      "suggested_target": "backend/app/base/notifications/ (templates)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/wa-client-001-whatsapp-messages/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/wa-client-001-whatsapp-messages/whatsapp.png",
+        "02-screens/stage-12-cross-cutting/wa-client-001-whatsapp-messages/whatsapp-02-client-whatsapp-weekly-report-summar.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/wa-client-001-whatsapp-messages/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/wa-client-001-whatsapp-messages/fixtures.json",
+      "states": [
+        "Client · WhatsApp · Chioma",
+        "Client · WhatsApp · weekly report summary"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-02",
+        "CM-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "WhatsApp message",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Messages.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/wa-client-001-whatsapp-messages/whatsapp.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-013",
+      "title": "Spot check SMS and push",
+      "stage": 12,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P1",
+      "fr": [
+        "FR-20",
+        "FR-11"
+      ],
+      "route": "push + SMS: spot_check_assigned",
+      "suggested_target": "backend/app/base/notifications/ + mobile push handling",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/and-supervisor-013-spot-check-sms-push/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/and-supervisor-013-spot-check-sms-push/android.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/and-supervisor-013-spot-check-sms-push/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/and-supervisor-013-spot-check-sms-push/fixtures.json",
+      "states": [
+        "Supervisor · SMS + push · spot check assigned"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Push and SMS notification",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Messages.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/and-supervisor-013-spot-check-sms-push/android.png"
+    },
+    {
+      "id": "EMAIL-CLIENT-001",
+      "title": "Client emails",
+      "stage": 12,
+      "surface": "email",
+      "role": "client",
+      "priority": "P1",
+      "fr": [
+        "FR-20",
+        "FR-18"
+      ],
+      "route": "templates: milestone_verified, weekly_report",
+      "suggested_target": "backend/app/base/notifications/ (email templates)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/email-client-001-emails/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/email-client-001-emails/email.png",
+        "02-screens/stage-12-cross-cutting/email-client-001-emails/email-02-weekly-report.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/email-client-001-emails/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/email-client-001-emails/fixtures.json",
+      "states": [
+        "Milestone verified",
+        "Weekly report"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-03"
+      ],
+      "components": [
+        "Wordmark",
+        "Buttons",
+        "Status chip",
+        "Money display",
+        "Escrow trust line",
+        "Three-checks list",
+        "Checklist row",
+        "AI-generated label",
+        "Reviewed-by badge",
+        "Email template",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Email.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/email-client-001-emails/email.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-014",
+      "title": "Supervisor push notifications",
+      "stage": 12,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "push templates",
+      "suggested_target": "mobile/lib/core/ (FCM) ",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/and-supervisor-014-push/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/and-supervisor-014-push/android.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/and-supervisor-014-push/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/and-supervisor-014-push/fixtures.json",
+      "states": [
+        "Supervisor app · notifications"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-05"
+      ],
+      "components": [
+        "Wordmark",
+        "Evidence card",
+        "Push and SMS notification",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Push.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/and-supervisor-014-push/android.png"
+    },
+    {
+      "id": "AND-CONTRACTOR-006",
+      "title": "Contractor push notifications",
+      "stage": 12,
+      "surface": "android",
+      "role": "contractor",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "push templates",
+      "suggested_target": "mobile/lib/core/ (FCM)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/and-contractor-006-push/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/and-contractor-006-push/android.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/and-contractor-006-push/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/and-contractor-006-push/fixtures.json",
+      "states": [
+        "Contractor app · notifications"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-04"
+      ],
+      "components": [
+        "Wordmark",
+        "Escrow trust line",
+        "Push and SMS notification",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Push.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/and-contractor-006-push/android.png"
+    },
+    {
+      "id": "WA-CLIENT-002",
+      "title": "WhatsApp assistant",
+      "stage": 12,
+      "surface": "whatsapp",
+      "role": "client",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "webhook: POST /webhooks/whatsapp",
+      "suggested_target": "backend/app/features/agents/",
+      "api": [
+        "POST /webhooks/whatsapp"
+      ],
+      "html": "02-screens/stage-12-cross-cutting/wa-client-002-whatsapp-assistant/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/wa-client-002-whatsapp-assistant/whatsapp.png",
+        "02-screens/stage-12-cross-cutting/wa-client-002-whatsapp-assistant/whatsapp-02-read-only-boundary-hand-off-to-ops.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/wa-client-002-whatsapp-assistant/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/wa-client-002-whatsapp-assistant/fixtures.json",
+      "states": [
+        "WhatsApp assistant · questions it answers",
+        "Read-only boundary · hand-off to ops"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "CM-11"
+      ],
+      "components": [
+        "Wordmark",
+        "Money display",
+        "Escrow trust line",
+        "Evidence card",
+        "WhatsApp message",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Assistant.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/wa-client-002-whatsapp-assistant/whatsapp.png"
+    },
+    {
+      "id": "WEB-CLIENT-023",
+      "title": "Client settings",
+      "stage": 12,
+      "surface": "web",
+      "role": "client",
+      "priority": "P1",
+      "fr": [
+        "FR-20",
+        "FR-01"
+      ],
+      "route": "/settings",
+      "suggested_target": "web/src/features/settings/ (new folder; not in the Spec)",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-12-cross-cutting/web-client-023-settings/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-client-023-settings/desktop.png",
+        "02-screens/stage-12-cross-cutting/web-client-023-settings/desktop-02-client-time-zone-and-currency.png",
+        "02-screens/stage-12-cross-cutting/web-client-023-settings/desktop-03-client-data-and-privacy.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-client-023-settings/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-client-023-settings/fixtures.json",
+      "states": [
+        "Client · notifications",
+        "Client · time zone and currency",
+        "Client · data and privacy"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01",
+        "MX-19"
+      ],
+      "inventory_refs": [
+        "NS-07",
+        "NS-09"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Text input and select",
+        "Toggle, checkbox and radio card",
+        "Status chip",
+        "Money display",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "X-Settings.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-client-023-settings/desktop.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-010",
+      "title": "Devices and revoke",
+      "stage": 12,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-07"
+      ],
+      "route": "/c/settings/devices",
+      "suggested_target": "web/src/features/settings/ (new folder)",
+      "api": [
+        "POST /devices/{id}/revoke"
+      ],
+      "html": "02-screens/stage-12-cross-cutting/web-contractor-010-devices/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-contractor-010-devices/desktop.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-contractor-010-devices/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-contractor-010-devices/fixtures.json",
+      "states": [
+        "Contractor · devices · revoke"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-12"
+      ],
+      "inventory_refs": [
+        "NS-08"
+      ],
+      "components": [
+        "Wordmark",
+        "Contractor top bar",
+        "Buttons",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "X-Settings.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-contractor-010-devices/desktop.png"
+    },
+    {
+      "id": "WEB-OPS-013",
+      "title": "Ops profile, alerts and security",
+      "stage": 12,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "/ops/settings",
+      "suggested_target": "web/src/features/ops-console/",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-12-cross-cutting/web-ops-013-settings/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-ops-013-settings/desktop.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-ops-013-settings/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-ops-013-settings/fixtures.json",
+      "states": [
+        "Ops · profile, alerts and security"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01"
+      ],
+      "inventory_refs": [
+        "NS-06",
+        "NS-07"
+      ],
+      "components": [
+        "Wordmark",
+        "Toggle, checkbox and radio card",
+        "Table",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "X-Settings.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-ops-013-settings/desktop.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-015",
+      "title": "Supervisor settings and revoke",
+      "stage": 12,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-07",
+        "FR-20"
+      ],
+      "route": "SettingsScreen",
+      "suggested_target": "mobile/lib/features/auth/ (settings)",
+      "api": [
+        "POST /devices/{id}/revoke"
+      ],
+      "html": "02-screens/stage-12-cross-cutting/and-supervisor-015-settings/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/and-supervisor-015-settings/android.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-015-settings/android-02-supervisor-app-revoke-old-phone.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/and-supervisor-015-settings/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/and-supervisor-015-settings/fixtures.json",
+      "states": [
+        "Supervisor app · settings",
+        "Supervisor app · revoke old phone"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01",
+        "MX-12"
+      ],
+      "inventory_refs": [
+        "NS-07",
+        "NS-08"
+      ],
+      "components": [
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Toggle, checkbox and radio card",
+        "Status chip",
+        "Dialog and alert dialog",
+        "Bottom sheet and side panel",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Settings.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/and-supervisor-015-settings/android.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-008",
+      "title": "Supplier notification settings",
+      "stage": 12,
+      "surface": "mobile-web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-20"
+      ],
+      "route": "/s/settings",
+      "suggested_target": "web/src/features/settings/ (new folder)",
+      "api": [
+        "GET /me"
+      ],
+      "html": "02-screens/stage-12-cross-cutting/web-supplier-008-settings/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-supplier-008-settings/mobile.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-supplier-008-settings/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-supplier-008-settings/fixtures.json",
+      "states": [
+        "Supplier · mobile web · notifications"
+      ],
+      "links_to": [],
+      "missing_endpoints": [
+        "MX-01"
+      ],
+      "inventory_refs": [
+        "NS-07"
+      ],
+      "components": [
+        "Buttons",
+        "Toggle, checkbox and radio card",
+        "Table",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Settings.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-supplier-008-settings/mobile.png"
+    },
+    {
+      "id": "WEB-CLIENT-024",
+      "title": "System states (web)",
+      "stage": 12,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-01"
+      ],
+      "route": "(shared states for every web portal)",
+      "suggested_target": "web/src/common/ (UI kit: error pages, toasts, dialogs, skeletons)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/web-client-024-system-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-02-500-server-error.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-03-permission-denied-403.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-04-409-conflict-already-done-elsewhere.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-05-form-validation.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-06-session-expired.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-07-offline.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-08-loading-skeleton.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-09-success-toasts.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-10-confirmation-dialog.png",
+        "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop-11-destructive-dialog.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-client-024-system-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-client-024-system-states/fixtures.json",
+      "states": [
+        "404 · page not found",
+        "500 · server error",
+        "Permission denied · 403",
+        "409 · conflict, already done elsewhere",
+        "Form validation",
+        "Session expired",
+        "Offline",
+        "Loading skeleton",
+        "Success toasts",
+        "Confirmation dialog",
+        "Destructive dialog"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Client top bar",
+        "Buttons",
+        "Text input and select",
+        "Status chip",
+        "Alert and banner",
+        "Toast and snackbar",
+        "Skeleton loader",
+        "Error page",
+        "Dialog and alert dialog",
+        "Money display",
+        "Escrow trust line",
+        "Ledger row and receipt",
+        "Card",
+        "Avatar (initials)"
+      ],
+      "source_boards": [
+        "X-StatesWeb.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-client-024-system-states/desktop.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-016",
+      "title": "System states (Android)",
+      "stage": 12,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-01",
+        "FR-06"
+      ],
+      "route": "(shared app states)",
+      "suggested_target": "mobile/lib/core/ (UI kit)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-02-location-permission-denied.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-03-camera-permission-denied.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-04-not-allowed-rotated-off.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-05-form-validation.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-06-loading-skeleton.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-07-snackbars.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-08-confirmation-dialog.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android-09-destructive-dialog.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/fixtures.json",
+      "states": [
+        "Server error",
+        "Location permission denied",
+        "Camera permission denied",
+        "Not allowed · rotated off",
+        "Form validation",
+        "Loading skeleton",
+        "Snackbars",
+        "Confirmation dialog",
+        "Destructive dialog"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Wordmark",
+        "Android app bar and bottom nav",
+        "Buttons",
+        "Text input and select",
+        "Alert and banner",
+        "Toast and snackbar",
+        "Skeleton loader",
+        "Error page",
+        "Dialog and alert dialog",
+        "Bottom sheet and side panel",
+        "Evidence card",
+        "Card"
+      ],
+      "source_boards": [
+        "X-StatesAndroid.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/and-supervisor-016-system-states/android.png"
+    },
+    {
+      "id": "WEB-CLIENT-025",
+      "title": "Empty states (client)",
+      "stage": 12,
+      "surface": "web",
+      "role": "client",
+      "priority": "P0",
+      "fr": [
+        "FR-15"
+      ],
+      "route": "(projects, evidence, reports, ledger, orders, notifications)",
+      "suggested_target": "web/src/common/ (empty state component)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/web-client-025-empty-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile.png",
+        "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile-02-client-evidence.png",
+        "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile-03-client-reports.png",
+        "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile-04-client-ledger.png",
+        "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile-05-client-orders.png",
+        "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile-06-client-notifications.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-client-025-empty-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-client-025-empty-states/fixtures.json",
+      "states": [
+        "Client · Projects",
+        "Client · Evidence",
+        "Client · Reports",
+        "Client · Ledger",
+        "Client · Orders",
+        "Client · Notifications"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Empty state",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Empty.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-client-025-empty-states/tile.png"
+    },
+    {
+      "id": "WEB-CONTRACTOR-011",
+      "title": "Empty states (contractor)",
+      "stage": 12,
+      "surface": "web",
+      "role": "contractor",
+      "priority": "P0",
+      "fr": [
+        "FR-12"
+      ],
+      "route": "(projects, payouts, orders)",
+      "suggested_target": "web/src/common/ (empty state component)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/tile.png",
+        "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/tile-02-contractor-payouts.png",
+        "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/tile-03-contractor-orders.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/fixtures.json",
+      "states": [
+        "Contractor · Projects",
+        "Contractor · Payouts",
+        "Contractor · Orders"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Empty state",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Empty.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-contractor-011-empty-states/tile.png"
+    },
+    {
+      "id": "AND-SUPERVISOR-017",
+      "title": "Empty states (supervisor)",
+      "stage": 12,
+      "surface": "android",
+      "role": "supervisor",
+      "priority": "P0",
+      "fr": [
+        "FR-09"
+      ],
+      "route": "(projects, sync, spot checks)",
+      "suggested_target": "mobile/lib/core/ (empty state widget)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/tile.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/tile-02-supervisor-sync.png",
+        "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/tile-03-supervisor-spot-checks.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/fixtures.json",
+      "states": [
+        "Supervisor · Projects",
+        "Supervisor · Sync",
+        "Supervisor · Spot checks"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Status chip",
+        "Empty state",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Empty.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/and-supervisor-017-empty-states/tile.png"
+    },
+    {
+      "id": "WEB-SUPPLIER-009",
+      "title": "Empty states (supplier)",
+      "stage": 12,
+      "surface": "web",
+      "role": "supplier",
+      "priority": "P1",
+      "fr": [
+        "FR-16"
+      ],
+      "route": "(orders, payouts)",
+      "suggested_target": "web/src/common/ (empty state component)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/web-supplier-009-empty-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-supplier-009-empty-states/tile.png",
+        "02-screens/stage-12-cross-cutting/web-supplier-009-empty-states/tile-02-supplier-payouts.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-supplier-009-empty-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-supplier-009-empty-states/fixtures.json",
+      "states": [
+        "Supplier · Orders",
+        "Supplier · Payouts"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Empty state",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Empty.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-supplier-009-empty-states/tile.png"
+    },
+    {
+      "id": "WEB-OPS-014",
+      "title": "Empty states (ops)",
+      "stage": 12,
+      "surface": "web",
+      "role": "ops",
+      "priority": "P0",
+      "fr": [
+        "FR-19"
+      ],
+      "route": "(vetting, disputes)",
+      "suggested_target": "web/src/common/ (empty state component)",
+      "api": [],
+      "html": "02-screens/stage-12-cross-cutting/web-ops-014-empty-states/screen.html",
+      "screenshots": [
+        "02-screens/stage-12-cross-cutting/web-ops-014-empty-states/tile.png",
+        "02-screens/stage-12-cross-cutting/web-ops-014-empty-states/tile-02-ops-disputes.png"
+      ],
+      "spec": "02-screens/stage-12-cross-cutting/web-ops-014-empty-states/spec.md",
+      "fixtures": "02-screens/stage-12-cross-cutting/web-ops-014-empty-states/fixtures.json",
+      "states": [
+        "Ops · Vetting",
+        "Ops · Disputes"
+      ],
+      "links_to": [],
+      "missing_endpoints": [],
+      "inventory_refs": [
+        "NS-10"
+      ],
+      "components": [
+        "Buttons",
+        "Status chip",
+        "Empty state",
+        "Card"
+      ],
+      "source_boards": [
+        "X-Empty.dc.html"
+      ],
+      "primary_screenshot": "02-screens/stage-12-cross-cutting/web-ops-014-empty-states/tile.png"
+    }
+  ]
+}

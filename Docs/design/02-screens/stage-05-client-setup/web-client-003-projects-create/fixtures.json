@@ -1,0 +1,171 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CLIENT-003",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /projects": {
+      "items": [
+        {
+          "id": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "title": "Chioma's bungalow",
+          "address": "14 Chime Avenue, Independence Layout, Enugu",
+          "status": "active",
+          "currency": "GBP",
+          "budget_minor": 2500000,
+          "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+          "contractor": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+          "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+          "created_at": "2026-10-20T09:00:00Z",
+          "updated_at": "2026-12-10T14:20:00Z"
+        },
+        {
+          "id": "e0b03437-d806-5d9d-b2c4-08261d6c6836",
+          "title": "Mum's house",
+          "address": "Trans-Ekulu, Enugu",
+          "status": "draft",
+          "currency": "GBP",
+          "budget_minor": 1800000,
+          "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+          "contractor": null,
+          "supervisor": null,
+          "created_at": "2026-12-01T10:00:00Z",
+          "updated_at": "2026-12-08T08:00:00Z"
+        }
+      ],
+      "next_cursor": null
+    },
+    "POST /projects": {
+      "request": {
+        "title": "Mum's house",
+        "address": "Trans-Ekulu, Enugu",
+        "currency": "GBP",
+        "budget_minor": 1800000,
+        "contractor_phone": "+2348000000101"
+      },
+      "response": {
+        "id": "e0b03437-d806-5d9d-b2c4-08261d6c6836",
+        "title": "Mum's house",
+        "address": "Trans-Ekulu, Enugu",
+        "status": "draft",
+        "currency": "GBP",
+        "budget_minor": 1800000,
+        "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+        "contractor": null,
+        "supervisor": null,
+        "created_at": "2026-12-01T10:00:00Z",
+        "updated_at": "2026-12-08T08:00:00Z"
+      }
+    },
+    "GET /projects/{id}": {
+      "id": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+      "title": "Chioma's bungalow",
+      "address": "14 Chime Avenue, Independence Layout, Enugu",
+      "status": "active",
+      "currency": "GBP",
+      "budget_minor": 2500000,
+      "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+      "contractor": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+      "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+      "created_at": "2026-10-20T09:00:00Z",
+      "updated_at": "2026-12-10T14:20:00Z",
+      "site": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "location": {
+          "type": "Point",
+          "coordinates": [
+            7.4931,
+            6.4562
+          ]
+        },
+        "geofence": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                7.4929,
+                6.4564
+              ],
+              [
+                7.49335,
+                6.45637
+              ],
+              [
+                7.49338,
+                6.45598
+              ],
+              [
+                7.49292,
+                6.45601
+              ],
+              [
+                7.4929,
+                6.4564
+              ]
+            ]
+          ]
+        }
+      }
+    },
+    "GET /projects/{id}/boq": {
+      "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+      "currency": "NGN",
+      "budget_minor": 2500000,
+      "budget_currency": "GBP",
+      "total_minor": 5440500000,
+      "milestones": [
+        {
+          "milestone_sequence": 3,
+          "milestone_name": "Roofing",
+          "total_minor": 1326000000,
+          "lines": [
+            {
+              "line_no": 1,
+              "description": "Long-span aluminium roofing sheet, 0.55 mm",
+              "unit": "m2",
+              "quantity": "210.000",
+              "unit_price_minor": 2600000,
+              "total_minor": 546000000
+            },
+            {
+              "line_no": 2,
+              "description": "Roof trusses, treated hardwood",
+              "unit": "item",
+              "quantity": "1.000",
+              "unit_price_minor": 780000000,
+              "total_minor": 780000000
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "role": "contractor",
+          "user": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+          "approved_at": "2026-10-27T09:00:00Z"
+        },
+        {
+          "role": "ops",
+          "user": "8f897360-7095-58ad-9883-7a8e42e0a564",
+          "approved_at": "2026-10-27T15:00:00Z"
+        }
+      ],
+      "_note": "Only one milestone group is shown; the full BoQ has 5 groups and totals NGN 54,405,000."
+    }
+  },
+  "mock_adapters": {
+    "MX-02": {
+      "invitation": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "role": "contractor",
+        "phone": "+2348000000101",
+        "status": "pending",
+        "expires_at": "2026-10-27T09:00:00Z"
+      }
+    }
+  }
+}

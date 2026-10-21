@@ -1,0 +1,218 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CLIENT-008",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /projects": {
+      "items": [
+        {
+          "id": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "title": "Chioma's bungalow",
+          "address": "14 Chime Avenue, Independence Layout, Enugu",
+          "status": "active",
+          "currency": "GBP",
+          "budget_minor": 2500000,
+          "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+          "contractor": "0b5a1881-0563-5413-8b86-7d23cead99b2",
+          "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+          "created_at": "2026-10-20T09:00:00Z",
+          "updated_at": "2026-12-10T14:20:00Z"
+        },
+        {
+          "id": "e0b03437-d806-5d9d-b2c4-08261d6c6836",
+          "title": "Mum's house",
+          "address": "Trans-Ekulu, Enugu",
+          "status": "draft",
+          "currency": "GBP",
+          "budget_minor": 1800000,
+          "client": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+          "contractor": null,
+          "supervisor": null,
+          "created_at": "2026-12-01T10:00:00Z",
+          "updated_at": "2026-12-08T08:00:00Z"
+        }
+      ],
+      "next_cursor": null
+    },
+    "GET /projects/{id}/milestones": {
+      "items": [
+        {
+          "id": "21db5638-927e-57d6-8a2f-9f59a3bf2815",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 1,
+          "name": "Foundation",
+          "amount_minor": 1053000000,
+          "currency": "NGN",
+          "status": "released",
+          "funded_at": "2026-10-21T09:12:00Z",
+          "claimed_at": "2026-11-02T10:00:00Z",
+          "verified_at": "2026-11-04T14:00:00Z",
+          "approved_at": "2026-11-06T11:50:00Z",
+          "released_at": "2026-11-06T12:20:00Z",
+          "_derived_client_amount": {
+            "amount_minor": 540000,
+            "currency": "GBP"
+          }
+        },
+        {
+          "id": "94406ee7-342d-59c9-bc6d-1688a15f2270",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 2,
+          "name": "Blockwork to Lintel",
+          "amount_minor": 819000000,
+          "currency": "NGN",
+          "status": "released",
+          "funded_at": "2026-11-09T10:00:00Z",
+          "claimed_at": "2026-11-24T09:00:00Z",
+          "verified_at": "2026-11-25T14:48:00Z",
+          "approved_at": "2026-11-27T08:52:00Z",
+          "released_at": "2026-11-27T09:07:00Z",
+          "_derived_client_amount": {
+            "amount_minor": 420000,
+            "currency": "GBP"
+          }
+        },
+        {
+          "id": "a3955a90-c8d3-5ea6-9108-4b3e95917ee3",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 3,
+          "name": "Roofing",
+          "amount_minor": 1326000000,
+          "currency": "NGN",
+          "status": "verified",
+          "funded_at": "2026-11-30T10:20:00Z",
+          "claimed_at": "2026-12-09T11:40:00Z",
+          "verified_at": "2026-12-10T15:20:00Z",
+          "approved_at": null,
+          "released_at": null,
+          "_derived_client_amount": {
+            "amount_minor": 680000,
+            "currency": "GBP"
+          },
+          "latest_verification": {
+            "id": "831ec260-53c6-5a6d-a221-6928bc2e17f7",
+            "supervisor": "49049b09-6203-5142-be1c-7b454d53b1c5",
+            "decision": "verified",
+            "checklist": [
+              {
+                "item": "Trusses fixed and braced",
+                "evidence": [
+                  "EV-2109",
+                  "EV-2110"
+                ]
+              },
+              {
+                "item": "Roof covering complete, all slopes",
+                "evidence": [
+                  "EV-2115",
+                  "EV-2116"
+                ]
+              },
+              {
+                "item": "Ridge, fascia and flashing",
+                "evidence": [
+                  "EV-2118"
+                ]
+              },
+              {
+                "item": "Walkthrough of the roof space",
+                "evidence": [
+                  "EV-2119"
+                ]
+              }
+            ],
+            "notes": "Long-span aluminium 0.55 mm, as in the BoQ. Ridge caps sealed and fascia straight."
+          }
+        },
+        {
+          "id": "abfddc0c-6e2c-54df-ad39-4cd47ec67998",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 4,
+          "name": "Plastering",
+          "amount_minor": 760500000,
+          "currency": "NGN",
+          "status": "pending",
+          "funded_at": null,
+          "claimed_at": null,
+          "verified_at": null,
+          "approved_at": null,
+          "released_at": null,
+          "_derived_client_amount": {
+            "amount_minor": 390000,
+            "currency": "GBP"
+          }
+        },
+        {
+          "id": "ef8dc75f-d9d9-54d5-afcf-964b6d870749",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "sequence": 5,
+          "name": "Finishing",
+          "amount_minor": 1482000000,
+          "currency": "NGN",
+          "status": "pending",
+          "funded_at": null,
+          "claimed_at": null,
+          "verified_at": null,
+          "approved_at": null,
+          "released_at": null,
+          "_derived_client_amount": {
+            "amount_minor": 760000,
+            "currency": "GBP"
+          }
+        }
+      ],
+      "next_cursor": null
+    },
+    "GET /projects/{id}/reports": {
+      "items": [
+        {
+          "id": "44606e00-453c-5a99-8114-6afce8f80f90",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "week_start": "2026-12-07",
+          "status": "sent",
+          "sent_at": "2026-12-11T17:20:00Z",
+          "body_md": "AI-generated. Roof trusses are up and covered on all sections; fascia boards are fixed (EV-2114). The supervisor verified Roofing on Thursday (EV-2118). One photo is under review by iBackHome.",
+          "evidence_ids": [
+            "05e03855-2bde-5b15-87ea-22d6a7fd719b",
+            "90114654-5167-5843-9430-3a1f625f9b6e"
+          ],
+          "pdf_key": "reports/1ea40965-81fa-5d97-ab91-e14b230415b0/2026-12-07.pdf"
+        }
+      ],
+      "next_cursor": null
+    }
+  },
+  "mock_adapters": {
+    "MX-02": {
+      "invitation": {
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "role": "contractor",
+        "phone": "+2348000000101",
+        "status": "pending",
+        "expires_at": "2026-10-27T09:00:00Z"
+      }
+    },
+    "MX-11": {
+      "_mock": "MX-11",
+      "items": [
+        {
+          "template": "milestone_verified",
+          "channel": "whatsapp",
+          "payload": {
+            "milestone": "Roofing",
+            "amount_minor": 680000,
+            "currency": "GBP"
+          },
+          "status": "sent",
+          "sent_at": "2026-12-10T15:21:00Z"
+        }
+      ],
+      "next_cursor": null
+    }
+  }
+}

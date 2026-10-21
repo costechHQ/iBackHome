@@ -1,0 +1,64 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-OPS-010",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /projects/{id}/reports": {
+      "items": [
+        {
+          "id": "44606e00-453c-5a99-8114-6afce8f80f90",
+          "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+          "week_start": "2026-12-07",
+          "status": "sent",
+          "sent_at": "2026-12-11T17:20:00Z",
+          "body_md": "AI-generated. Roof trusses are up and covered on all sections; fascia boards are fixed (EV-2114). The supervisor verified Roofing on Thursday (EV-2118). One photo is under review by iBackHome.",
+          "evidence_ids": [
+            "05e03855-2bde-5b15-87ea-22d6a7fd719b",
+            "90114654-5167-5843-9430-3a1f625f9b6e"
+          ],
+          "pdf_key": "reports/1ea40965-81fa-5d97-ab91-e14b230415b0/2026-12-07.pdf"
+        }
+      ],
+      "next_cursor": null
+    },
+    "POST /reports/{id}/review": {
+      "request": {},
+      "response": {
+        "id": "44606e00-453c-5a99-8114-6afce8f80f90",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "week_start": "2026-12-07",
+        "status": "reviewed",
+        "sent_at": null,
+        "body_md": "AI-generated. Roof trusses are up and covered on all sections; fascia boards are fixed (EV-2114). The supervisor verified Roofing on Thursday (EV-2118). One photo is under review by iBackHome.",
+        "evidence_ids": [
+          "05e03855-2bde-5b15-87ea-22d6a7fd719b",
+          "90114654-5167-5843-9430-3a1f625f9b6e"
+        ],
+        "pdf_key": "reports/1ea40965-81fa-5d97-ab91-e14b230415b0/2026-12-07.pdf"
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-13": {
+      "report": {
+        "id": "44606e00-453c-5a99-8114-6afce8f80f90",
+        "project": "1ea40965-81fa-5d97-ab91-e14b230415b0",
+        "week_start": "2026-12-07",
+        "status": "sent",
+        "sent_at": "2026-12-11T17:20:00Z",
+        "body_md": "AI-generated. Roof trusses are up and covered on all sections; fascia boards are fixed (EV-2114). The supervisor verified Roofing on Thursday (EV-2118). One photo is under review by iBackHome.",
+        "evidence_ids": [
+          "05e03855-2bde-5b15-87ea-22d6a7fd719b",
+          "90114654-5167-5843-9430-3a1f625f9b6e"
+        ],
+        "pdf_key": "reports/1ea40965-81fa-5d97-ab91-e14b230415b0/2026-12-07.pdf"
+      },
+      "pdf_url": "https://storage.example.com/signed/report.pdf?expires=900"
+    }
+  }
+}

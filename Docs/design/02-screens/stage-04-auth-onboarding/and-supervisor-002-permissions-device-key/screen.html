@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AND-SUPERVISOR-002 · Permissions and capture key</title>
+<link rel="stylesheet" href="../../../01-design-system/tokens.css">
+<style>
+/* styles from approved board Onboard-Supervisor.dc.html */
+
+</style>
+<style>
+body.ibh-pkg{margin:0;background:var(--ibh-canvas);font-family:var(--ibh-font-sans);color:var(--ibh-slate)}
+.ibh-pkg-head{background:var(--ibh-white);border-bottom:1px solid var(--ibh-line);padding:12px 24px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.ibh-pkg-head b{color:var(--ibh-ink);font-size:16px}.ibh-pkg-head code{font:500 13px/20px var(--ibh-font-mono);color:var(--ibh-ink)}
+.ibh-pkg-head a{color:var(--ibh-accent);font-size:14px;font-weight:600}.ibh-pkg-head span{font-size:13px;color:var(--ibh-muted)}
+.ibh-pkg-note{margin:16px 24px 0;font-size:13px;line-height:19px;color:var(--ibh-muted);max-width:980px}
+.ibh-pkg-frame{margin:24px;display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.ibh-pkg-frame>h2{margin:0;font:600 14px/20px var(--ibh-font-sans);color:var(--ibh-ink)}
+.ibh-pkg-frame>h2 small{font-weight:400;color:var(--ibh-muted);margin-left:8px}
+.ibh-pkg-scroll{max-width:100%;overflow-x:auto}
+</style>
+</head>
+<body class="ibh-pkg">
+<header class="ibh-pkg-head"><code>AND-SUPERVISOR-002</code><b>Permissions and capture key</b><span>Stage 4 · android · supervisor · P0</span><a href="spec.md">spec.md</a><a href="fixtures.json">fixtures.json</a><a href="../../../index.html">All screens</a></header>
+<p class="ibh-pkg-note">Static export of the approved design. Every frame below is one designed state. Colours use the tokens in 01-design-system/tokens.css; buttons and links do nothing except navigate to other exported screens. Sample names and figures are PLACEHOLDER data.</p>
+<section class="ibh-pkg-frame" id="android"><h2>10 · Permissions<small>android · 360×800 · android.png</small></h2><div class="ibh-pkg-scroll"><div style="width:360px;font-family:Inter, Roboto, 'Segoe UI', Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 360px; height: 800px; border-radius: 24px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-white); display: flex; flex-direction: column" data-ibh-frame="android">
+          <div style="height: 56px; flex: none; padding: 0 4px 0 4px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--ibh-line)">
+            <button type="button" aria-label="Back" style="width: 48px; height: 48px; border: 0; background: transparent; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+            <span style="flex: 1; padding-left: 0; font-size: 17px; font-weight: 600; color: var(--ibh-ink)">Set up this phone</span>
+            <span style="padding-right: 14px; font-size: 13px; font-weight: 600; color: var(--ibh-muted)">1 of 2</span>
+          </div>
+          <div style="height: 4px; background: var(--ibh-line)"><div style="height: 100%; width: 50%; background: var(--ibh-navy-900)"></div></div>
+          <div style="flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+            
+            
+            <h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; color: var(--ibh-ink)">Allow what the camera needs</h2>
+            <p style="margin: 0; font-size: 15px; line-height: 23px">Android will ask you next.</p>
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+              
+                <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ibh-line)"><span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z M15 13a3 3 0 1 1-6 0a3 3 0 1 1 6 0"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; color: var(--ibh-ink)">Camera</b><span style="font-size: 13px; line-height: 19px">Photos and video are taken only inside the app.</span></span></div>
+              
+                <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ibh-line)"><span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0 M15 10a3 3 0 1 1-6 0a3 3 0 1 1 6 0"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; color: var(--ibh-ink)">Precise location</b><span style="font-size: 13px; line-height: 19px">Proves each capture is inside the site. Mock or fake locations are blocked.</span></span></div>
+              
+                <div style="display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--ibh-line)"><span style="width: 40px; height: 40px; border-radius: 10px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.268 21a2 2 0 0 0 3.464 0 M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg></span><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; color: var(--ibh-ink)">Notifications</b><span style="font-size: 13px; line-height: 19px">New sites, spot checks and claims to verify.</span></span></div>
+              
+            
+
+            
+
+            
+          </div>
+          <div style="padding: 12px 16px 16px; border-top: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 8px">
+            <button type="button" style="height: 52px; border-radius: 8px; border: 0; background: var(--ibh-navy-900); color: var(--ibh-white); font: 600 16px/1 Inter, sans-serif">Allow</button>
+            
+          </div>
+        </div></div></div></section>
+<section class="ibh-pkg-frame" id="android-02-11-secure-capture-key"><h2>11 · Secure capture key<small>android · 360×800 · android-02-11-secure-capture-key.png</small></h2><div class="ibh-pkg-scroll"><div style="width:360px;font-family:Inter, Roboto, 'Segoe UI', Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 360px; height: 800px; border-radius: 24px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-white); display: flex; flex-direction: column" data-ibh-frame="android-02-11-secure-capture-key">
+          <div style="height: 56px; flex: none; padding: 0 4px 0 4px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--ibh-line)">
+            <button type="button" aria-label="Back" style="width: 48px; height: 48px; border: 0; background: transparent; color: var(--ibh-ink); display: inline-flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+            <span style="flex: 1; padding-left: 0; font-size: 17px; font-weight: 600; color: var(--ibh-ink)">Set up this phone</span>
+            <span style="padding-right: 14px; font-size: 13px; font-weight: 600; color: var(--ibh-muted)">2 of 2</span>
+          </div>
+          <div style="height: 4px; background: var(--ibh-line)"><div style="height: 100%; width: 100%; background: var(--ibh-navy-900)"></div></div>
+          <div style="flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+            <span style="width: 56px; height: 56px; border-radius: 999px; background: var(--ibh-mist); color: var(--ibh-navy-900); display: inline-flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 15.5a5.5 5.5 0 1 1-11 0a5.5 5.5 0 1 1 11 0 M21 2l-9.6 9.6 M15.5 7.5l3 3L22 7l-3-3"></path></svg></span>
+            
+            <h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; color: var(--ibh-ink)">Your secure capture key</h2>
+            <p style="margin: 0; font-size: 15px; line-height: 23px">This phone gets its own key. It signs every photo and video you take, so nobody can fake or change them.</p>
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+              <div style="background: var(--ibh-mist); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+                <span style="display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 21px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131F39" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 2px"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z M12 18h.01"></path></svg>Created on this phone. The private part never leaves it.</span><span style="display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 21px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131F39" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 2px"><path d="M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2z M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Signs each capture with the time and place it was taken.</span><span style="display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 21px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131F39" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 2px"><path d="M22 12a10 10 0 1 1-20 0a10 10 0 1 1 20 0 M15 9l-6 6 M9 9l6 6"></path></svg>Captures signed by an unknown or revoked key are rejected.</span><span style="display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 21px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#131F39" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-top: 2px"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8 M21 3v5h-5 M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16 M8 16H3v5"></path></svg>New phone? Sign in there and create a new key; revoke the old one in Settings.</span>
+              </div>
+            
+
+            
+          </div>
+          <div style="padding: 12px 16px 16px; border-top: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 8px">
+            <button type="button" style="height: 52px; border-radius: 8px; border: 0; background: var(--ibh-navy-900); color: var(--ibh-white); font: 600 16px/1 Inter, sans-serif">Create my capture key</button>
+            
+          </div>
+        </div></div></div></section>
+<section class="ibh-pkg-frame" id="android-03-12-key-ready"><h2>12 · Key ready<small>android · 360×800 · android-03-12-key-ready.png</small></h2><div class="ibh-pkg-scroll"><div style="width:360px;font-family:Inter, Roboto, 'Segoe UI', Arial, sans-serif;font-size:16px;line-height:normal;color:var(--ibh-slate);letter-spacing:normal;font-weight:400;text-align:start;-webkit-font-smoothing:auto"><div style="width: 360px; height: 800px; border-radius: 24px; overflow: hidden; outline: 1px solid var(--ibh-frame); background: var(--ibh-white); display: flex; flex-direction: column" data-ibh-frame="android-03-12-key-ready">
+          <div style="height: 56px; flex: none; padding: 0 4px 0 4px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--ibh-line)">
+            
+            <span style="flex: 1; padding-left: 12px; font-size: 17px; font-weight: 600; color: var(--ibh-ink)">All set</span>
+            <span style="padding-right: 14px; font-size: 13px; font-weight: 600; color: var(--ibh-muted)"></span>
+          </div>
+          
+          <div style="flex: 1; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+            <span style="width: 56px; height: 56px; border-radius: 999px; background: var(--ibh-ok-bg); color: var(--ibh-ok-fg); display: inline-flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12a10 10 0 1 1-20 0a10 10 0 1 1 20 0 M9 12l2 2 4-4"></path></svg></span>
+            
+            <h2 style="margin: 0; font-size: 22px; line-height: 28px; font-weight: 700; color: var(--ibh-ink)">Capture key ready</h2>
+            <p style="margin: 0; font-size: 15px; line-height: 23px">This phone can now take evidence for iBackHome.</p>
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+              <div style="border: 1px solid var(--ibh-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+                <span style="display: flex; justify-content: space-between"><span style="color: var(--ibh-muted)">Phone</span><b style="color: var(--ibh-ink)">Tecno Spark 10</b></span>
+                <span style="display: flex; justify-content: space-between"><span style="color: var(--ibh-muted)">Key</span><b style="color: var(--ibh-ink); font-family: 'JetBrains Mono', monospace; font-size: 13px">ending 4F2A</b></span>
+                <span style="display: flex; justify-content: space-between"><span style="color: var(--ibh-muted)">Created</span><b style="color: var(--ibh-ink)">Fri 16 Oct, 08:12</b></span>
+              </div>
+              <div style="border: 1.5px dashed var(--ibh-line-strong); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; text-align: center"><b style="font-size: 15px; color: var(--ibh-ink)">No sites yet</b><span style="font-size: 13px; line-height: 19px">Ops will assign you a site near you. We'll send a push and SMS when they do.</span></div>
+            
+          </div>
+          <div style="padding: 12px 16px 16px; border-top: 1px solid var(--ibh-line); display: flex; flex-direction: column; gap: 8px">
+            <button type="button" style="height: 52px; border-radius: 8px; border: 0; background: var(--ibh-navy-900); color: var(--ibh-white); font: 600 16px/1 Inter, sans-serif">Go to my sites</button>
+            
+          </div>
+        </div></div></div></section>
+</body>
+</html>

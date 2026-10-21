@@ -1,0 +1,69 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-OPS-005",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /ops/queue": {
+      "vetting": [
+        {
+          "supervisor_profile": "5496a078-2a00-583d-aa21-032dd09fc83b",
+          "applied_at": "2027-01-09T13:20:00Z"
+        }
+      ],
+      "flagged_evidence": [
+        {
+          "evidence": "e3a0bfdd-3820-5f1e-8c99-6c758d3c9a8e",
+          "display_ref": "EV-2243",
+          "match": "EV-2241",
+          "distance": 6
+        }
+      ],
+      "disputes": [
+        {
+          "dispute": "be06d2b5-1b4f-5438-b66e-2475a6fad0b0",
+          "display_ref": "D-0064",
+          "status": "open"
+        }
+      ]
+    },
+    "POST /evidence/{id}/decision": {
+      "request": {
+        "decision": "accepted",
+        "notes": "Different wall; similar finish only."
+      },
+      "response": {
+        "id": "e3a0bfdd-3820-5f1e-8c99-6c758d3c9a8e",
+        "display_ref": "EV-2243",
+        "status": "accepted"
+      }
+    }
+  },
+  "mock_adapters": {
+    "MX-07": {
+      "_mock": "MX-07: per-check results are not returned by any Spec endpoint",
+      "evidence": "EV-2118",
+      "checks": [
+        {
+          "check": "inside_geofence",
+          "result": "pass",
+          "detail": "inside the site boundary, accuracy 6 m"
+        },
+        {
+          "check": "device_signature",
+          "result": "pass",
+          "detail": "signed by the registered Tecno Spark 10 key"
+        },
+        {
+          "check": "not_reused",
+          "result": "pass",
+          "detail": "no near-duplicate across all projects"
+        }
+      ]
+    }
+  }
+}

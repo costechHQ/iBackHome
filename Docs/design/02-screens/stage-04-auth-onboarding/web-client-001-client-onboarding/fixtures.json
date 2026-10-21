@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "placeholder": "PLACEHOLDER: every name, phone number, amount, rate, date and ID in this file is fictional sample data copied from the approved designs. Never copy it into production code or seed data for production.",
+    "units": "Money is integer minor units (kobo for NGN, pence for GBP) plus an ISO 4217 currency. Times are UTC (ISO 8601). Show them in the viewer's time zone.",
+    "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
+    "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
+    "screen": "WEB-CLIENT-001",
+    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+  },
+  "endpoints": {
+    "GET /me": {
+      "id": "55ac2f24-7f75-5ce2-ab31-7c00cdda5776",
+      "full_name": "Chioma Nwosu",
+      "role": "client",
+      "status": "active",
+      "phone": "+447700900321",
+      "email": "chioma.nwosu@example.com",
+      "timezone": "Europe/London",
+      "country": "GB"
+    }
+  },
+  "mock_adapters": {
+    "MX-01": {
+      "request": {
+        "full_name": "Chioma Nwosu",
+        "country": "GB",
+        "timezone": "Europe/London",
+        "channel_order": [
+          "whatsapp",
+          "email",
+          "sms"
+        ],
+        "quiet_hours": "22:00-07:00",
+        "consent_at": "2026-10-20T08:55:00Z"
+      }
+    }
+  }
+}
