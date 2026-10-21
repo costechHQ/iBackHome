@@ -1,5 +1,5 @@
 # web/
 
-The React web app. Built in the web phase (programme days 9–11), after the backend gate passes.
+The web app: client dashboard, contractor and supplier portals, ops console. Owner: Gabriel.
 
-Lilian creates the app shell on web day 1 (Vite + React + TypeScript). See the **Web Frontend Tasks** doc for who owns which folder.
+Next.js (App Router) + TypeScript + Tailwind CSS (ADR 0003). The designs are in `Docs/design/` (screens `WEB-*`).
