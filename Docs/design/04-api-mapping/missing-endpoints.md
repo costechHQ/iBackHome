@@ -28,6 +28,7 @@ Things approved screens need that the Spec's API list does not provide. **Do not
 | MX-22 | Receipts and exports | Release receipt PDF, ledger CSV export and audit log export. No endpoints in the Spec. | WEB-CLIENT-014, WEB-CLIENT-017, WEB-SUPPLIER-005, WEB-OPS-011 |
 | MX-23 | Contractor public profile and track record | Contractor "About" text and computed track record. No endpoint in the Spec. | WEB-CONTRACTOR-009 |
 | MX-24 | Supervisor visits for the client | Scheduled visits and the supervisor card (name, body, last visit) on the client dashboard. Partly in GET /projects/{id}; visit history has no endpoint. | WEB-CLIENT-009 |
+| MX-25 | Contractor disputes a supervisor rejection | Conflict C-11: the designs let a contractor dispute a rejection (claimed → funded), but the Spec state machine only has verified → disputed, and the code lets only the client raise a dispute. **Decided 2026-10-21: not built**; no mock. Needs a backend rule (a dispute without a milestone state change) before any UI. | WEB-CONTRACTOR-006 |
 
 ## Missing fields on existing data
 

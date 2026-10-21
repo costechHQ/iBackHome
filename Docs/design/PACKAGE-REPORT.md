@@ -99,7 +99,7 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 
 **Evidence and supervision**
 
-- Captures must upload within [48 hours] of being taken, or they're rejected.
+- Captures must upload within 72 hours of being taken, or they're rejected; the app warns at 48 hours (C-1, decided 2026-10-21).
 - The camera stops below 100 MB of free storage. Unsent evidence is never deleted automatically.
 - Contractor photos are location-stamped but never count toward verification.
 - Near-duplicate flag at a distance of 10 or less out of 64.
@@ -162,7 +162,7 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 
 | # | Where | Design says | Spec / earlier decision says | Recommendation |
 |---|---|---|---|---|
-| C-1 | AND-SUPERVISOR-007 (offline frame), AND-SUPERVISOR-014 (push), Stage 13 assumption list | Captures not uploaded within [48 hours] are rejected | Spec: 72 h upload window, app warns at 48 h | Decide. Until then make it a server config value defaulting to 72 h and fill the copy from config. |
+| C-1 | AND-SUPERVISOR-007 (offline frame), AND-SUPERVISOR-014 (push), Stage 13 assumption list | Captures not uploaded within [48 hours] are rejected | Spec: 72 h upload window, app warns at 48 h | Decided 2026-10-21 (Gabriel): the Spec and backend win. 72 h is the hard limit, 48 h the warning. The copy in AND-SUPERVISOR-007 and AND-SUPERVISOR-014 `screen.html` now says 72 h; their PNGs still show the old 48 h text. |
 | C-2 | WEB-OPS-005, Stage 13 assumption list | Near-duplicate flagged at distance 10 or less of 64 | Spec: Hamming distance ≤ 8 | Decide. Config value defaulting to 8; show the configured value. |
 | C-3 | AND-SUPERVISOR-011 | Supervisor can "Edit the draft" before marking reviewed | Stage 1 G-17: no free-text editing of AI output; Spec has review only | Decide. If kept, needs MX-13 and the edit must keep the AI label and citations. |
 | C-4 | WEB-CLIENT-020 | In-app notifications screen | Stage 1 G-25: no in-app inbox; Spec has no feed endpoint | Approved in Stage 7; needs MX-11. |
@@ -172,7 +172,7 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 | C-8 | X-Empty board (WEB-CLIENT-025, WEB-CONTRACTOR-011, WEB-SUPPLIER-009, WEB-OPS-014) | 6 empty-state buttons render with browser-default styling because their style rule is scoped to another board class | Design system: secondary button | Build them as secondary buttons. The screenshots show the board exactly as approved. |
 | C-9 | Stage 5 funding success frame | "Funded" chip in info tone | Every other board: neutral | Use neutral (state-to-ui.md). |
 | C-10 | WEB-CONTRACTOR-006 | Dispute "Under review" chip in bad tone | Evidence "Under review" is warn | Keep Disputed (bad) for disputes, warn for evidence. |
-| C-11 | Stage 1 G-12 vs Spec | Contractor can dispute a supervisor rejection | Spec state machine only has verified → disputed | Approved assumption; needs a backend rule (dispute without a milestone state change). |
+| C-11 | Stage 1 G-12 vs Spec | Contractor can dispute a supervisor rejection | Spec state machine only has verified → disputed | Decided 2026-10-21 (Gabriel): not built. Logged in 04-api-mapping/missing-endpoints.md (MX-25). |
 
 ## Colours outside the Stage 2 token set
 

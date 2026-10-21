@@ -15,7 +15,7 @@ This folder is the approved design handoff for iBackHome (Stages 1–13, package
 
 ## Target stack (from the Spec)
 
-- **Web**: React + TypeScript, built with Vite (`web/src/common/` for the API client, auth, layout, map component and UI kit; `web/src/features/<feature>/`).
+- **Web**: Next.js (App Router) + TypeScript + Tailwind CSS v4, decided 2026-10-21 in `Docs/adr/0003-web-nextjs-bff.md` (replaces the Spec's React + Vite). `web/src/common/` holds the API client, auth, layout, map component and UI kit; `web/src/features/<feature>/` the features; `web/src/app/` only the routes.
 - **Android**: Flutter, Android 8+, 2 GB RAM, offline-first (`mobile/lib/core/`, `mobile/lib/features/<feature>/`).
 - **Backend**: existing FastAPI REST API under `/api/v1`, OTP login returning a bearer JWT (15-minute access token, 30-day rotating refresh token), errors as `{"error": {"code", "message"}}`, `Idempotency-Key` on every write, `?cursor=&limit=` pagination. Web and mobile API clients are generated from the OpenAPI document at `/docs`.
 

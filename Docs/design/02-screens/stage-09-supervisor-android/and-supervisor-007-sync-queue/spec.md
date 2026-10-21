@@ -80,5 +80,5 @@ Loading, empty, offline, 403/404/409/500 and session-expired states use the shar
 
 ## 8. Open questions
 
-- CONFLICT TO DECIDE: the approved design (and the Stage 13 assumption list) rejects captures not uploaded within [48 hours]; the Spec says 72 h with a warning at 48 h. Make the window a server config value; default to the Spec (72 h) until Gabriel confirms (see PACKAGE-REPORT).
+- DECIDED 2026-10-21 (C-1): the Spec wins. Captures not uploaded within 72 h are rejected and the app warns at 48 h; the offline banner copy now says 72 hours (the PNG still shows 48 hours). Fill the hours from config.
 - PLACEHOLDER: names, phone numbers, amounts, rates, dates and IDs shown are sample data, not production copy.

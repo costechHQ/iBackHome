@@ -70,5 +70,5 @@ Designer note on the board (`X-Push.dc.html`), **Push rules**:
 
 ## 8. Open questions
 
-- CONFLICT TO DECIDE: the push copy says "Upload within 48 h" (approved assumption [48 hours]); the Spec window is 72 h with a warning at 48 h. Fill the hours from config.
+- DECIDED 2026-10-21 (C-1): the Spec wins. The upload window is 72 h with a warning at 48 h; the push copy now says "Upload within 72 h" (the PNG still shows 48 h). Fill the hours from config.
 - PLACEHOLDER: names, phone numbers, amounts, rates, dates and IDs shown are sample data, not production copy.
