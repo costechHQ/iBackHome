@@ -1,0 +1,43 @@
+name: api-contract
+
+# The web app's API client is generated from the backend's OpenAPI document (ADR 0003).
+# This regenerates it and fails if the committed files differ, so a backend change to a route or
+# schema must come with `bun run gen:api` (from web/) in the same pull request.
+
+on:
+  pull_request:
+    paths: ["backend/**", "web/src/common/api/**", "web/scripts/gen-api.sh", ".github/workflows/api-contract.yml"]
+  push:
+    branches: [main]
+    paths: ["backend/**", "web/src/common/api/**", "web/scripts/gen-api.sh", ".github/workflows/api-contract.yml"]
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.12.5"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - name: Install system libraries (the reports module loads them on import)
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync --locked
+      - name: Install web dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Regenerate the API client
+        working-directory: web
+        run: bun run gen:api
+      - name: Fail if it changed
+        run: |
+          if ! git diff --exit-code -- web/src/common/api/; then
+            echo "::error::web/src/common/api/ is out of date with the backend. Run 'bun run gen:api' in web/ and commit the result."
+            exit 1
+          fi

@@ -1,7 +1,7 @@
 name: deploy-staging
 
 # Deploys main to the staging VPS (spec: "Merging to main deploys to staging"). Owner: Christopher.
-# Runs after backend-ci passes on main, when the staging files change, or by hand (Actions > Run workflow).
+# Runs after backend-ci or web-ci passes on main, when the staging files change, or by hand (Actions > Run workflow).
 # Until the repository secrets below exist it only prints a notice, so it never fails before the server is up.
 #
 # Repository secrets (Settings > Secrets and variables > Actions), see deploy/staging/README.md:
@@ -10,10 +10,11 @@ name: deploy-staging
 #   STAGING_SSH_KEY      that user's private key (ed25519), whose public key is in ~/.ssh/authorized_keys
 #   STAGING_KNOWN_HOSTS  output of `ssh-keyscan -t ed25519 <STAGING_HOST>` (pins the server's host key)
 #   STAGING_DOMAIN       e.g. api-staging.ibackhome.ng (for the health check)
+#   STAGING_WEB_DOMAIN   e.g. staging.ibackhome.ng (the web app's health check; skipped while unset)
 
 on:
   workflow_run:
-    workflows: [backend-ci]
+    workflows: [backend-ci, web-ci]
     types: [completed]
     branches: [main]
   push:
@@ -34,6 +35,7 @@ jobs:
       HOST: ${{ secrets.STAGING_HOST }}
       DEPLOY_USER: ${{ secrets.STAGING_USER }}
       DOMAIN: ${{ secrets.STAGING_DOMAIN }}
+      WEB_DOMAIN: ${{ secrets.STAGING_WEB_DOMAIN }}
       SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - name: Skip until staging exists
@@ -78,4 +80,14 @@ jobs:
             sleep 10
           done
           echo "::error::https://$DOMAIN/healthz did not answer 200 within 5 minutes"
+          exit 1
+
+      - name: Web health check
+        if: steps.ready.outputs.go == 'true' && env.WEB_DOMAIN != ''
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl -fsS "https://$WEB_DOMAIN/api/healthz"; then echo; exit 0; fi
+            sleep 10
+          done
+          echo "::error::https://$WEB_DOMAIN/api/healthz did not answer 200 within 5 minutes"
           exit 1

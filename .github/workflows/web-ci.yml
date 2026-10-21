@@ -1,0 +1,59 @@
+name: web-ci
+
+# Lint, type check, build and test the Next.js web app (ADR 0003). Owner of web/: Gabriel.
+# Runs only when web/ or this file changes. The OpenAPI drift check is in api-contract.yml.
+
+on:
+  pull_request:
+    paths: ["web/**", ".github/workflows/web-ci.yml"]
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/web-ci.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - name: Install dependencies (fails if bun.lock is out of date with package.json)
+        run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run lint
+      - name: Format
+        run: bun run format:check
+      - name: Type check
+        run: bun run typecheck
+      - name: Build
+        run: bun run build
+      - name: Unit tests
+        run: bun run test
+      - name: Install Playwright's Chromium
+        run: bun x playwright install --with-deps chromium
+      - name: End-to-end tests (against next start)
+        run: bun run e2e
+      - name: Keep the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
+
+  docker-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the web image
+        run: docker build --tag ibackhome-web:ci web
