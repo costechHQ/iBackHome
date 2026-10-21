@@ -1,0 +1,4 @@
+# Shell scripts must keep LF to run, and the generated client must match CI byte for byte.
+*.sh text eol=lf
+src/common/api/openapi.json text eol=lf
+src/common/api/schema.d.ts text eol=lf
