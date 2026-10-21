@@ -12,7 +12,7 @@ iBackHome is a web app, an Android app and a set of AI agents on one FastAPI bac
 | Database | PostgreSQL 16 + PostGIS | Geofences, point-in-polygon, ledger |
 | Jobs | Celery + Redis, Celery Beat | Reports, reminders, hash indexing, reconciliation |
 | File storage | S3-compatible object storage | Photos and video, private, signed URLs |
-| Web | React + TypeScript (Vite) | Client dashboard, contractor/supplier portals, ops console |
+| Web | Next.js (App Router) + TypeScript + Tailwind CSS | Client dashboard, contractor/supplier portals, ops console |
 | Mobile | Flutter (Android 8+) | Supervisor and contractor app, offline-first |
 | Payments | Stripe (foreign currency in), Paystack (NGN payouts), licensed escrow partner | We never hold client funds |
 | Messaging | WhatsApp Business Cloud API, SMS provider, Firebase Cloud Messaging, email | One notifications module |
@@ -71,6 +71,7 @@ features/milestones/
 
 ```
 web/src/
+├── app/                  # Next.js routes only (thin routing layer)
 ├── common/               # API client, auth, layout, map component, UI kit
 └── features/
     ├── auth/
@@ -81,6 +82,8 @@ web/src/
     ├── reports/
     └── ops-console/      # vetting, spot checks, disputes, live map
 ```
+
+`app/` holds routes only (pages, layouts, route handlers); it imports from `features/` and `common/`, never the other way round.
 
 **Mobile (Flutter)**
 
@@ -614,7 +617,7 @@ WhatsApp messages outside the 24-hour customer-service window must use Meta-appr
 
 ## Auth, roles and permissions
 
-**Login**: OTP by SMS or WhatsApp (Nigerian and international numbers, E.164) or email. OTPs are 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and per IP. Codes are sent through `notify_address()` on exactly the channel asked for (no fallback); an unconfigured channel answers 503 `notifications_not_configured` and a provider failure 502 `notification_failed`, and no code is left waiting. Only `ENVIRONMENT=local` writes codes to the log. Successful login returns a 15-minute access JWT and a 30-day refresh token (rotated on use, stored hashed). Mobile keeps tokens in Android encrypted storage.
+**Login**: OTP by SMS or WhatsApp (Nigerian and international numbers, E.164) or email. OTPs are 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and per IP. Codes are sent through `notify_address()` on exactly the channel asked for (no fallback); an unconfigured channel answers 503 `notifications_not_configured` and a provider failure 502 `notification_failed`, and no code is left waiting. Only `ENVIRONMENT=local` writes codes to the log. Successful login returns a 15-minute access JWT and a 30-day refresh token (rotated on use, stored hashed). Mobile keeps tokens in Android encrypted storage. The web app keeps them in httpOnly, secure, SameSite cookies set by its Next.js server, and the browser calls a same-origin proxy (`/api/v1/*`) that adds the bearer token, so browser JavaScript never sees a token.
 
 **Authorisation** has two layers, both checked on every request:
 
@@ -671,7 +674,7 @@ Building sites often have weak or no signal, so the supervisor app works fully o
 
 | Environment | Purpose | Payments | Data |
 | --- | --- | --- | --- |
-| Local | Docker Compose: api, worker, beat, postgres+postgis, redis, minio (S3) | Stripe and Paystack test keys, simulated escrow | Seed script |
+| Local | Docker Compose: web, api, worker, beat, postgres+postgis, redis, minio (S3) | Stripe and Paystack test keys, simulated escrow | Seed script |
 | Staging | Daily 17:00 deploy, Sunday demos | Test keys, simulated escrow | Seed + simulator |
 | Production | Pilot and demo day (from day 15) | Live keys, real escrow partner if ready | Real pilot data only |
 
@@ -683,7 +686,8 @@ Secrets live in environment variables from the host's secret store; `.env.exampl
 2. Type checks: `mypy` on backend, `tsc` on web.
 3. Tests against a real Postgres + PostGIS service container.
 4. Alembic migration check: upgrade from empty and downgrade one step.
-5. Build the API Docker image and the Android debug APK.
+5. Build the API and web Docker images (the web image runs `next build`) and the Android debug APK.
+6. Web tests: Vitest, then Playwright against `next build` + `next start`.
 
 Merging to `main` deploys to staging; a tagged release deploys to production.
 
@@ -713,11 +717,12 @@ Each becomes an architecture decision record (ADR) in `docs/adr/` once decided.
 | --- | --- | --- | --- | --- |
 | 1 | Base modules (users, payments, audit, geo, notifications) | Cohort starter repo; our own `base/` | Decided: each team builds its own; ours lives in `base/` | Done |
 | 2 | Escrow partner | To be identified in week-one talks; simulated meanwhile | Simulated until a partner signs | Day 10 |
-| 3 | Hosting | Render, Railway, Fly.io, a VPS with Docker | Decided 2026-10-16: staging is one VPS running the Docker Compose stack behind Caddy (HTTPS); `deploy/staging/` | Done |
+| 3 | Hosting | Render, Railway, Fly.io, a VPS with Docker | Decided 2026-10-16: staging is one VPS running the Docker Compose stack behind Caddy (HTTPS); `deploy/staging/`; the web app is a `web` container on the same stack, and Caddy routes the web hostname to it (2026-10-21) | Done |
 | 4 | Object storage | AWS S3, Cloudflare R2, Backblaze B2 | Decided 2026-10-16: Cloudflare R2 (S3 API, no egress fees) | Done |
 | 5 | SMS provider | Termii, Africa's Talking, Twilio | Local provider for Nigerian numbers | Day 5 |
 | 6 | LLM provider and model | Any with tool calling and vision | Pick one with strong tool calling and image input | Day 12 |
 | 7 | Mobile local database | Drift, Isar, Hive | Drift (SQL, good for queues) | Day 5 |
 | 8 | Payout rail for contractors | Paystack transfers vs escrow partner's own payouts | Depends on decision 2 | Day 12 |
+| 9 | Web framework | React + Vite SPA; Next.js (App Router) | Decided 2026-10-21: Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (BFF); ADR 0003 | Done |
 
 Check current pricing and availability in Nigeria for the paid services before deciding.
