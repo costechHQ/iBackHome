@@ -1,10 +1,11 @@
 "use client";
 
-import { useQueries } from "@tanstack/react-query";
-import { House, RotateCcw } from "lucide-react";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { Check, Circle, House, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 import { api, call } from "@/common/api/client";
+import { ApiError } from "@/common/api/errors";
 import { mockPayouts } from "@/common/api/mocks";
 import { useMock } from "@/common/api/mocks/context";
 import { keys, useProjects, type Milestone } from "@/common/api/queries";
@@ -47,6 +48,47 @@ const WORK: Record<string, string> = {
   disputed: "release paused",
 };
 
+const SETTING_UP = new Set(["draft", "boq_review"]);
+
+/** WEB-CONTRACTOR-002 "Home — waiting for your BoQ": what is done before the work can be priced and funded.
+ *  "Start the BoQ" comes with the BoQ editor (WEB-CONTRACTOR-004); there are no invitations to accept (MX-02). */
+function GettingReady({
+  status,
+  hasPayout,
+  named,
+}: {
+  status: string;
+  hasPayout: boolean | null;
+  named: boolean;
+}) {
+  const items = [
+    { label: "Profile", done: named },
+    { label: "Payout account", done: hasPayout === true },
+    {
+      label: status === "boq_review" ? "Bill of quantities · waiting for approvals" : "Bill of quantities",
+      done: false,
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="type-small font-semibold text-ink">Getting ready</p>
+      <ul className="flex flex-wrap gap-x-4 gap-y-1">
+        {items.map((item) => (
+          <li key={item.label} className="type-small flex items-center gap-1.5 text-slate">
+            {item.done ? (
+              <Check aria-hidden strokeWidth={2} className="size-4 text-ok-fg" />
+            ) : (
+              <Circle aria-hidden strokeWidth={1.75} className="size-4 text-muted" />
+            )}
+            {item.label}
+            <span className="sr-only">{item.done ? ": done" : ": not yet"}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PaidToYou() {
   const on = useMock("MX-06");
   if (!on) return null;
@@ -70,6 +112,17 @@ export function ContractorHome() {
   const viewer = useViewer();
   const timeZone = useViewerTimeZone();
   const projects = useProjects();
+  const payout = useQuery({
+    queryKey: ["me", "payout-recipient"],
+    retry: false,
+    queryFn: () => call(api().GET("/api/v1/me/payout/recipient")),
+  });
+  // No account is a 404; any other failure means it couldn't be checked.
+  const hasPayout = payout.data
+    ? true
+    : payout.error instanceof ApiError && payout.error.status === 404
+      ? false
+      : null;
   const milestoneQueries = useQueries({
     queries: (projects.data?.items ?? []).map((p) => ({
       queryKey: keys.milestones(p.id),
@@ -175,31 +228,41 @@ export function ContractorHome() {
                       />
                     </div>
                     <p className="type-small text-slate">{project.address}</p>
-                    {milestones.length ? (
-                      <div
-                        role="progressbar"
-                        aria-label={`${released} of ${milestones.length} milestones released`}
-                        aria-valuemin={0}
-                        aria-valuemax={milestones.length}
-                        aria-valuenow={released}
-                        className="h-2 overflow-hidden rounded-pill bg-line"
-                      >
-                        <div
-                          className="h-full bg-navy-900"
-                          style={{ width: `${Math.round((released / milestones.length) * 100)}%` }}
-                        />
-                      </div>
-                    ) : null}
-                    <p className="text-ink">
-                      {released} of {milestones.length} milestones released
-                      {current
-                        ? ` · ${current.name}: ${current.status === "funded" && current.latest_verification?.decision === "rejected" ? "rework" : (WORK[current.status] ?? current.status)}`
-                        : ""}
-                    </p>
-                    <p className="ibh-tabular type-small text-accent">
-                      {formatMoney(releasedMinor(milestones), "NGN")} released ·{" "}
-                      {formatMoney(heldMinor(milestones), "NGN")} waiting in escrow
-                    </p>
+                    {SETTING_UP.has(project.status) ? (
+                      <GettingReady
+                        status={project.status}
+                        hasPayout={hasPayout}
+                        named={Boolean(viewer.fullName)}
+                      />
+                    ) : (
+                      <>
+                        {milestones.length ? (
+                          <div
+                            role="progressbar"
+                            aria-label={`${released} of ${milestones.length} milestones released`}
+                            aria-valuemin={0}
+                            aria-valuemax={milestones.length}
+                            aria-valuenow={released}
+                            className="h-2 overflow-hidden rounded-pill bg-line"
+                          >
+                            <div
+                              className="h-full bg-navy-900"
+                              style={{ width: `${Math.round((released / milestones.length) * 100)}%` }}
+                            />
+                          </div>
+                        ) : null}
+                        <p className="text-ink">
+                          {released} of {milestones.length} milestones released
+                          {current
+                            ? ` · ${current.name}: ${current.status === "funded" && current.latest_verification?.decision === "rejected" ? "rework" : (WORK[current.status] ?? current.status)}`
+                            : ""}
+                        </p>
+                        <p className="ibh-tabular type-small text-accent">
+                          {formatMoney(releasedMinor(milestones), "NGN")} released ·{" "}
+                          {formatMoney(heldMinor(milestones), "NGN")} waiting in escrow
+                        </p>
+                      </>
+                    )}
                   </Card>
                 </Link>
               </li>

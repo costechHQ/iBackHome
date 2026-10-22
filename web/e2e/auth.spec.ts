@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 // is covered by the stack tests (e2e/stack, IBH_STACK=1).
 
 test("each portal sends a signed-out visitor to sign-in and back afterwards", async ({ page }) => {
-  for (const path of ["/projects", "/c", "/ops"]) {
+  for (const path of ["/projects", "/c", "/c/projects/x/milestones", "/ops", "/ops/disputes/x", "/welcome"]) {
     await page.goto(path);
     const signIn = path.startsWith("/ops") ? "/ops/sign-in" : "/sign-in";
     await expect(page).toHaveURL(`${signIn}?next=${encodeURIComponent(path)}`);
@@ -32,6 +32,7 @@ test("portal pages, sign-in and the API proxy are never cacheable", async ({ req
     "/ops",
     "/ops/disputes",
     "/ops/disputes/x",
+    "/welcome",
     "/sign-in",
     "/api/v1/me",
   ]) {
