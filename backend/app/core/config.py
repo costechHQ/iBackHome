@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_JWT_SECRET_LENGTH = 32
@@ -51,6 +51,15 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @field_validator("database_url")
+    @classmethod
+    def _async_driver(cls, value: str) -> str:
+        """Hosts such as Render hand out `postgresql://...`; the app needs the psycopg 3 driver name."""
+        for plain in ("postgresql://", "postgres://"):
+            if value.startswith(plain):
+                return "postgresql+psycopg://" + value[len(plain) :]
+        return value
 
     @model_validator(mode="after")
     def _real_secret_outside_local(self) -> "Settings":
