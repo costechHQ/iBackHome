@@ -49,6 +49,9 @@ async def get_queue(session: AsyncSession, limit: int = DEFAULT_LIMIT) -> OpsQue
                 milestone_id=d.milestone_id,
                 reason=d.reason,
                 opened_at=d.created_at,
+                proposed_outcome=d.proposed_outcome,
+                proposed_by=d.proposed_by,
+                proposed_at=d.proposed_at,
             )
             for d in disputes
         ],
