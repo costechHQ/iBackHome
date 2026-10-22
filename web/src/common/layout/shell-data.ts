@@ -1,5 +1,6 @@
 import "server-only";
 
+import { parseMockFlags, type MockFlags } from "../api/mocks";
 import { serverApi } from "../api/server";
 import type { ProjectSummary } from "./client-shell";
 import type { QueueCounts } from "./ops-shell";
@@ -31,4 +32,9 @@ export async function opsQueueCounts(): Promise<QueueCounts | null> {
 /** Which environment this is, for the ops badge (set by Docker Compose; LOCAL when unset). */
 export function environmentName(): string {
   return process.env.IBH_ENVIRONMENT ?? "local";
+}
+
+/** Which mock adapters are on (IBH_MOCKS; see common/api/mocks). Off unless set. */
+export function mockFlags(): MockFlags {
+  return parseMockFlags(process.env.IBH_MOCKS);
 }

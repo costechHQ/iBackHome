@@ -21,8 +21,17 @@ const ALLOWED = new Set(["tokens.css"]); // the copy of the handoff's tokens: wh
 const sources = files(SRC).filter((f) => !ALLOWED.has(f.split(/[\\/]/).pop() ?? ""));
 
 describe("no raw styles in src/", () => {
-  it("has no Tailwind arbitrary values", () => {
-    const offenders = sources.filter((f) => /\b[a-z][a-z0-9-]*-\[[^\]]+\]/.test(readFileSync(f, "utf8")));
+  it("has no Tailwind arbitrary values or arbitrary variants", () => {
+    const offenders = sources.filter((f) => {
+      const text = readFileSync(f, "utf8");
+      // bg-[#123456], text-[13px] ... and variants like [&>div]:flex or [@media(...)]:x
+      return /\b[a-z][a-z0-9-]*-\[[^\]]+\]/.test(text) || /[\s"'`]\[[&@][^\]]*\]:/.test(text);
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it("never puts a breakpoint or state variant on a type-* style (they are plain classes, see theme.css)", () => {
+    const offenders = sources.filter((f) => /[a-z-]+:type-[a-z-]+/.test(readFileSync(f, "utf8")));
     expect(offenders).toEqual([]);
   });
 

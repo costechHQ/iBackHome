@@ -26,11 +26,7 @@ export function Time({
     <Tooltip.Provider delayDuration={300}>
       <Tooltip.Root>
         <Tooltip.Trigger asChild>
-          <time
-            dateTime={iso}
-            tabIndex={0}
-            className="underline decoration-line-strong decoration-dotted underline-offset-2"
-          >
+          <time dateTime={iso} tabIndex={0} className="rounded-tag">
             {text}
           </time>
         </Tooltip.Trigger>

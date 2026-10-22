@@ -87,6 +87,7 @@ services:
     environment:
       API_INTERNAL_URL: http://api:8000
       IBH_ENVIRONMENT: staging # the ops console badge
+      IBH_MOCKS: all # mock adapters for missing endpoints (web/src/common/api/mocks); never in production
     networks: [internal]
     depends_on:
       api:
