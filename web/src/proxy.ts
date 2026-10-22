@@ -9,9 +9,15 @@ import { signInPathFor } from "./common/auth/roles";
 // of the server. It only routes:
 //  - no session at all            -> /sign-in?next=<this page> (/ops/sign-in for the ops console)
 //  - access token (nearly) expired -> /api/session/refresh?next=<this page>, which refreshes once and comes back
-// The API proxy under /api/v1 refreshes by itself and is not matched here.
+// The API proxy under /api/v1 refreshes by itself and is not matched here. The public landing page "/" is
+// matched only to send a signed-in visitor to /home (which picks their portal); signed out, it's served as is.
 
 export function proxy(req: NextRequest) {
+  if (req.nextUrl.pathname === "/") {
+    return req.cookies.has(SESSION_COOKIE)
+      ? NextResponse.redirect(new URL("/home", req.url))
+      : NextResponse.next();
+  }
   // The ops sign-in page sits under /ops but is for signed-out staff.
   if (req.nextUrl.pathname === "/ops/sign-in") return NextResponse.next();
   const next = `${req.nextUrl.pathname}${req.nextUrl.search}`;
@@ -26,5 +32,5 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/home", "/welcome", "/projects/:path*", "/c", "/c/:path*", "/ops", "/ops/:path*"],
+  matcher: ["/", "/home", "/welcome", "/projects/:path*", "/c", "/c/:path*", "/ops", "/ops/:path*"],
 };

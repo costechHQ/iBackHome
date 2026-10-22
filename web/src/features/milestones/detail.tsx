@@ -169,8 +169,13 @@ export function MilestoneDetail({ projectId, milestoneId }: { projectId: string;
       </div>
 
       {/* Phones: the decision stays in reach (WEB-CLIENT-013 mobile, verified). */}
-      {actions.has("approve") || actions.has("raise_dispute") ? (
+      {actions.has("approve") || actions.has("raise_dispute") || actions.has("fund") ? (
         <div className="fixed inset-x-0 bottom-0 z-30 flex flex-col gap-2 border-t border-line bg-white p-4 sm:hidden">
+          {actions.has("fund") ? (
+            <Button asChild size="lg" block>
+              <Link href={`/projects/${milestone.project_id}/fund/${milestone.id}`}>Fund this milestone</Link>
+            </Button>
+          ) : null}
           {actions.has("approve") ? (
             <Button asChild size="lg" block>
               <Link href={`${base}/approve`}>Approve release</Link>

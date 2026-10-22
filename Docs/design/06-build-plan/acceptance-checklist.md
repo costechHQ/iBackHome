@@ -94,6 +94,37 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Backend: seed.py records consent for the seeded people (#71, reviewer James). Gaps logged: W-27 to W-29
 - [ ] Legal: the real terms of use and privacy policy, their versions and links (launch blocker, W-27)
 
+### W6a · Project set-up
+
+- [x] WEB-CLIENT-003: projects list with set-up progress and the next step, the empty state, create a project (validation with the design's Nigerian-number message) that invites the contractor by phone, and the six-step set-up tracker
+- [x] WEB-CLIENT-004: site pin and boundary on a street map (drag the pin, click corners, undo, clear), the 25 m tolerance band, pin-outside error, saved, locked once active; a keyboard way to set the site
+- [x] WEB-CLIENT-005: BoQ by milestone with every line, total against budget, the three approvals, the final approval (needs a saved site) that makes the project active
+- [x] WEB-CLIENT-006: quote check of the submitted BoQ or a PDF, flagged lines first, the over-index total, and the price index
+- [x] Set-up tabs (Set-up, BoQ, Quote check, Site) while a project is draft or in BoQ review; `/projects/:id` opens the tracker for those
+- [x] Unit tests for the set-up steps, the map geometry and the quote figures (BigInt, no floats); stack test of the whole set-up through to an active project; axe clean at 1280 and 390 px
+- [x] Gaps logged: B-6 (projects in naira), W-30 to W-32, MX-08 proposal
+- [ ] Production map tiles (W-30, launch item)
+
+### W6b · Money and home
+
+- [x] WEB-CLIENT-007 / 016 funding: today's amounts before paying (quote: nothing recorded), GBP, USD or EUR, the hand-off to Stripe Checkout, waiting for escrow until the webhook funds it, funded (what was paid, the rate, the reference), cancelled; "Fund this milestone" on a pending milestone and in the set-up tracker
+- [x] WEB-CLIENT-008 home at `/projects`: needs your attention (approvals, a new weekly report, set-up steps) and the projects with progress and money
+- [x] WEB-CLIENT-009 overview: needs your approval, progress, spend against budget, milestones, latest evidence, latest report, in escrow now
+- [x] WEB-CLIENT-012 site map: the boundary, the tolerance band, the pin and the captures, filtered by milestone and by who captured them, listed in words
+- [x] WEB-CLIENT-018 weekly reports: the list and the viewer, AI-generated and reviewed labels, drafts kept from the client, Markdown rendered as text only
+- [x] Backend: `GET /funding/quote` and Stripe's return to the web funding page (#74, two reviewers)
+- [x] Unit tests (money summary, report Markdown); stack test of the whole W6b flow; axe clean at 1280 and 390 px
+- [x] Gaps logged: B-7 (drafts listed to clients), W-33 to W-36, MX-13 note
+
+### W9 · Public site
+
+- [x] WEB-PUBLIC-001 to 009 built at `web/src/features/public/`, routes `/`, `/how-it-works`, `/pricing`, `/contractors`, `/supervisors`, `/trust`, `/contact`, `/privacy`, `/terms`, all static, with the public header (phone menu) and footer
+- [x] Company values (prices, partner, contact, legal entity) in one file, `site.ts`, all empty; sections that need them stay hidden; no `[…]` placeholder shown anywhere (checked in e2e)
+- [x] Privacy and Terms read `web/content/legal/*.md`, "being finalised" until supplied; the consent card links to both
+- [x] A signed-in visitor at `/` goes to `/home`; robots and sitemap index only production
+- [x] Unit tests (site content, contact channels, legal files, proxy, robots and sitemap); e2e: axe clean and screenshots at 1280 and 390 px for every page, phone menu, redirect, legal state, robots
+- [x] Gaps logged: B-8 (fee at funding), W-37
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page

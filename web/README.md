@@ -71,3 +71,5 @@ For the contractor and ops screens (W3), put one milestone into `sent-back` and 
 **Evidence photos locally:** the API signs photo URLs for the Docker host `storage:9000`, so a browser outside Docker can't load them. Add `127.0.0.1 storage` to your hosts file (`C:\Windows\System32\drivers\etc\hosts` on Windows, admin rights) to see them. Playwright maps the name itself. Staging uses R2's public URLs, so this is local only.
 
 **Mock adapters:** `IBH_MOCKS=all` (set in both Compose files, never in production) turns on the mocks for missing endpoints in `src/common/api/mocks/` (MX-03, MX-10); without it the elements they fill are hidden. Add `IBH_MOCKS=all` when running `bun run dev`.
+
+**Public site:** the company values the pages need (prices, escrow partner, contact channels, company name) are in `src/features/public/site.ts`, all empty until the product owner supplies them; empty ones are hidden. The privacy policy and terms are `content/legal/privacy.md` and `terms.md` (see `content/legal/README.md`). Search engines may index the site only when `IBH_ENVIRONMENT=production`; set `IBH_SITE_URL` (for example `https://ibackhome.com`) there for the sitemap.
