@@ -4,7 +4,7 @@ export type Role = "client" | "contractor" | "supervisor" | "supplier" | "ops";
 
 const HOME: Partial<Record<string, string>> = {
   client: "/projects",
-  contractor: "/c/projects",
+  contractor: "/c",
   ops: "/ops",
 };
 

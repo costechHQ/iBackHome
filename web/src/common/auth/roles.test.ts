@@ -5,7 +5,7 @@ import { homeFor, safeNext } from "./roles";
 describe("homeFor", () => {
   it("sends each web role to its portal and the others nowhere", () => {
     expect(homeFor("client")).toBe("/projects");
-    expect(homeFor("contractor")).toBe("/c/projects");
+    expect(homeFor("contractor")).toBe("/c");
     expect(homeFor("ops")).toBe("/ops");
     expect(homeFor("supervisor")).toBeNull();
     expect(homeFor("supplier")).toBeNull();

@@ -4,7 +4,13 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { errorResponse, isSameOrigin, NO_STORE } from "../api/http";
 import { apiBaseUrl, callerIp } from "./backend";
-import { clearSessionCookies, REFRESH_COOKIE, setSessionCookies, type TokenPair } from "./cookies";
+import {
+  ACCESS_COOKIE,
+  clearSessionCookies,
+  REFRESH_COOKIE,
+  setSessionCookies,
+  type TokenPair,
+} from "./cookies";
 import { refreshSession } from "./refresh";
 import { homeFor, safeNext } from "./roles";
 
@@ -96,5 +102,26 @@ export function signOut(req: NextRequest): NextResponse {
     return errorResponse(403, "cross_origin_request", "This request didn't come from iBackHome.");
   const response = new NextResponse(null, { status: 204, headers: { "Cache-Control": NO_STORE } });
   clearSessionCookies(response.cookies);
+  return response;
+}
+
+/**
+ * GET /home: "Go to my projects" from anywhere (error pages don't know who is signed in). Sends the person to
+ * their portal's home, or to sign-in. src/proxy.ts refreshes the token first. Supervisors and suppliers have
+ * no web portal yet and land on the client page's 403, which says so.
+ */
+export async function goHome(req: NextRequest): Promise<NextResponse> {
+  const token = req.cookies.get(ACCESS_COOKIE)?.value;
+  let role: string | null = null;
+  if (token) {
+    const me = await fetch(`${apiBaseUrl()}/api/v1/me`, {
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+    }).catch(() => null);
+    role = me?.ok ? ((await me.json()) as { role: string }).role : null;
+  }
+  const target = role ? (homeFor(role) ?? "/projects") : "/sign-in";
+  const response = NextResponse.redirect(new URL(target, req.nextUrl), 303);
+  response.headers.set("Cache-Control", NO_STORE);
   return response;
 }
