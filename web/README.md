@@ -41,3 +41,27 @@ The web server calls the API at `API_INTERNAL_URL` (default `http://127.0.0.1:80
 **UI rules in code:** colours, radii, shadows and type come only from the tokens (`bg-primary`, `rounded-card`, `type-h2`, ...). A test fails on any hex or rgb colour or Tailwind arbitrary value (`bg-[#...]`, `text-[13px]`) in `src/`. Shared components are in `src/common/ui/`, the portal shells in `src/common/layout/`; nav items appear once their screen is built (`nav.ts`, `ready`).
 
 With Docker: `docker compose up --build` from the repo root also starts `web` on http://localhost:3000.
+
+## Seed driver (local data in every milestone state)
+
+The client screens need milestones in every state. The dev seed driver (`scripts/drive/`, never shipped) gets them there through the real API, as the people `backend/scripts/seed.py` creates. Local Docker Compose only.
+
+```sh
+# once, from the repo root: a clean database with people, projects and photos
+docker compose up -d
+docker compose exec api python scripts/seed.py
+docker compose exec api python scripts/simulator.py --photos 2
+
+# then from web/: one milestone into the state you need (prints its client URL)
+bun scripts/drive/index.ts --to released --milestone 1 --project "3-bedroom bungalow, Trans-Ekulu"
+bun scripts/drive/index.ts --to verified --milestone 2 --project "3-bedroom bungalow, Trans-Ekulu"
+bun scripts/drive/index.ts --to disputed --milestone 1 --project "4-bedroom duplex, Independence Layout"
+```
+
+States: `funded`, `claimed`, `verified`, `approved`, `released`, `disputed`. Funding sends the signed `checkout.session.completed` webhook Stripe would send, so it needs only `STRIPE_WEBHOOK_SECRET` in the repo's `.env` (any random value locally; no Stripe account). Captures are signed with an ECDSA P-256 key per SIGNING.md and pass the real checks (the worker must run). Tokens and device keys are kept in `web/.drive/` (gitignored).
+
+Then `IBH_STACK=1 bun run e2e e2e/stack/client-release.spec.ts` checks every client screen against that data (axe at 1280 and 390 px, and a real approval in three taps). The backend allows 3 login codes per email per 15 minutes; the stack tests keep their browser session in `web/.drive/` between runs.
+
+**Evidence photos locally:** the API signs photo URLs for the Docker host `storage:9000`, so a browser outside Docker can't load them. Add `127.0.0.1 storage` to your hosts file (`C:\Windows\System32\drivers\etc\hosts` on Windows, admin rights) to see them. Playwright maps the name itself. Staging uses R2's public URLs, so this is local only.
+
+**Mock adapters:** `IBH_MOCKS=all` (set in both Compose files, never in production) turns on the mocks for missing endpoints in `src/common/api/mocks/` (MX-03, MX-10); without it the elements they fill are hidden. Add `IBH_MOCKS=all` when running `bun run dev`.

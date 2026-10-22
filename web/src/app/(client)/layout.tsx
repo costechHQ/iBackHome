@@ -4,9 +4,10 @@ import type { ReactNode } from "react";
 import { viewerFor } from "@/common/auth/guard";
 import { ClientMain, ClientNav, ClientTop } from "@/common/layout/client-shell";
 import { ForbiddenPage } from "@/common/layout/forbidden-page";
-import { OfflineBar, ViewerTimeZone } from "@/common/layout/online";
+import { OfflineBar } from "@/common/layout/online";
+import { PortalProviders } from "@/common/layout/portal-providers";
 import { SessionExpiredDialog } from "@/common/layout/session-expired-dialog";
-import { clientProjects } from "@/common/layout/shell-data";
+import { mockFlags, clientProjects } from "@/common/layout/shell-data";
 import { viewerTimeZone } from "@/common/time";
 
 // Signed-in, never cached (ADR 0003).
@@ -18,7 +19,11 @@ export default async function ClientLayout({ children }: { children: ReactNode }
   if (viewer.status === "forbidden") return <ForbiddenPage portal="client" me={viewer.me} />;
   const projects = await clientProjects();
   return (
-    <ViewerTimeZone timeZone={viewerTimeZone(viewer.me)}>
+    <PortalProviders
+      viewer={{ id: viewer.me.id, role: "client", fullName: viewer.me.full_name }}
+      timeZone={viewerTimeZone(viewer.me)}
+      mocks={mockFlags()}
+    >
       <div className="flex min-h-dvh flex-col">
         <OfflineBar />
         <ClientTop name={viewer.me.full_name ?? viewer.me.email ?? "You"} projects={projects} />
@@ -26,6 +31,6 @@ export default async function ClientLayout({ children }: { children: ReactNode }
         <ClientNav />
       </div>
       <SessionExpiredDialog />
-    </ViewerTimeZone>
+    </PortalProviders>
   );
 }

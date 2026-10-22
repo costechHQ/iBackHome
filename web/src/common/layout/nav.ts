@@ -7,10 +7,10 @@ export type NavItem = { label: string; href: string; ready: boolean };
 /** Project tabs (ClientTabs), relative to /projects/:id. */
 export const CLIENT_PROJECT_TABS = [
   { label: "Overview", path: "", ready: false }, // WEB-CLIENT-009
-  { label: "Milestones", path: "/milestones", ready: false }, // WEB-CLIENT-013 (W2)
-  { label: "Evidence", path: "/evidence", ready: false }, // WEB-CLIENT-010 (W2)
+  { label: "Milestones", path: "/milestones", ready: true }, // WEB-CLIENT-013 (W2)
+  { label: "Evidence", path: "/evidence", ready: true }, // WEB-CLIENT-010 (W2)
   { label: "Reports", path: "/reports", ready: false }, // WEB-CLIENT-018
-  { label: "Ledger", path: "/ledger", ready: false }, // WEB-CLIENT-017 (W2)
+  { label: "Ledger", path: "/ledger", ready: true }, // WEB-CLIENT-017 (W2)
   { label: "Orders", path: "/orders", ready: false }, // WEB-CLIENT-019
   { label: "BoQ", path: "/boq", ready: false }, // WEB-CLIENT-005
   { label: "Site map", path: "/site-map", ready: false }, // WEB-CLIENT-012
@@ -19,9 +19,9 @@ export const CLIENT_PROJECT_TABS = [
 /** Client mobile bottom nav (ClientNav). Project-scoped items need a current project. */
 export const CLIENT_MOBILE_NAV = [
   { label: "Home", path: "/projects", projectScoped: false, ready: true },
-  { label: "Milestones", path: "/milestones", projectScoped: true, ready: false },
-  { label: "Evidence", path: "/evidence", projectScoped: true, ready: false },
-  { label: "Money", path: "/ledger", projectScoped: true, ready: false },
+  { label: "Milestones", path: "/milestones", projectScoped: true, ready: true },
+  { label: "Evidence", path: "/evidence", projectScoped: true, ready: true },
+  { label: "Money", path: "/ledger", projectScoped: true, ready: true },
   { label: "Reports", path: "/reports", projectScoped: true, ready: false },
 ] as const;
 
@@ -77,4 +77,10 @@ export function shown<T extends { ready: boolean }>(items: readonly T[], all = f
 export function isActive(pathname: string, href: string, exact = false): boolean {
   if (exact) return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** A milestone's own pages (detail, approve, dispute, receipt): on phones they bring their own compact header and
+ *  action bar, so the portal's top bar, project header and bottom nav step aside (WEB-CLIENT-013/014 mobile). */
+export function isMilestonePage(pathname: string): boolean {
+  return /^\/projects\/[^/]+\/milestones\/[^/]+/.test(pathname);
 }

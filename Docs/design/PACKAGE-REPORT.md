@@ -196,6 +196,15 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 | W-6 | WEB-CLIENT-008 route `/` vs WEB-PUBLIC-001 route `/` | Both the client home and the public landing page are at `/` | **Open conflict.** The client home stays at `/projects` until decided: `/` must stay a static public page (ADR 0003), so it can't also be a signed-in dashboard. |
 | W-7 | WEB-CONTRACTOR-003 | Contractor home at `/c` | Built at `/c` (W1a had `/c/projects`). |
 | W-8 | Focus ring | Sheet: 2px white + 4px accent ring | The token stylesheet's own `:focus-visible` outline (2px accent, 2px offset; on-dark colour inside `.ibh-on-navy`) is the one indicator everywhere. It is unlayered, so it always wins over component classes. |
+| W-9 | WEB-CLIENT-013/014/015 "People", "Verified by Ifeanyi Okafor" | Names of the contractor and supervisor | Named by role ("the contractor", "the supervisor"); the People card is hidden until MX-26. |
+| W-10 | WEB-CLIENT-013 evidence checklist before verification | Rows from ops checklist templates ("Not captured") | No template endpoint (missing field "Checklist templates"): before verification the card lists the supervisor's captures for the milestone; after it, the supervisor's own checklist. |
+| W-11 | WEB-CLIENT-010 filters | Date range filter | No date filter in `GET /projects/{id}/evidence`; left out. Cards show the short id where the design has a title (evidence has no title field). |
+| W-12 | WEB-CLIENT-015 raise a dispute | "Evidence it's about" picker | `DisputeCreate` has only `reason`; the picker is left out and the chosen "What's wrong?" starts the reason. |
+| W-13 | WEB-CLIENT-015 outcomes A and B, dispute timeline | Resolved dispute pages | Need MX-10 (no dispute read): only "Release paused" is built. |
+| W-14 | WEB-CLIENT-017 ledger | Nightly reconciliation sentence, "[£ FEE]", "Paid into bank accounts" card | No endpoint for the reconcile result; the fee placeholder is dropped; the payouts card and Payouts rows appear once the ledger has payout entries. |
+| W-15 | Milestones tab | No client milestone list is designed (the list is on WEB-CLIENT-009) | `/projects/{id}/milestones` uses the designed milestone rows of WEB-CONTRACTOR-005 with the client's amounts; `/projects/{id}` opens the milestone that needs attention until WEB-CLIENT-009 exists. |
+| W-16 | WEB-CLIENT-013 pending | "Fund this milestone", "≈ £ estimate at today's rate" | Hidden until the funding screens (WEB-CLIENT-007/016); no endpoint gives today's rate, so a pending milestone shows NGN only. |
+| W-17 | Evidence, receipts, ledger references (EV-2118, R-3307, T-2417) | Human-readable references | The API has UUIDs only: screens show the first 8 characters in mono. |
 
 ## Colours outside the Stage 2 token set
 

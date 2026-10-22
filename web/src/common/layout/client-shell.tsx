@@ -10,7 +10,7 @@ import { cn } from "../ui/cn";
 import { StatusChip } from "../ui/status-chip";
 import { Mark, Wordmark } from "../ui/wordmark";
 import { AvatarMenu } from "./avatar-menu";
-import { CLIENT_MOBILE_NAV, CLIENT_PROJECT_TABS, isActive, shown } from "./nav";
+import { CLIENT_MOBILE_NAV, CLIENT_PROJECT_TABS, isActive, isMilestonePage, shown } from "./nav";
 
 // The client portal shell (components.md: ClientTop, ClientTabs, ClientNav). Help and the notifications bell
 // are hidden until their pages exist (Help centre, WEB-CLIENT-020 + MX-11).
@@ -69,8 +69,14 @@ function ProjectSwitcher({
 /** ClientTop: 64px desktop, 56px mobile. */
 export function ClientTop({ name, projects }: { name: string; projects: readonly ProjectSummary[] }) {
   const params = useParams<{ id?: string }>();
+  const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-white">
+    <header
+      className={cn(
+        "sticky top-0 z-30 border-b border-line bg-white print:hidden",
+        isMilestonePage(pathname) && "max-sm:hidden",
+      )}
+    >
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:h-16 sm:gap-6 sm:px-8">
         <Link href="/projects" aria-label="iBackHome, your projects" className="rounded-control">
           <Wordmark className="hidden sm:inline-flex" />
@@ -104,7 +110,12 @@ export function ProjectHeader({
   const pathname = usePathname();
   const tabs = shown(CLIENT_PROJECT_TABS, showAll);
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-6 sm:px-10">
+    <div
+      className={cn(
+        "mx-auto w-full max-w-7xl px-4 pt-6 sm:px-10 print:hidden",
+        isMilestonePage(pathname) && "max-sm:hidden",
+      )}
+    >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h1 className="type-h2 text-ink">{title}</h1>
         <StatusChip entity="project" state={status} audience="client" />
@@ -167,9 +178,12 @@ export function ClientNav({
   const pathname = usePathname();
   const params = useParams<{ id?: string }>();
   const items = shown(CLIENT_MOBILE_NAV, showAll).filter((i) => !i.projectScoped || params.id || showAll);
-  if (items.length < 2) return null; // a bar with one item helps nobody
+  if (items.length < 2 || isMilestonePage(pathname)) return null; // one item helps nobody; milestone pages have their own bar
   return (
-    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white sm:hidden">
+    <nav
+      aria-label="Main"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white sm:hidden print:hidden"
+    >
       <ul className="flex h-18 items-stretch justify-around px-2">
         {items.map((item) => {
           const href = item.projectScoped ? `/projects/${params.id ?? "_"}${item.path}` : item.path;
