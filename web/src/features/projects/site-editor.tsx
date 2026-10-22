@@ -26,6 +26,7 @@ import { useSaveSite } from "./api";
 // review; after approval it is locked (409 site_locked) and only ops can change it. The server decides
 // inside/outside; the screen says it in words too. "Ask our team to change it" waits for a contact page (W-2).
 // Keyboard users set the pin by its coordinates and a square boundary around it (PACKAGE-REPORT W-30).
+// Ops use the same editor from the console (WEB-OPS-004, `ops`): never locked, and back to the project there.
 
 const GeofenceMap = dynamic(() => import("@/common/map/geofence-map").then((m) => m.GeofenceMap), {
   ssr: false,
@@ -104,7 +105,7 @@ function KeyboardSite({
   );
 }
 
-export function SiteEditor({ projectId }: { projectId: string }) {
+export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?: boolean }) {
   const timeZone = useViewerTimeZone();
   const project = useProject(projectId);
   const save = useSaveSite(projectId);
@@ -127,7 +128,10 @@ export function SiteEditor({ projectId }: { projectId: string }) {
   const saved = p.site
     ? { pin: { lat: p.site.location.lat, lon: p.site.location.lon }, corners: fromGeoJson(p.site.geofence) }
     : null;
-  const lockedByStatus = !(p.status === "draft" || p.status === "boq_review");
+  const lockedByStatus = !ops && !(p.status === "draft" || p.status === "boq_review");
+  const back = ops
+    ? { href: `/ops/projects/${p.id}`, label: "Back to the project" }
+    : { href: `/projects/${p.id}/setup`, label: "Back to set-up" };
   const lockedByServer = save.error instanceof ApiError && save.error.code === "site_locked";
   const locked = lockedByStatus || lockedByServer;
   const drawing = !locked && (editing || !saved);
@@ -166,7 +170,10 @@ export function SiteEditor({ projectId }: { projectId: string }) {
       ? { label: "Can’t save", tone: "bad" as const }
       : drawing
         ? { label: "Draft · editable", tone: "neutral" as const }
-        : { label: "Saved · editable until approval", tone: "ok" as const };
+        : {
+            label: ops ? "Saved · ops can change it" : "Saved · editable until approval",
+            tone: "ok" as const,
+          };
 
   const tools: { mode: MapMode | "undo" | "clear"; label: string; icon: typeof MapPin }[] = [
     { mode: "boundary", label: "Boundary", icon: Pentagon },
@@ -179,11 +186,8 @@ export function SiteEditor({ projectId }: { projectId: string }) {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6 sm:px-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-1">
-          <Link
-            href={`/projects/${p.id}/setup`}
-            className="type-small rounded-control font-semibold text-accent"
-          >
-            ‹ Set-up
+          <Link href={back.href} className="type-small rounded-control font-semibold text-accent">
+            ‹ {ops ? "Project" : "Set-up"}
           </Link>
           <h2 className="type-h1 text-ink">Site and boundary</h2>
         </div>
@@ -257,7 +261,7 @@ export function SiteEditor({ projectId }: { projectId: string }) {
               <li className="flex items-start gap-3 border-b border-line p-4">
                 <StepMark done={Boolean(shape.pin) && pinInside !== false} bad={pinInside === false} n={1} />
                 <div>
-                  <p className="font-semibold text-ink">Pin on your plot</p>
+                  <p className="font-semibold text-ink">{ops ? "Pin on the plot" : "Pin on your plot"}</p>
                   <p className="type-small text-slate">
                     {!shape.pin
                       ? drawing
@@ -278,7 +282,7 @@ export function SiteEditor({ projectId }: { projectId: string }) {
                   <p className="type-small text-slate">
                     {drawing
                       ? `Choose Boundary, then click the map to add corners. ${shape.corners.length} ${shape.corners.length === 1 ? "corner" : "corners"} so far.`
-                      : `${p.site ? formatDateTime(p.site.updated_at, timeZone) : ""}${locked ? " · locked" : " · you can change it until the BoQ is approved"}`}
+                      : `${p.site ? formatDateTime(p.site.updated_at, timeZone) : ""}${locked ? " · locked" : ops ? " · every change is audited" : " · you can change it until the BoQ is approved"}`}
                   </p>
                 </div>
               </li>
@@ -302,7 +306,7 @@ export function SiteEditor({ projectId }: { projectId: string }) {
           ) : locked ? null : (
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="outline" size="lg">
-                <Link href={`/projects/${p.id}/setup`}>Back to set-up</Link>
+                <Link href={back.href}>{back.label}</Link>
               </Button>
               <Button size="lg" onClick={() => setEditing(true)}>
                 Edit site

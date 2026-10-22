@@ -61,29 +61,29 @@ export type OpsSection = {
 
 /** Ops sidebar. Queue counts come from GET /ops/queue. */
 export const OPS_NAV: readonly OpsSection[] = [
-  { heading: null, items: [{ label: "Overview", href: "/ops", ready: false }] }, // WEB-OPS-002
+  { heading: null, items: [{ label: "Overview", href: "/ops", ready: true }] }, // WEB-OPS-002 (W8a)
   {
     heading: "Queues",
     items: [
-      { label: "Vetting", href: "/ops/vetting", ready: false, queue: "vetting" }, // WEB-OPS-003
-      { label: "Flagged evidence", href: "/ops/evidence", ready: false, queue: "flagged_evidence" }, // WEB-OPS-005
+      { label: "Vetting", href: "/ops/vetting", ready: true, queue: "vetting" }, // WEB-OPS-003 (W8a: queue)
+      { label: "Flagged evidence", href: "/ops/evidence", ready: true, queue: "flagged_evidence" }, // WEB-OPS-005 (W8a)
       { label: "Disputes", href: "/ops/disputes", ready: true, queue: "disputes" }, // WEB-OPS-006 (W3)
     ],
   },
   {
     heading: "Operations",
     items: [
-      { label: "Projects", href: "/ops/projects", ready: false }, // WEB-OPS-004
+      { label: "Projects", href: "/ops/projects", ready: true }, // WEB-OPS-004 (W8a)
       { label: "Spot checks", href: "/ops/spot-checks", ready: false }, // WEB-OPS-007
       { label: "Suppliers", href: "/ops/suppliers", ready: false }, // WEB-OPS-008
-      { label: "Price index", href: "/ops/price-index", ready: false }, // WEB-OPS-009
-      { label: "Weekly reports", href: "/ops/reports", ready: false }, // WEB-OPS-010
+      { label: "Price index", href: "/ops/price-index", ready: true }, // WEB-OPS-009 (W8a, read-only)
+      { label: "Weekly reports", href: "/ops/reports", ready: true }, // WEB-OPS-010 (W8a)
     ],
   },
   {
     heading: "Records",
     items: [
-      { label: "Audit log", href: "/ops/audit", ready: false }, // WEB-OPS-011
+      { label: "Audit log", href: "/ops/audit", ready: true }, // WEB-OPS-011 (W8a)
       { label: "Agent runs", href: "/ops/agent-runs", ready: false }, // WEB-OPS-011
       { label: "Users", href: "/ops/users", ready: false }, // WEB-OPS-012
     ],

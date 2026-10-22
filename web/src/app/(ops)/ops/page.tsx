@@ -1,6 +1,7 @@
-import { redirect } from "next/navigation";
+import { environmentName } from "@/common/layout/shell-data";
+import { OpsOverview } from "@/features/ops-console/overview";
 
-// Until the ops overview (WEB-OPS-002) exists, the console opens on the dispute queue.
+// WEB-OPS-002
 export default function OpsHome() {
-  redirect("/ops/disputes");
+  return <OpsOverview environment={environmentName()} />;
 }

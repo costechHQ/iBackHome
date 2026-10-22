@@ -626,7 +626,7 @@ function Editor({
   );
 }
 
-function SavedLines({ boq }: { boq: Boq }) {
+export function SavedLines({ boq }: { boq: Boq }) {
   return (
     <div className="flex flex-col gap-4">
       {boq.milestones.map((m) => (

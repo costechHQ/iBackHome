@@ -96,8 +96,8 @@ test("an ops user signs in with their work email at /ops/sign-in", async ({ page
   await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
   await page.getByLabel("Digit 1 of 6").fill(latestCode(email));
   await page.getByRole("button", { name: "Verify" }).click();
-  // /ops opens on the dispute queue until the ops overview (WEB-OPS-002) exists.
-  await expect(page).toHaveURL(/\/ops\/disputes$/);
+  // /ops opens on the overview (WEB-OPS-002).
+  await expect(page).toHaveURL(/\/ops$/);
   await expect(page.getByRole("navigation", { name: "Ops console" })).toBeAttached();
 });
 
