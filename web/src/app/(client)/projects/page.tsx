@@ -1,9 +1,6 @@
-// W1a placeholder: proves sign-in lands on the right portal. The shell around it (W1b) is real; the designed
-// client home replaces this page in W2/W3.
-export default function ClientHome() {
-  return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-10 sm:px-8">
-      <h1 className="type-h2 text-ink">Signed in</h1>
-    </div>
-  );
+import { ProjectsList } from "@/features/projects/projects-list";
+
+// WEB-CLIENT-003 CS-01 (the client home at /projects; "/" stays the public site, decided 2026-10-22)
+export default function ProjectsPage() {
+  return <ProjectsList />;
 }

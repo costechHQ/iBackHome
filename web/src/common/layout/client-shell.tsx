@@ -10,7 +10,15 @@ import { cn } from "../ui/cn";
 import { StatusChip } from "../ui/status-chip";
 import { Mark, Wordmark } from "../ui/wordmark";
 import { AvatarMenu } from "./avatar-menu";
-import { CLIENT_MOBILE_NAV, CLIENT_PROJECT_TABS, isActive, isMilestonePage, shown } from "./nav";
+import {
+  CLIENT_MOBILE_NAV,
+  CLIENT_PROJECT_TABS,
+  CLIENT_SETUP_TABS,
+  isActive,
+  isMilestonePage,
+  isSettingUp,
+  shown,
+} from "./nav";
 
 // The client portal shell (components.md: ClientTop, ClientTabs, ClientNav). Help and the notifications bell
 // are hidden until their pages exist (Help centre, WEB-CLIENT-020 + MX-11).
@@ -104,11 +112,19 @@ export function ProjectHeader({
   title: string;
   status: string;
   address: string;
-  badges?: Partial<Record<(typeof CLIENT_PROJECT_TABS)[number]["label"], number>>;
+  badges?: Partial<Record<string, number>>;
   showAll?: boolean;
 }) {
   const pathname = usePathname();
-  const tabs = shown(CLIENT_PROJECT_TABS, showAll);
+  const tabs: { label: string; path: string; ready: boolean }[] = shown<{
+    label: string;
+    path: string;
+    ready: boolean;
+  }>(isSettingUp(status) ? CLIENT_SETUP_TABS : CLIENT_PROJECT_TABS, showAll);
+  // The deepest tab that matches wins ("Quote check" at /boq/check, not "BoQ").
+  const activeTab = [...tabs]
+    .filter((t) => (t.path ? isActive(pathname, `/projects/${id}${t.path}`) : pathname === `/projects/${id}`))
+    .sort((a, b) => b.path.length - a.path.length)[0];
   return (
     <div
       className={cn(
@@ -126,7 +142,7 @@ export function ProjectHeader({
           <ul className="flex gap-1 overflow-x-auto">
             {tabs.map((tab) => {
               const href = `/projects/${id}${tab.path}`;
-              const active = tab.path ? isActive(pathname, href) : pathname === href;
+              const active = tab === activeTab;
               const badge = badges[tab.label];
               return (
                 <li key={tab.label}>
