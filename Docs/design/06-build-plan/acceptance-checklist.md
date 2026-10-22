@@ -116,6 +116,15 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Unit tests (money summary, report Markdown); stack test of the whole W6b flow; axe clean at 1280 and 390 px
 - [x] Gaps logged: B-7 (drafts listed to clients), W-33 to W-36, MX-13 note
 
+### W9 · Public site
+
+- [x] WEB-PUBLIC-001 to 009 built at `web/src/features/public/`, routes `/`, `/how-it-works`, `/pricing`, `/contractors`, `/supervisors`, `/trust`, `/contact`, `/privacy`, `/terms`, all static, with the public header (phone menu) and footer
+- [x] Company values (prices, partner, contact, legal entity) in one file, `site.ts`, all empty; sections that need them stay hidden; no `[…]` placeholder shown anywhere (checked in e2e)
+- [x] Privacy and Terms read `web/content/legal/*.md`, "being finalised" until supplied; the consent card links to both
+- [x] A signed-in visitor at `/` goes to `/home`; robots and sitemap index only production
+- [x] Unit tests (site content, contact channels, legal files, proxy, robots and sitemap); e2e: axe clean and screenshots at 1280 and 390 px for every page, phone menu, redirect, legal state, robots
+- [x] Gaps logged: B-8 (fee at funding), W-37
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page

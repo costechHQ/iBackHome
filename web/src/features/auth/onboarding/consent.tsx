@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Lock, MapPin, Phone, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useId, useState } from "react";
 
 import { api, call } from "@/common/api/client";
@@ -92,7 +93,11 @@ export function ConsentCard({ onDone }: { onDone: () => void }) {
             className="mt-1 size-5 flex-none"
           />
           <span>
-            I agree to the Terms of use{versions.data ? ` (version ${versions.data.terms_version})` : ""}.{" "}
+            I agree to the{" "}
+            <Link href="/terms" target="_blank" className="text-accent underline">
+              Terms of use
+            </Link>
+            {versions.data ? ` (version ${versions.data.terms_version})` : ""}.{" "}
             <span className="text-muted">Required</span>
           </span>
         </label>
@@ -106,7 +111,10 @@ export function ConsentCard({ onDone }: { onDone: () => void }) {
           />
           <span>
             I consent to iBackHome processing my personal data — including site photos, locations and payment
-            records — to run my projects, as described in the Privacy policy
+            records — to run my projects, as described in the{" "}
+            <Link href="/privacy" target="_blank" className="text-accent underline">
+              Privacy policy
+            </Link>
             {versions.data ? ` (version ${versions.data.privacy_version})` : ""}.{" "}
             <span className="text-muted">Required</span>
           </span>

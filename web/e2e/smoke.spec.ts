@@ -8,5 +8,5 @@ test("the server is up and its health check is never cached", async ({ request }
 
 test("the home page renders", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("iBackHome");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Far from home, never out of sight.");
 });

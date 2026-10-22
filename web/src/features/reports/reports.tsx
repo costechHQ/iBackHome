@@ -15,7 +15,7 @@ import { Loading, Skeleton } from "@/common/ui/skeleton";
 import { ToneChip } from "@/common/ui/status-chip";
 import { Card, EmptyState } from "@/common/ui/surfaces";
 
-import { ReportMarkdown, summaryOf } from "./markdown";
+import { Markdown, summaryOf } from "@/common/ui/markdown";
 
 // WEB-CLIENT-018 Weekly reports: the list and one report. The client sees a report only once the supervisor
 // (or ops) has reviewed it: the backend also lists drafts, so they are left out here (PACKAGE-REPORT B-7).
@@ -165,7 +165,7 @@ export function ReportViewer({ projectId, reportId }: { projectId: string; repor
         anything or move money.
       </p>
       <Card className="p-6">
-        <ReportMarkdown source={r.body_md} />
+        <Markdown source={r.body_md} />
       </Card>
       {r.evidence_ids.length ? (
         <section className="flex flex-col gap-2">

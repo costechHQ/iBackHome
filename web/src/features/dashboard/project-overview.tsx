@@ -21,7 +21,7 @@ import { ESCROW_LINE } from "@/common/ui/money-display";
 import { Loading, Skeleton } from "@/common/ui/skeleton";
 import { StatusChip, ToneChip } from "@/common/ui/status-chip";
 import { Card, CardLabel } from "@/common/ui/surfaces";
-import { summaryOf } from "@/features/reports/markdown";
+import { summaryOf } from "@/common/ui/markdown";
 import { useReports } from "@/features/reports/reports";
 
 import { moneySummary, type ClientAmount } from "./money-summary";

@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 
-// The report agent writes Markdown. This renders the small subset it uses, safely (text only, no HTML):
-// headings (#, ##, ###), paragraphs, "- " lists, pipe tables and **bold**. Evidence IDs stay as written.
+// A small, safe Markdown renderer (text only, never HTML): headings (#, ##, ###), paragraphs, "- " lists, pipe
+// tables and **bold**. Used for the AI weekly reports and the legal pages (privacy policy, terms).
 
 function inline(text: string): ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
@@ -22,7 +22,7 @@ const cells = (row: string) =>
     .split("|")
     .map((c) => c.trim());
 
-export function ReportMarkdown({ source }: { source: string }) {
+export function Markdown({ source }: { source: string }) {
   const lines = source.replace(/\r\n/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
   let i = 0;

@@ -1,8 +1,13 @@
-// W0 placeholder so the app builds and starts. The public landing page (WEB-PUBLIC-001) replaces it.
-export default function Home() {
-  return (
-    <main>
-      <h1>iBackHome</h1>
-    </main>
-  );
+import type { Metadata } from "next";
+
+import { Landing } from "@/features/public/landing";
+
+export const metadata: Metadata = {
+  title: "iBackHome · Far from home, never out of sight",
+  description:
+    "For Nigerians abroad building in Enugu: verified supervisors capture site evidence, and a licensed escrow partner releases money milestone by milestone, only after you approve.",
+};
+
+export default function Page() {
+  return <Landing />;
 }

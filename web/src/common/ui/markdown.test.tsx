@@ -2,7 +2,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { ReportMarkdown, summaryOf } from "./markdown";
+import { Markdown, summaryOf } from "./markdown";
 
 const report = `# Weekly report
 
@@ -22,9 +22,9 @@ Roofing was **finished** and verified this week.
 
 afterEach(cleanup);
 
-describe("report Markdown", () => {
+describe("Markdown", () => {
   it("renders headings, paragraphs, bold, tables and lists", () => {
-    render(<ReportMarkdown source={report} />);
+    render(<Markdown source={report} />);
     expect(screen.getByRole("heading", { name: "Weekly report" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Progress against the BoQ" })).toBeTruthy();
     expect(screen.getByText("finished").tagName).toBe("STRONG");
@@ -38,7 +38,7 @@ describe("report Markdown", () => {
   });
 
   it("never renders HTML from the report", () => {
-    const { container } = render(<ReportMarkdown source={report} />);
+    const { container } = render(<Markdown source={report} />);
     expect(container.querySelector("script")).toBeNull();
     expect(screen.getByText("<script>alert(1)</script>")).toBeTruthy();
   });
