@@ -54,3 +54,11 @@ describe("formatting", () => {
     expect(() => formatTime("yesterday", WAT)).toThrow(TypeError);
   });
 });
+
+describe("zone labels", () => {
+  it("spells London winter time GMT whatever the ICU build says", async () => {
+    const { zoneLabel } = await import("./time");
+    expect(zoneLabel("2026-12-14T09:12:00Z", "Europe/London")).toBe("GMT");
+    expect(zoneLabel("2026-12-14T09:12:00Z", "UTC")).toMatch(/^(UTC|GMT)$/);
+  });
+});

@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 // is covered with the seed driver in W4.
 
 test("each portal sends a signed-out visitor to sign-in and back afterwards", async ({ page }) => {
-  for (const path of ["/projects", "/c/projects", "/ops"]) {
+  for (const path of ["/projects", "/c", "/ops"]) {
     await page.goto(path);
     await expect(page).toHaveURL(`/sign-in?next=${encodeURIComponent(path)}`);
   }

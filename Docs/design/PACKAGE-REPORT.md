@@ -184,6 +184,19 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 | B-4 | WEB-OPS-001, AND-SUPERVISOR-003, WEB-CLIENT-023 sign-out | Sign-out ends the session | No sign-out endpoint (MX-19) | Sign-out clears the web cookies; the refresh token stays valid on the server until it expires. |
 | B-5 | 01-design-system/tokens.css | `@font-face` rules pointing at `../05-assets/fonts` | (web build) | The web copy drops them and loads the same files with `next/font/local`; `--ibh-font-sans` / `--ibh-font-mono` point at those fonts first. |
 
+### Web build notes (decided with Gabriel; recorded as each stage builds)
+
+| # | Where | What the designs show | What the web app does, and why |
+|---|---|---|---|
+| W-1 | Every top bar and the ops sidebar | Links to screens that aren't built yet | Each item is hidden until its screen exists (`web/src/common/layout/nav.ts`, flag `ready`), so nobody follows a link to a 404. The dev gallery shows them all for comparison. |
+| W-2 | ClientTop, ConTop, WEB-CLIENT-024 | "Help", "Help centre", "Contact us" | Hidden until those pages exist (WEB-PUBLIC-007; no help centre is designed). |
+| W-3 | ClientTop, ConTop | Notifications bell with a count | Hidden until WEB-CLIENT-020 and MX-11 exist. |
+| W-4 | Ops sidebar and header | Global search; "session 3 h left" | Hidden: no search endpoint, and the backend has no ops session limit (the design's 8 h is a placeholder). The environment badge (LOCAL / STAGING / PRODUCTION) is shown, from `IBH_ENVIRONMENT`. |
+| W-5 | WEB-CLIENT-024 session expired | "signed out after [12 hours]" | The bracketed placeholder is left out: "For your security, you were signed out." |
+| W-6 | WEB-CLIENT-008 route `/` vs WEB-PUBLIC-001 route `/` | Both the client home and the public landing page are at `/` | **Open conflict.** The client home stays at `/projects` until decided: `/` must stay a static public page (ADR 0003), so it can't also be a signed-in dashboard. |
+| W-7 | WEB-CONTRACTOR-003 | Contractor home at `/c` | Built at `/c` (W1a had `/c/projects`). |
+| W-8 | Focus ring | Sheet: 2px white + 4px accent ring | The token stylesheet's own `:focus-visible` outline (2px accent, 2px offset; on-dark colour inside `.ibh-on-navy`) is the one indicator everywhere. It is unlayered, so it always wins over component classes. |
+
 ## Colours outside the Stage 2 token set
 
 All hex values in `screen.html` style attributes and board CSS are mapped to `var(--ibh-*)`. Values on approved boards that are not in the Stage 2 token set are kept as `supplementary` tokens (`x-*` in tokens.json / tokens.css) so the screens render as approved; confirm or replace them:

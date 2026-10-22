@@ -209,7 +209,7 @@ export function SignInForm({ next, expired }: { next: string | null; expired: bo
             disabled={codeCancelled}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
             aria-describedby={message ? ids.message : undefined}
-            className="min-h-target rounded-control border border-line-strong bg-white px-3 tracking-widest type-mono"
+            className="type-mono min-h-target rounded-control border border-line-strong bg-white px-3 tracking-widest"
           />
           {codeCancelled ? (
             <button

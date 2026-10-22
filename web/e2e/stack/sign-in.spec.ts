@@ -52,7 +52,8 @@ test("a client signs in by email, lands on their portal, and can't open ops", as
   await expect(page.getByRole("heading", { name: /This page is only for/ })).toBeVisible();
 
   await page.goto("/projects");
-  await page.getByRole("button", { name: "Sign out" }).click();
+  await page.getByRole("button", { name: /account menu/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in$/);
   await page.goto("/projects");
   await expect(page).toHaveURL(/\/sign-in\?next=/);
@@ -69,4 +70,24 @@ test("a wrong code shows the designed message", async ({ page }) => {
   await page.getByLabel("6-digit code").fill(real === "000000" ? "111111" : "000000");
   await page.getByRole("button", { name: "Verify" }).click();
   await expect(page.locator("main").getByRole("alert")).toContainText("That code isn’t right.");
+});
+
+test("an ops user signs in by phone and lands in the ops console shell", async ({ page }) => {
+  // Needs the seeded ops user (backend/scripts/seed.py): run only with IBH_STACK_SEEDED=1. On an unseeded
+  // database this phone number would just sign up as a new client. SMS codes are logged like email codes.
+  test.skip(
+    !process.env.IBH_STACK_SEEDED,
+    "needs a database seeded with backend/scripts/seed.py (IBH_STACK_SEEDED=1)",
+  );
+  const phone = "+2348030000004";
+  await page.goto("/ops");
+  await page.getByLabel("Phone number").fill(phone);
+  await page.getByLabel("SMS").check();
+  await page.getByRole("button", { name: "Send code" }).click();
+  await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
+  await page.getByLabel("6-digit code").fill(latestCode(phone));
+  await page.getByRole("button", { name: "Verify" }).click();
+  await expect(page).toHaveURL(/\/ops$/);
+  await expect(page.getByRole("navigation", { name: "Ops console" })).toBeAttached();
+  await expect(page.getByText("Operations", { exact: true })).toBeVisible();
 });

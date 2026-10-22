@@ -17,7 +17,11 @@ export default defineConfig({
     ? undefined
     : {
         command: `bun run start -- --port ${port}`,
-        env: { API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000" },
+        // IBH_DEV_PAGES turns on the dev-only states gallery for the axe and screenshot tests (e2e/states.spec.ts).
+        env: {
+          API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000",
+          IBH_DEV_PAGES: "1",
+        },
         url: `${baseURL}/api/healthz`,
         reuseExistingServer: false,
         timeout: 60_000,

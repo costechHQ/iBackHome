@@ -85,44 +85,48 @@
     var(--font-mono-latin), var(--font-mono-latin-ext), ui-monospace, Menlo, Consolas, monospace;
 }
 
-/* Type scale: the tokens are font shorthands, so each style is one utility (type-h1, type-body, ...). */
-@utility type-display {
-  font: var(--ibh-type-display);
-  letter-spacing: var(--ibh-type-display-tracking);
-}
-@utility type-h1 {
-  font: var(--ibh-type-h1);
-  letter-spacing: var(--ibh-type-h1-tracking);
-}
-@utility type-h2 {
-  font: var(--ibh-type-h2);
-  letter-spacing: var(--ibh-type-h2-tracking);
-}
-@utility type-h3 {
-  font: var(--ibh-type-h3);
-  letter-spacing: var(--ibh-type-h3-tracking);
-}
-@utility type-body-lg {
-  font: var(--ibh-type-body-lg);
-  letter-spacing: var(--ibh-type-body-lg-tracking);
-}
-@utility type-body {
-  font: var(--ibh-type-body);
-  letter-spacing: var(--ibh-type-body-tracking);
-}
-@utility type-small {
-  font: var(--ibh-type-small);
-  letter-spacing: var(--ibh-type-small-tracking);
-}
-@utility type-caption {
-  font: var(--ibh-type-caption);
-  letter-spacing: var(--ibh-type-caption-tracking);
-}
-@utility type-ops-body {
-  font: var(--ibh-type-ops-body);
-  letter-spacing: var(--ibh-type-ops-body-tracking);
-}
-@utility type-mono {
-  font: var(--ibh-type-mono);
-  letter-spacing: var(--ibh-type-mono-tracking);
+/* Type scale: the tokens are font shorthands, so each style is one class (type-h1, type-body, ...).
+   They live in the components layer, below every utility: the font shorthand would otherwise reset a
+   font-semibold or tracking-normal written next to it, depending on stylesheet order. */
+@layer components {
+  .type-display {
+    font: var(--ibh-type-display);
+    letter-spacing: var(--ibh-type-display-tracking);
+  }
+  .type-h1 {
+    font: var(--ibh-type-h1);
+    letter-spacing: var(--ibh-type-h1-tracking);
+  }
+  .type-h2 {
+    font: var(--ibh-type-h2);
+    letter-spacing: var(--ibh-type-h2-tracking);
+  }
+  .type-h3 {
+    font: var(--ibh-type-h3);
+    letter-spacing: var(--ibh-type-h3-tracking);
+  }
+  .type-body-lg {
+    font: var(--ibh-type-body-lg);
+    letter-spacing: var(--ibh-type-body-lg-tracking);
+  }
+  .type-body {
+    font: var(--ibh-type-body);
+    letter-spacing: var(--ibh-type-body-tracking);
+  }
+  .type-small {
+    font: var(--ibh-type-small);
+    letter-spacing: var(--ibh-type-small-tracking);
+  }
+  .type-caption {
+    font: var(--ibh-type-caption);
+    letter-spacing: var(--ibh-type-caption-tracking);
+  }
+  .type-ops-body {
+    font: var(--ibh-type-ops-body);
+    letter-spacing: var(--ibh-type-ops-body-tracking);
+  }
+  .type-mono {
+    font: var(--ibh-type-mono);
+    letter-spacing: var(--ibh-type-mono-tracking);
+  }
 }
