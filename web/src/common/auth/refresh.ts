@@ -3,7 +3,7 @@ import "server-only";
 import { apiBaseUrl } from "./backend";
 import type { TokenPair } from "./cookies";
 
-// Single-flight refresh (ADR 0003). The backend rotates the refresh token once and treats any reuse as theft:
+// Single-flight refresh (ADR 0004). The backend rotates the refresh token once and treats any reuse as theft:
 // it revokes every session of that user. So for one refresh token we call POST /auth/refresh at most once:
 //  - callers that arrive while it runs share the same promise;
 //  - callers that arrive shortly after (a page whose requests were already in flight with the old cookie)

@@ -2,7 +2,7 @@
 
 The web app: client dashboard, contractor and supplier portals, ops console. Owner: Gabriel.
 
-Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (ADR 0003, `Docs/adr/0003-web-nextjs-bff.md`). The designs are in `Docs/design/` (screens `WEB-*`).
+Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (ADR 0004, `Docs/adr/0004-web-nextjs-bff.md`). The designs are in `Docs/design/` (screens `WEB-*`).
 
 ## Folders
 

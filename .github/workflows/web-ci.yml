@@ -1,6 +1,6 @@
 name: web-ci
 
-# Lint, type check, build and test the Next.js web app (ADR 0003). Owner of web/: Gabriel.
+# Lint, type check, build and test the Next.js web app (ADR 0004). Owner of web/: Gabriel.
 # Runs when web/, this file, or a handoff file the web app copies (tokens.css, state-to-ui.md) changes:
 # the drift tests fail if the copies are out of date. The OpenAPI drift check is in api-contract.yml.
 

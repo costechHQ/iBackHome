@@ -193,7 +193,7 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 | W-3 | ClientTop, ConTop | Notifications bell with a count | Hidden until WEB-CLIENT-020 and MX-11 exist. |
 | W-4 | Ops sidebar and header | Global search; "session 3 h left" | Hidden: no search endpoint, and the backend has no ops session limit (the design's 8 h is a placeholder). The environment badge (LOCAL / STAGING / PRODUCTION) is shown, from `IBH_ENVIRONMENT`. |
 | W-5 | WEB-CLIENT-024 session expired | "signed out after [12 hours]" | The bracketed placeholder is left out: "For your security, you were signed out." |
-| W-6 | WEB-CLIENT-008 route `/` vs WEB-PUBLIC-001 route `/` | Both the client home and the public landing page are at `/` | **Open conflict.** The client home stays at `/projects` until decided: `/` must stay a static public page (ADR 0003), so it can't also be a signed-in dashboard. |
+| W-6 | WEB-CLIENT-008 route `/` vs WEB-PUBLIC-001 route `/` | Both the client home and the public landing page are at `/` | **Open conflict.** The client home stays at `/projects` until decided: `/` must stay a static public page (ADR 0004), so it can't also be a signed-in dashboard. |
 | W-7 | WEB-CONTRACTOR-003 | Contractor home at `/c` | Built at `/c` (W1a had `/c/projects`). |
 | W-8 | Focus ring | Sheet: 2px white + 4px accent ring | The token stylesheet's own `:focus-visible` outline (2px accent, 2px offset; on-dark colour inside `.ibh-on-navy`) is the one indicator everywhere. It is unlayered, so it always wins over component classes. |
 | W-9 | WEB-CLIENT-013/014/015 "People", "Verified by Ifeanyi Okafor" | Names of the contractor and supervisor | Named by role ("the contractor", "the supervisor"); the People card is hidden until MX-26. |

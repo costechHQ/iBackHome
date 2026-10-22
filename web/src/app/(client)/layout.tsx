@@ -10,7 +10,7 @@ import { SessionExpiredDialog } from "@/common/layout/session-expired-dialog";
 import { mockFlags, clientProjects } from "@/common/layout/shell-data";
 import { viewerTimeZone } from "@/common/time";
 
-// Signed-in, never cached (ADR 0003).
+// Signed-in, never cached (ADR 0004).
 export const dynamic = "force-dynamic";
 
 export default async function ClientLayout({ children }: { children: ReactNode }) {

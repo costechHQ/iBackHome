@@ -10,7 +10,7 @@ import { SessionExpiredDialog } from "@/common/layout/session-expired-dialog";
 import { mockFlags, opsQueueCounts } from "@/common/layout/shell-data";
 import { viewerTimeZone } from "@/common/time";
 
-// Signed-in, never cached (ADR 0003). Desktop only (1440 design).
+// Signed-in, never cached (ADR 0004). Desktop only (1440 design).
 export const dynamic = "force-dynamic";
 
 export default async function OpsLayout({ children }: { children: ReactNode }) {

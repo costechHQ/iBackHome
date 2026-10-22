@@ -6,7 +6,7 @@ import { apiErrorFrom, NetworkError } from "./errors";
 import type { paths } from "./schema";
 
 // The browser's API client, generated from the backend's OpenAPI (schema.d.ts). It calls our own origin:
-// /api/v1/* is the auth proxy (ADR 0003), which adds the bearer token from the httpOnly cookie.
+// /api/v1/* is the auth proxy (ADR 0004), which adds the bearer token from the httpOnly cookie.
 
 export const SESSION_EXPIRED_EVENT = "ibh:session-expired";
 

@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-// Signed-in portals and every API route: never stored by a browser or a shared cache (ADR 0003). The pages are
+// Signed-in portals and every API route: never stored by a browser or a shared cache (ADR 0004). The pages are
 // rendered per request anyway; this makes the rule explicit and covers redirects and errors too.
 const NO_STORE = [{ key: "Cache-Control", value: "no-store" }];
 const PRIVATE_PATHS = ["/home", "/projects/:path*", "/c/:path*", "/ops/:path*", "/sign-in", "/api/:path*"];

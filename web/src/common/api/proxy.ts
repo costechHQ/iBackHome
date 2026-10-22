@@ -14,7 +14,7 @@ import { needsRefresh } from "../auth/jwt";
 import { refreshSession } from "../auth/refresh";
 import { errorResponse, isSameOrigin, NO_STORE } from "./http";
 
-// The same-origin API proxy (ADR 0003): the browser calls /api/v1/*, we call FastAPI with the bearer token
+// The same-origin API proxy (ADR 0004): the browser calls /api/v1/*, we call FastAPI with the bearer token
 // from the httpOnly cookie. Tokens never appear in a response body or reach browser JavaScript.
 
 // These answer with tokens; only /api/session/* may call them.

@@ -4,7 +4,7 @@ One block per screen. Tick each item when the screen is built, then re-run lint,
 
 ## Web build stages (W0–W4, the web gate)
 
-The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks below are ticked as each stage builds them.
+The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks below are ticked as each stage builds them.
 
 ### W0 · Repo, contract and Spec (no screens)
 
@@ -14,7 +14,7 @@ The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks belo
 - [x] Generated API client (`web/src/common/api/`, from the backend's OpenAPI) and a CI drift check (`api-contract`)
 - [x] CI `web-ci`: eslint, prettier, tsc, next build, Vitest, Playwright against next start, Docker image
 - [x] Docker image (standalone, Node), `web` in local Compose and staging Compose, Caddy route on its own hostname
-- [x] ADR 0003 and the Spec update (separate commit)
+- [x] ADR 0004 and the Spec update (separate commit)
 
 ### W1a · Tokens, auth proxy, API wrapper, helpers (no designed screens)
 
