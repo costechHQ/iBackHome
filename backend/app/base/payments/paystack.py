@@ -1,7 +1,9 @@
 """Paystack API client (NGN payouts), behind one small interface. Owner: Gabriel.
 
 Only the calls payouts need: create a transfer recipient, start a transfer, and look a transfer up
-by our reference (to learn what happened when Paystack's answer to a transfer was lost). Uses httpx
+by our reference (to learn what happened when Paystack's answer to a transfer was lost). For people
+saving their own payout account there is a second, smaller interface (PaystackDirectory): the list of
+Nigerian banks and the account-name lookup. Uses httpx
 with the secret key from PAYSTACK_SECRET_KEY (sk_test_... in test mode). Tests mock the HTTP
 layer with respx, so they never reach Paystack.
 
@@ -42,6 +44,12 @@ class TransferResult:
     status: TransferStatus  # "pending" until the transfer.* webhook says otherwise
 
 
+@dataclass(frozen=True)
+class Bank:
+    code: str
+    name: str
+
+
 class PaystackClient(Protocol):
     async def create_transfer_recipient(
         self, account_name: str, account_number: str, bank_code: str
@@ -52,6 +60,14 @@ class PaystackClient(Protocol):
     ) -> TransferResult: ...
 
     async def verify_transfer(self, reference: str) -> TransferResult | None: ...
+
+
+class PaystackDirectory(Protocol):
+    """What someone saving their payout account needs: the banks, and whose name an account is in."""
+
+    async def list_banks(self) -> list[Bank]: ...
+
+    async def resolve_account(self, account_number: str, bank_code: str) -> str: ...
 
 
 def _transfer_status(raw: object) -> TransferStatus:
@@ -157,8 +173,45 @@ class HttpPaystackClient:
             status=_transfer_status(data.get("status")),
         )
 
+    async def list_banks(self) -> list[Bank]:
+        """Nigerian banks that take NGN transfers (Paystack GET /bank)."""
+        response = await self._send("GET", "/bank?country=nigeria&currency=NGN&perPage=100")
+        if response.status_code >= 400:
+            self._data(response)  # raises the matching AppError
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise AppError("paystack_unavailable", "Paystack sent an unreadable answer.", 502) from exc
+        rows = body.get("data") if isinstance(body, dict) else None
+        if not isinstance(rows, list):
+            raise AppError("paystack_unavailable", "Paystack sent no banks.", 502)
+        banks = {
+            str(row["code"]): Bank(code=str(row["code"]), name=str(row["name"]))
+            for row in rows
+            if isinstance(row, dict) and row.get("code") and row.get("name") and row.get("active", True)
+        }
+        return sorted(banks.values(), key=lambda b: b.name.lower())
+
+    async def resolve_account(self, account_number: str, bank_code: str) -> str:
+        """The name the bank has on the account (Paystack GET /bank/resolve)."""
+        response = await self._send(
+            "GET", f"/bank/resolve?account_number={account_number}&bank_code={bank_code}"
+        )
+        data = self._data(response)
+        name = str(data.get("account_name") or "").strip()
+        if not name:
+            raise AppError("paystack_refused", "The bank didn't give a name for this account.", 422)
+        return name
+
 
 def get_paystack_client() -> PaystackClient:
+    settings = get_payments_settings()
+    if not settings.paystack_secret_key:
+        raise AppError("paystack_not_configured", "PAYSTACK_SECRET_KEY is not set.", 503)
+    return HttpPaystackClient(settings.paystack_secret_key, settings.paystack_base_url)
+
+
+def get_paystack_directory() -> PaystackDirectory:
     settings = get_payments_settings()
     if not settings.paystack_secret_key:
         raise AppError("paystack_not_configured", "PAYSTACK_SECRET_KEY is not set.", 503)

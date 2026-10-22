@@ -259,6 +259,175 @@
         }
       }
     },
+    "/api/v1/banks": {
+      "get": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Banks",
+        "description": "Nigerian banks a payout account can be in.",
+        "operationId": "banks_api_v1_banks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BankOut"
+                  },
+                  "type": "array",
+                  "title": "Response Banks Api V1 Banks Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/payout/recipient/resolve": {
+      "post": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Resolve Account",
+        "description": "Whose name the account is in, so the contractor can check it before saving. Saves nothing.",
+        "operationId": "resolve_account_api_v1_me_payout_recipient_resolve_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountNameOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/payout/recipient": {
+      "get": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "My Payout Recipient",
+        "description": "The account the contractor's releases are paid into (the number masked); 404 until one is saved.",
+        "operationId": "my_payout_recipient_api_v1_me_payout_recipient_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutRecipientOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "payments"
+        ],
+        "summary": "Save Payout Recipient",
+        "description": "Save (or change) the contractor's payout account. The name comes from the bank, not the request.",
+        "operationId": "save_payout_recipient_api_v1_me_payout_recipient_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayoutRecipientOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/otp/request": {
       "post": {
         "tags": [
@@ -3072,6 +3241,44 @@
   },
   "components": {
     "schemas": {
+      "AccountIn": {
+        "properties": {
+          "bank_code": {
+            "type": "string",
+            "maxLength": 10,
+            "minLength": 2,
+            "title": "Bank Code"
+          },
+          "account_number": {
+            "type": "string",
+            "pattern": "^[0-9]{10}$",
+            "title": "Account Number",
+            "description": "10-digit NUBAN"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "bank_code",
+          "account_number"
+        ],
+        "title": "AccountIn",
+        "description": "A Nigerian bank account: the full number goes to Paystack and is never stored."
+      },
+      "AccountNameOut": {
+        "properties": {
+          "account_name": {
+            "type": "string",
+            "title": "Account Name",
+            "description": "The name the bank has on the account"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account_name"
+        ],
+        "title": "AccountNameOut"
+      },
       "AssignSupervisor": {
         "properties": {
           "supervisor_id": {
@@ -3212,6 +3419,24 @@
           "next_cursor"
         ],
         "title": "AuditPage"
+      },
+      "BankOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "BankOut"
       },
       "BoqApprovalOut": {
         "properties": {
@@ -5330,6 +5555,46 @@
           "code"
         ],
         "title": "OtpVerifyIn"
+      },
+      "PayoutRecipientOut": {
+        "properties": {
+          "bank_code": {
+            "type": "string",
+            "title": "Bank Code"
+          },
+          "bank_name": {
+            "type": "string",
+            "title": "Bank Name"
+          },
+          "account_name": {
+            "type": "string",
+            "title": "Account Name"
+          },
+          "account_number_masked": {
+            "type": "string",
+            "title": "Account Number Masked",
+            "description": "Only the last 4 digits, e.g. ******6789"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "bank_code",
+          "bank_name",
+          "account_name",
+          "account_number_masked",
+          "currency",
+          "created_at"
+        ],
+        "title": "PayoutRecipientOut"
       },
       "Pin": {
         "properties": {

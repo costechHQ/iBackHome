@@ -98,6 +98,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/banks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Banks
+         * @description Nigerian banks a payout account can be in.
+         */
+        get: operations["banks_api_v1_banks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/payout/recipient/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve Account
+         * @description Whose name the account is in, so the contractor can check it before saving. Saves nothing.
+         */
+        post: operations["resolve_account_api_v1_me_payout_recipient_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/payout/recipient": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Payout Recipient
+         * @description The account the contractor's releases are paid into (the number masked); 404 until one is saved.
+         */
+        get: operations["my_payout_recipient_api_v1_me_payout_recipient_get"];
+        /**
+         * Save Payout Recipient
+         * @description Save (or change) the contractor's payout account. The name comes from the bank, not the request.
+         */
+        put: operations["save_payout_recipient_api_v1_me_payout_recipient_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/otp/request": {
         parameters: {
             query?: never;
@@ -888,6 +952,27 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AccountIn
+         * @description A Nigerian bank account: the full number goes to Paystack and is never stored.
+         */
+        AccountIn: {
+            /** Bank Code */
+            bank_code: string;
+            /**
+             * Account Number
+             * @description 10-digit NUBAN
+             */
+            account_number: string;
+        };
+        /** AccountNameOut */
+        AccountNameOut: {
+            /**
+             * Account Name
+             * @description The name the bank has on the account
+             */
+            account_name: string;
+        };
         /** AssignSupervisor */
         AssignSupervisor: {
             /**
@@ -938,6 +1023,13 @@ export interface components {
             items: components["schemas"]["AuditEntryOut"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** BankOut */
+        BankOut: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
         };
         /** BoqApprovalOut */
         BoqApprovalOut: {
@@ -1880,6 +1972,27 @@ export interface components {
              */
             code: string;
         };
+        /** PayoutRecipientOut */
+        PayoutRecipientOut: {
+            /** Bank Code */
+            bank_code: string;
+            /** Bank Name */
+            bank_name: string;
+            /** Account Name */
+            account_name: string;
+            /**
+             * Account Number Masked
+             * @description Only the last 4 digits, e.g. ******6789
+             */
+            account_number_masked: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** Pin */
         Pin: {
             /**
@@ -2638,6 +2751,114 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WebhookAck"];
+                };
+            };
+        };
+    };
+    banks_api_v1_banks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankOut"][];
+                };
+            };
+        };
+    };
+    resolve_account_api_v1_me_payout_recipient_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountNameOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_payout_recipient_api_v1_me_payout_recipient_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutRecipientOut"];
+                };
+            };
+        };
+    };
+    save_payout_recipient_api_v1_me_payout_recipient_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayoutRecipientOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

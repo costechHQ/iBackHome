@@ -44,7 +44,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.base import audit
 from app.base.payments.after_commit import after_commit
 from app.base.payments.models import LedgerEntry, PaymentEvent, Payout, PayoutRecipient
-from app.base.payments.paystack import PaystackClient, TransferResult, get_paystack_client
+from app.base.payments.paystack import (
+    Bank,
+    PaystackClient,
+    PaystackDirectory,
+    TransferResult,
+    get_paystack_client,
+    get_paystack_directory,
+)
 from app.core import pagination
 from app.core.errors import AppError
 
@@ -404,6 +411,61 @@ async def register_payout_recipient(
         request=request,
     )
     return recipient
+
+
+def _check_account(account_number: str, bank_code: str) -> str:
+    account_number = account_number.strip()
+    if not _NUBAN.match(account_number):
+        raise AppError("invalid_account_number", "The account number must be 10 digits.", 422)
+    if not _BANK_CODE.match(bank_code):
+        raise AppError("invalid_bank_code", "The bank code is not valid.", 422)
+    return account_number
+
+
+async def list_banks(directory: PaystackDirectory | None = None) -> list[Bank]:
+    """Nigerian banks a payout account can be in (from Paystack)."""
+    return await (directory or get_paystack_directory()).list_banks()
+
+
+async def resolve_account_name(
+    account_number: str, bank_code: str, directory: PaystackDirectory | None = None
+) -> str:
+    """The name the bank has on this account, so the person can check it is theirs before saving.
+
+    - 422 invalid_account_number, invalid_bank_code, paystack_refused (no such account)
+    - 502 paystack_unavailable; 503 paystack_not_configured
+    """
+    account_number = _check_account(account_number, bank_code)
+    return await (directory or get_paystack_directory()).resolve_account(account_number, bank_code)
+
+
+async def save_own_payout_recipient(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    account_number: str,
+    bank_code: str,
+    *,
+    directory: PaystackDirectory | None = None,
+    client: PaystackClient | None = None,
+    request: Request | None = None,
+) -> PayoutRecipient:
+    """A contractor saves the account their releases are paid into.
+
+    The name is the bank's, looked up here (never one the person typed); then the account is
+    registered with Paystack. Saving another account makes it the one used from now on
+    (get_recipient_for returns the newest). Audited by register_payout_recipient. Does not commit.
+    """
+    account_name = await resolve_account_name(account_number, bank_code, directory)
+    return await register_payout_recipient(
+        session,
+        account_name=account_name,
+        account_number=account_number,
+        bank_code=bank_code,
+        actor_id=user_id,
+        user_id=user_id,
+        client=client,
+        request=request,
+    )
 
 
 async def get_payout_recipient(session: AsyncSession, recipient_code: str) -> PayoutRecipient:
