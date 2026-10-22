@@ -1,0 +1,120 @@
+# Render Blueprint for the BACKEND only (ADR 0003). Owner: Christopher.
+# Web and Flutter are not deployed yet. deploy/staging/ (VPS) stays until Render is verified.
+#
+# Create it: Render dashboard > New > Blueprint > pick this repo. Render reads this file from the repo root.
+# Services: api (web), worker + beat (background workers), Postgres 16 (PostGIS), Key Value (Redis).
+#
+# Secrets are NOT in this file. After the first sync, open Environment Groups > ibackhome-app and add the
+# variables listed at the bottom (same names as .env.example). api, worker and beat all read that group.
+#
+# Beat must stay at exactly ONE instance, or every scheduled job (reconcile, reminders, report sends) runs twice.
+
+services:
+  - type: web
+    name: ibackhome-api
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: checksPass # deploy only after backend-ci passes on main
+    preDeployCommand: alembic upgrade head # runs once per deploy, not on every instance start
+    envVars:
+      - fromGroup: ibackhome-app
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ibackhome-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ibackhome-redis
+          property: connectionString
+
+  - type: worker
+    name: ibackhome-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: celery -A app.workers.celery_app worker --loglevel=info
+    autoDeployTrigger: checksPass
+    envVars:
+      - fromGroup: ibackhome-app
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ibackhome-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ibackhome-redis
+          property: connectionString
+
+  - type: worker
+    name: ibackhome-beat
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    numInstances: 1 # never scale this
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
+    autoDeployTrigger: checksPass
+    envVars:
+      - fromGroup: ibackhome-app
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ibackhome-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ibackhome-redis
+          property: connectionString
+
+  - type: keyvalue
+    name: ibackhome-redis
+    region: frankfurt
+    plan: starter
+    maxmemoryPolicy: noeviction # Celery's queue must never be evicted
+    ipAllowList: [] # private network only
+
+databases:
+  - name: ibackhome-db
+    region: frankfurt
+    plan: basic-1gb
+    postgresMajorVersion: "16"
+    ipAllowList: [] # private network only; use the dashboard's External URL temporarily for psql
+
+envVarGroups:
+  - name: ibackhome-app
+    envVars:
+      - key: ENVIRONMENT
+        value: staging # change to production for the live environment
+      - key: DEBUG
+        value: "false"
+      - key: LOG_LEVEL
+        value: INFO
+      # Render's proxy sets X-Forwarded-For and the services are not reachable except through it, so trust it.
+      # (The VPS used Caddy's subnet; Render's proxy addresses are not fixed.)
+      - key: FORWARDED_ALLOW_IPS
+        value: "*"
+      - key: JWT_SECRET
+        generateValue: true # random, longer than the 32 characters the app requires
+
+# Add to the ibackhome-app group in the dashboard (secrets and per-environment values):
+#   CORS_ORIGINS            web origin(s); empty list of real origins is fine until the web phase
+#   STORAGE_ENDPOINT, STORAGE_BUCKET, STORAGE_ACCESS_KEY, STORAGE_SECRET_KEY   Cloudflare R2 (photos are not on Render)
+#   STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, PAYSTACK_SECRET_KEY, ESCROW_WEBHOOK_SECRET   TEST keys on staging
+#   FUNDING_SUCCESS_URL, FUNDING_CANCEL_URL, FX_NGN_PER_GBP, FX_NGN_PER_USD, FX_NGN_PER_EUR, FUNDING_FEE_BPS
+#   LLM_API_KEY, LLM_MODEL
+#   at least one login channel: EMAIL_SMTP_* + EMAIL_FROM, or TERMII_API_KEY + TERMII_SENDER_ID (else nobody can sign in)
+#   SENTRY_DSN, SENTRY_TRACES_SAMPLE_RATE
+#   optional: FCM_*, WHATSAPP_*, NOTIFY_*
+# Stripe webhook URL after deploy: https://<ibackhome-api>.onrender.com/api/v1/webhooks/stripe
