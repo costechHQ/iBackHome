@@ -26,16 +26,26 @@ export default defineConfig({
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
-    : {
-        command: `bun run start -- --port ${port}`,
-        // IBH_DEV_PAGES turns on the dev-only states gallery for the axe and screenshot tests (e2e/states.spec.ts).
-        env: {
-          API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000",
-          IBH_DEV_PAGES: "1",
-          IBH_MOCKS: "all",
+    : [
+        {
+          command: `bun run start -- --port ${port}`,
+          // IBH_DEV_PAGES turns on the dev-only states gallery for the axe and screenshot tests (e2e/states.spec.ts).
+          env: {
+            API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000",
+            IBH_DEV_PAGES: "1",
+            IBH_MOCKS: "all",
+          },
+          url: `${baseURL}/api/healthz`,
+          reuseExistingServer: false,
+          timeout: 60_000,
         },
-        url: `${baseURL}/api/healthz`,
-        reuseExistingServer: false,
-        timeout: 60_000,
-      },
+        // The same build as production runs it: no mocks, no dev pages (e2e/stack/gate-guards.spec.ts).
+        {
+          command: `bun run start -- --port ${port + 1}`,
+          env: { API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000" },
+          url: `http://127.0.0.1:${port + 1}/api/healthz`,
+          reuseExistingServer: false,
+          timeout: 60_000,
+        },
+      ],
 });

@@ -5,16 +5,18 @@
 //   bun scripts/drive/index.ts --to disputed --project "3-bedroom bungalow, Trans-Ekulu"
 //   bun scripts/drive/index.ts --to claimed --milestone 2     # a milestone by its sequence number
 //   bun scripts/drive/index.ts --to funded --currency USD     # the client pays in USD (default GBP)
+//   bun scripts/drive/index.ts --new-project --to funded      # a fresh active project (the gate test uses this)
 //
 // States: funded, claimed, verified, approved (release requested), released (waits for escrow), disputed,
 // sent-back (the supervisor rejects the claim with reasons: back to funded, rework needed).
-// Prints the milestone's id and client URL. Never touches the database; every step is an API call.
+// --project takes a title or an id. Prints the milestone's id and client URL. Never touches the database; every step is an API call.
 import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 
 import { capture, waitAccepted } from "./capture";
 import { DriveError } from "./env";
 import { fundMilestone } from "./funding";
+import { newProject } from "./project";
 import { apiAs, ok, PEOPLE, type Person } from "./session";
 
 const ORDER = ["pending", "funded", "claimed", "verified", "approved", "released"] as const;
@@ -33,6 +35,7 @@ const { values } = parseArgs({
   options: {
     to: { type: "string" },
     project: { type: "string" },
+    "new-project": { type: "boolean", default: false },
     milestone: { type: "string" },
     photos: { type: "string", default: "2" },
     // The client picks the payment currency at checkout (GBP, USD or EUR); the BoQ itself is priced in NGN.
@@ -48,17 +51,31 @@ async function main() {
     throw new DriveError(`--to must be one of: ${TARGETS.join(", ")}`);
   }
   const client = await apiAs(PEOPLE.client);
-  const projects = ok(
-    "projects",
-    await client.GET("/api/v1/projects", { params: { query: { limit: 100 } } }),
-  );
-  const summary = values.project
-    ? projects.items.find((p) => p.title === values.project)
-    : projects.items.find((p) => p.status === "active");
-  if (!summary) throw new DriveError("no active project: run backend/scripts/seed.py and simulator.py first");
+  let projectRef = values.project;
+  if (values["new-project"]) {
+    const created = await newProject();
+    projectRef = created.id;
+    step(`new project "${created.title}": BoQ approved by all three, supervisor assigned`);
+  }
+  // An id is read directly (gate runs add projects, so it may be past the first page); a title is looked up.
+  const isId = projectRef !== undefined && /^[0-9a-f-]{36}$/i.test(projectRef);
+  let projectId = isId ? projectRef : undefined;
+  if (!projectId) {
+    const projects = ok(
+      "projects",
+      await client.GET("/api/v1/projects", { params: { query: { limit: 100 } } }),
+    );
+    projectId = (
+      projectRef
+        ? projects.items.find((p) => p.title === projectRef)
+        : projects.items.find((p) => p.status === "active")
+    )?.id;
+  }
+  if (!projectId)
+    throw new DriveError("no active project: run backend/scripts/seed.py and simulator.py first");
   const project = ok(
     "project",
-    await client.GET("/api/v1/projects/{project_id}", { params: { path: { project_id: summary.id } } }),
+    await client.GET("/api/v1/projects/{project_id}", { params: { path: { project_id: projectId } } }),
   );
 
   const list = async () =>

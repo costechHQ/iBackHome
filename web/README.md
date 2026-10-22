@@ -42,6 +42,10 @@ The web server calls the API at `API_INTERNAL_URL` (default `http://127.0.0.1:80
 
 With Docker: `docker compose up --build` from the repo root also starts `web` on http://localhost:3000.
 
+## Web gate
+
+`e2e/stack/gate.spec.ts` walks the milestone release journey through the screens on a new project each run (the driver's `--new-project`), and `e2e/stack/gate-guards.spec.ts` checks that no screen gets around dual approval, that each portal refuses the other roles, approving by keyboard, and that a server without `IBH_MOCKS` shows nothing mocked (Playwright starts that second server on port 3011). Both repeat with no reset. In CI, `.github/workflows/web-stack.yml` runs every stack test from an empty database, with the same driver steps as below.
+
 ## Seed driver (local data in every milestone state)
 
 The client screens need milestones in every state. The dev seed driver (`scripts/drive/`, never shipped) gets them there through the real API, as the people `backend/scripts/seed.py` creates. Local Docker Compose only.

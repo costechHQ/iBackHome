@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // No backend needed: these check routing, caching and the sign-in form itself. Signing in against the real API
-// is covered with the seed driver in W4.
+// is covered by the stack tests (e2e/stack, IBH_STACK=1).
 
 test("each portal sends a signed-out visitor to sign-in and back afterwards", async ({ page }) => {
   for (const path of ["/projects", "/c", "/ops"]) {
@@ -23,7 +23,16 @@ test("a visitor whose session cookie is left but whose token is gone goes throug
 });
 
 test("portal pages, sign-in and the API proxy are never cacheable", async ({ request }) => {
-  for (const path of ["/projects", "/sign-in", "/api/v1/me"]) {
+  for (const path of [
+    "/projects",
+    "/c",
+    "/c/projects/x/milestones",
+    "/ops",
+    "/ops/disputes",
+    "/ops/disputes/x",
+    "/sign-in",
+    "/api/v1/me",
+  ]) {
     const res = await request.get(path, { maxRedirects: 0 });
     expect(res.headers()["cache-control"], path).toContain("no-store");
   }

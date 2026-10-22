@@ -62,6 +62,17 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] axe: no WCAG 2.1 AA violations on these screens (contractor at 1280 and 390 px, ops at 1440 px) with real data
 - [x] Mocks behind `IBH_MOCKS`: MX-06 (paid to you). Backend: a second ops user in `seed.py` (#62), proposal fields on the ops queue (#63). Gaps logged: W-18 to W-22
 
+### W4 · The web gate
+
+- [x] Gate journey through the screens on a fresh project each run (`e2e/stack/gate.spec.ts`): fund → supervisor captures → the contractor claims → supervisor verifies → the client approves in three taps → simulated escrow releases → receipt and ledger row; then the dispute path: the client disputes, ops 1 proposes rework, ops 2 confirms, the milestone is back to Funded and the contractor can claim again
+- [x] Seed driver `--new-project`: the client creates the project and site, the contractor submits a BoQ, client, contractor and ops approve, ops assigns a supervisor (all through the real API)
+- [x] Dual approval can't be bypassed from any screen (`e2e/stack/gate-guards.spec.ts`): Approve only for the project's client and only on Verified; none on a dispute; none for the contractor; the proposer of a dispute resolution has no approve control; the API (through the web proxy) refuses the contractor and ops with 403
+- [x] Each portal refuses the other roles (403 page); signed-out visitors go to sign-in from every portal route; every portal route is `no-store`
+- [x] The client can approve with the keyboard alone
+- [x] Production-like server (no `IBH_MOCKS`): no mocked data is shown
+- [x] CI: `.github/workflows/web-stack.yml` runs every stack test against Docker Compose from an empty database (seed, simulator, driver), on web and backend changes; simulated locally from an empty database: 22 of 22 pass
+- [ ] On staging: waits for a web host (the backend is moving to Render, ADR 0003; the web app has none yet)
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
