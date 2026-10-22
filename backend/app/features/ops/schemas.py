@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class VettingItem(BaseModel):
@@ -35,6 +35,12 @@ class DisputeItem(BaseModel):
     milestone_id: uuid.UUID
     reason: str
     opened_at: datetime
+    proposed_outcome: str | None = Field(
+        default=None,
+        description="The first ops approval's outcome (release or rework); a different ops user confirms it",
+    )
+    proposed_by: uuid.UUID | None = Field(default=None, description="The ops user who proposed it")
+    proposed_at: datetime | None = None
 
 
 class OpsQueue(BaseModel):
