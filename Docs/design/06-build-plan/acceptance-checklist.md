@@ -40,6 +40,18 @@ The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks belo
 - [x] axe: no WCAG 2.1 AA violations in any frame at 960, 1280 and 390 px (`e2e/states.spec.ts`)
 - [x] Not built yet, logged as W-1 to W-8 in PACKAGE-REPORT (hidden links, Help, bell, ops search and session timer, a dropped placeholder, the `/` route conflict)
 
+### W2 · Client milestone release
+
+- [x] WEB-CLIENT-013 milestone detail in all six states, against the real API (local stack, seed driver): stepper, state panel, evidence checklist, supervisor's verification, money (client currency, NGN, rate at funding), activity in the client's time zone
+- [x] Approve and dispute only on Verified and only for the project's client; no approve button while disputed (stack test)
+- [x] WEB-CLIENT-014 approve in 3 taps on a phone (detail → review → confirm), desktop confirm dialog that ignores Escape; 409 shows the designed conflict state
+- [x] Receipt as a print-styled page (MX-22)
+- [x] WEB-CLIENT-015 raise a dispute and "Release paused"
+- [x] WEB-CLIENT-010 evidence gallery (read-only) with the three checks on every item; rejected captures never shown to the client
+- [x] WEB-CLIENT-017 ledger with escrow now (MX-20, computed), summary, filters and a CSV made in the browser
+- [x] axe: no WCAG 2.1 AA violations on these screens at 1280 and 390 px with real data
+- [x] Mocks behind `IBH_MOCKS`: MX-03 (pays to), MX-10 (dispute reason). Gaps logged: MX-26, MX-27 (new), W-9 to W-17
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page

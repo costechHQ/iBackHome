@@ -12,7 +12,16 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: { baseURL, trace: "retain-on-failure" },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        // Locally, evidence URLs name the Docker storage host; map it so images load (no hosts-file change).
+        launchOptions: { args: ["--host-resolver-rules=MAP storage 127.0.0.1"] },
+      },
+    },
+  ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
@@ -21,6 +30,7 @@ export default defineConfig({
         env: {
           API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000",
           IBH_DEV_PAGES: "1",
+          IBH_MOCKS: "all",
         },
         url: `${baseURL}/api/healthz`,
         reuseExistingServer: false,
