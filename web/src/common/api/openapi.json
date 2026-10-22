@@ -3703,6 +3703,43 @@
             "type": "string",
             "format": "date-time",
             "title": "Opened At"
+          },
+          "proposed_outcome": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed Outcome",
+            "description": "The first ops approval's outcome (release or rework); a different ops user confirms it"
+          },
+          "proposed_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed By",
+            "description": "The ops user who proposed it"
+          },
+          "proposed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed At"
           }
         },
         "type": "object",
