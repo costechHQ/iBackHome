@@ -6,7 +6,8 @@
 //   bun scripts/drive/index.ts --to claimed --milestone 2     # a milestone by its sequence number
 //   bun scripts/drive/index.ts --to funded --currency USD     # the client pays in USD (default GBP)
 //
-// States: funded, claimed, verified, approved (release requested), released (waits for escrow), disputed.
+// States: funded, claimed, verified, approved (release requested), released (waits for escrow), disputed,
+// sent-back (the supervisor rejects the claim with reasons: back to funded, rework needed).
 // Prints the milestone's id and client URL. Never touches the database; every step is an API call.
 import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
@@ -17,8 +18,8 @@ import { fundMilestone } from "./funding";
 import { apiAs, ok, PEOPLE, type Person } from "./session";
 
 const ORDER = ["pending", "funded", "claimed", "verified", "approved", "released"] as const;
-type Target = (typeof ORDER)[number] | "disputed";
-const TARGETS: readonly Target[] = ["funded", "claimed", "verified", "approved", "released", "disputed"];
+type Target = (typeof ORDER)[number] | "disputed" | "sent-back";
+const TARGETS: readonly Target[] = ["funded", "claimed", "verified", "approved", "released", "disputed", "sent-back"];
 
 const { values } = parseArgs({
   options: {
@@ -60,7 +61,7 @@ async function main() {
       }),
     );
   const milestones = await list();
-  const want = target === "disputed" ? "verified" : target;
+  const want = target === "disputed" ? "verified" : target === "sent-back" ? "claimed" : target;
   const milestone = values.milestone
     ? milestones.find((m) => m.sequence === Number(values.milestone))
     : milestones.find((m) => m.status === "pending");
@@ -102,6 +103,29 @@ async function main() {
     );
     milestone.status = "claimed";
     step("claimed by the contractor");
+  }
+
+  if (target === "sent-back" && milestone.status === "claimed") {
+    const ids = evidenceIds.length ? evidenceIds : [await capture(supervisor, project, milestone.id)];
+    if (!evidenceIds.length) await waitAccepted(supervisor, project.id, ids);
+    const api = await apiAs(supervisor);
+    ok(
+      "send back",
+      await api.POST("/api/v1/milestones/{milestone_id}/verify", {
+        params: { path: { milestone_id: milestone.id } },
+        body: {
+          decision: "rejected",
+          checklist: [
+            { item: "Driver check: finished as in the BoQ", passed: true, evidence_ids: [ids[0]!] },
+            { item: "Driver check: no cracks on the north side", passed: false, evidence_ids: [ids.at(-1)!] },
+          ],
+          notes: "Sent back by the dev seed driver: fix the cracks on the north side, then claim again.",
+        },
+        headers: { "Idempotency-Key": randomUUID() },
+      }),
+    );
+    milestone.status = "funded";
+    step("sent back by the supervisor (rework)");
   }
 
   if (milestone.status === "claimed" && reach("verified")) {
