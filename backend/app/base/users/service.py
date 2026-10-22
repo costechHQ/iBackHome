@@ -27,6 +27,7 @@ import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import jwt
 import phonenumbers
@@ -36,6 +37,7 @@ from sqlalchemy import ColumnElement, func, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.base import audit
 from app.base.users.models import OtpChannel, OtpCode, RefreshToken, Role, User, UserStatus
 from app.base.users.otp_sender import OtpSender
 from app.base.users.schemas import TokenPair
@@ -534,4 +536,106 @@ async def invite_contractor(session: AsyncSession, raw_phone: str) -> User:
         )
     if user.status != UserStatus.ACTIVE.value:
         raise AppError("contractor_suspended", "This contractor's account is suspended.", 409)
+    return user
+
+
+# --- Profile and consent (MX-01 in part; NDPA 2023 consent) ------------------------------------------
+
+
+def consent_required(user: User, settings: Settings | None = None) -> bool:
+    """True until the person has agreed to the current terms of use and privacy policy."""
+    settings = settings or get_settings()
+    return (
+        user.consented_at is None
+        or user.terms_version != settings.terms_version
+        or user.privacy_version != settings.privacy_version
+    )
+
+
+def _valid_timezone(name: str) -> bool:
+    try:
+        ZoneInfo(name)
+    except (ZoneInfoNotFoundError, ValueError):
+        return False
+    return True
+
+
+async def update_profile(
+    session: AsyncSession,
+    user: User,
+    changes: dict[str, Any],
+    request: Request | None = None,
+) -> User:
+    """Change the person's own name, country or time zone (only the keys given). Audited with the old and
+    new values of the fields that changed, never the phone or email."""
+    if "full_name" in changes:
+        name = (changes["full_name"] or "").strip()
+        if not name:
+            raise AppError("invalid_full_name", "Enter your full name.", 422)
+        changes["full_name"] = name
+    if "timezone" in changes and (changes["timezone"] is None or not _valid_timezone(changes["timezone"])):
+        raise AppError("invalid_timezone", "Choose a time zone from the list.", 422)
+    if "country" in changes and changes["country"] is None:
+        raise AppError("invalid_country", "Choose your country.", 422)
+
+    before = {k: getattr(user, k) for k in changes if getattr(user, k) != changes[k]}
+    if not before:
+        return user
+    for key in before:
+        setattr(user, key, changes[key])
+    await session.flush()
+    await audit.record(
+        session,
+        user.id,
+        "user.profile_updated",
+        "user",
+        user.id,
+        before=before,
+        after={k: getattr(user, k) for k in before},
+        request=request,
+    )
+    return user
+
+
+async def record_consent(
+    session: AsyncSession,
+    user: User,
+    terms_version: str,
+    privacy_version: str,
+    request: Request | None = None,
+) -> User:
+    """The person agrees to the current terms of use and privacy policy. Agreeing to older versions (a page
+    left open while they changed) is refused with 409, so nobody consents to something they didn't see."""
+    settings = get_settings()
+    if terms_version != settings.terms_version or privacy_version != settings.privacy_version:
+        raise AppError(
+            "consent_version_outdated",
+            "The terms or privacy policy changed. Read the current versions and agree again.",
+            409,
+        )
+    if not consent_required(user, settings):
+        return user
+    before = {
+        "terms_version": user.terms_version,
+        "privacy_version": user.privacy_version,
+        "consented_at": user.consented_at,
+    }
+    user.terms_version = terms_version
+    user.privacy_version = privacy_version
+    user.consented_at = _utcnow()
+    await session.flush()
+    await audit.record(
+        session,
+        user.id,
+        "user.consented",
+        "user",
+        user.id,
+        before=before,
+        after={
+            "terms_version": terms_version,
+            "privacy_version": privacy_version,
+            "consented_at": user.consented_at,
+        },
+        request=request,
+    )
     return user

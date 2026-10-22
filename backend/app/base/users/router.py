@@ -10,8 +10,20 @@ from typing import Any
 from fastapi import APIRouter, Request, Response
 
 from app.base.users import service
+from app.base.users.models import User
 from app.base.users.otp_sender import OtpSenderDep
-from app.base.users.schemas import MeOut, OtpRequestIn, OtpRequestOut, OtpVerifyIn, RefreshIn, TokenPair
+from app.base.users.schemas import (
+    ConsentIn,
+    ConsentOut,
+    MeOut,
+    MeUpdate,
+    OtpRequestIn,
+    OtpRequestOut,
+    OtpVerifyIn,
+    RefreshIn,
+    TokenPair,
+)
+from app.core.config import get_settings
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 
@@ -67,6 +79,64 @@ async def refresh(
     return await service.rotate_refresh_token(session, payload.refresh_token)
 
 
+def _me(user: User) -> MeOut:
+    return MeOut.model_validate(user).model_copy(update={"consent_required": service.consent_required(user)})
+
+
 @router.get("/me", response_model=MeOut)
 async def me(user: service.CurrentUserDep) -> MeOut:
-    return MeOut.model_validate(user)
+    return _me(user)
+
+
+@router.patch("/me", response_model=MeOut)
+async def update_me(
+    payload: MeUpdate,
+    request: Request,
+    session: SessionDep,
+    user: service.CurrentUserDep,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """The signed-in person changes their own name, country or time zone (only the fields sent)."""
+    scope = f"PATCH /me {user.id}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    await service.update_profile(session, user, payload.model_dump(exclude_unset=True), request)
+    body = _me(user).model_dump(mode="json")
+    await remember(session, key, scope, 200, body)
+    await session.commit()
+    return body
+
+
+def _consent(user: User) -> ConsentOut:
+    settings = get_settings()
+    return ConsentOut(
+        terms_version=settings.terms_version,
+        privacy_version=settings.privacy_version,
+        consented_at=user.consented_at,
+        consent_required=service.consent_required(user, settings),
+    )
+
+
+@router.get("/me/consent", response_model=ConsentOut)
+async def consent(user: service.CurrentUserDep) -> ConsentOut:
+    """The terms of use and privacy policy versions to agree to (NDPA 2023), and whether this person has."""
+    return _consent(user)
+
+
+@router.post("/me/consent", response_model=ConsentOut)
+async def give_consent(
+    payload: ConsentIn,
+    request: Request,
+    session: SessionDep,
+    user: service.CurrentUserDep,
+    key: IdempotencyKeyDep,
+) -> Any:
+    """The person agrees to the current versions; older ones get 409 consent_version_outdated."""
+    scope = f"POST /me/consent {user.id}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    await service.record_consent(session, user, payload.terms_version, payload.privacy_version, request)
+    body = _consent(user).model_dump(mode="json")
+    await remember(session, key, scope, 200, body)
+    await session.commit()
+    return body

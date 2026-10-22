@@ -113,7 +113,7 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 
 | Table | Feature | Key fields |
 | --- | --- | --- |
-| `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status (`active`, `suspended`), timezone, country |
+| `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status (`active`, `suspended`), timezone, country, terms_version, privacy_version, consented_at (NDPA 2023 consent; the current versions are settings, and a new version asks everyone again) |
 | `otp_codes` | base/users | identifier (E.164 phone or lower-case email), channel (`sms`, `whatsapp`, `email`), code_hash (HMAC-SHA256, never the code), expires_at, attempts, consumed_at, requested_ip |
 | `refresh_tokens` | base/users | user → users, token_hash (SHA-256, unique), expires_at, used_at, revoked_at, replaced_by → refresh_tokens |
 | `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating |
@@ -426,7 +426,9 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/auth/otp/request` | anyone | Send OTP to phone or email |
 | POST | `/auth/otp/verify` | anyone | Exchange OTP for access + refresh tokens |
 | POST | `/auth/refresh` | signed in | New access token |
-| GET | `/me` | signed in | Current user and role |
+| GET | `/me` | signed in | Current user and role; `consent_required` until the current terms and privacy policy are agreed |
+| PATCH | `/me` | signed in | Change own full_name, country, timezone (not phone or email: they are sign-in identifiers) |
+| GET, POST | `/me/consent` | signed in | Current terms and privacy versions; agree to them (older versions: 409 `consent_version_outdated`) |
 | POST | `/projects` | client | Create project, invite contractor |
 | GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
