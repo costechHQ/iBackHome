@@ -4,6 +4,7 @@
 //   bun scripts/drive/index.ts --to verified                  # next pending milestone of the first project
 //   bun scripts/drive/index.ts --to disputed --project "3-bedroom bungalow, Trans-Ekulu"
 //   bun scripts/drive/index.ts --to claimed --milestone 2     # a milestone by its sequence number
+//   bun scripts/drive/index.ts --to funded --currency USD     # the client pays in USD (default GBP)
 //
 // States: funded, claimed, verified, approved (release requested), released (waits for escrow), disputed.
 // Prints the milestone's id and client URL. Never touches the database; every step is an API call.
@@ -25,6 +26,8 @@ const { values } = parseArgs({
     project: { type: "string" },
     milestone: { type: "string" },
     photos: { type: "string", default: "2" },
+    // The client picks the payment currency at checkout (GBP, USD or EUR); the BoQ itself is priced in NGN.
+    currency: { type: "string", default: "GBP" },
   },
 });
 
@@ -76,7 +79,7 @@ async function main() {
       projectId: project.id,
       milestoneId: milestone.id,
       clientId: project.client_id,
-      currency: project.currency,
+      currency: values.currency ?? "GBP",
       amountNgnMinor: milestone.amount_minor,
     });
     milestone.status = "funded";
