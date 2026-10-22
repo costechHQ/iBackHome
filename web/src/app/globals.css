@@ -1,1 +1,12 @@
 @import "tailwindcss";
+@import "../common/theme/tokens.css";
+@import "../common/theme/theme.css";
+
+@layer base {
+  body {
+    @apply bg-white text-slate antialiased;
+    font: var(--ibh-type-body);
+    /* Native controls (radios, checkboxes) take the token accent, not the browser's own blue. */
+    accent-color: var(--ibh-accent);
+  }
+}

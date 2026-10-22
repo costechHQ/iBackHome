@@ -1206,6 +1206,18 @@ export interface components {
              * Format: date-time
              */
             opened_at: string;
+            /**
+             * Proposed Outcome
+             * @description The first ops approval's outcome (release or rework); a different ops user confirms it
+             */
+            proposed_outcome?: string | null;
+            /**
+             * Proposed By
+             * @description The ops user who proposed it
+             */
+            proposed_by?: string | null;
+            /** Proposed At */
+            proposed_at?: string | null;
         };
         /** DisputeOut */
         DisputeOut: {

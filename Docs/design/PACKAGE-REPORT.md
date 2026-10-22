@@ -174,6 +174,43 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 | C-10 | WEB-CONTRACTOR-006 | Dispute "Under review" chip in bad tone | Evidence "Under review" is warn | Keep Disputed (bad) for disputes, warn for evidence. |
 | C-11 | Stage 1 G-12 vs Spec | Contractor can dispute a supervisor rejection | Spec state machine only has verified → disputed | Decided 2026-10-21 (Gabriel): not built. Logged in 04-api-mapping/missing-endpoints.md (MX-25). |
 
+### Where the backend differs from the designs (found while building; the backend wins)
+
+| # | Where | Design says | Backend does | What the web app does |
+|---|---|---|---|---|
+| B-1 | WEB-PUBLIC-010 "Wrong code" | Shows "3 attempts left" | `invalid_code` (400) has no attempts-left count | Shows the designed wrong-code message without the count. |
+| B-2 | error-codes-to-ui.md, OTP rows | Assumed codes and statuses | `invalid_code` 400, `otp_expired` 400, `too_many_attempts` 429, `rate_limited` 429 with `Retry-After`; refresh reuse is 401 `refresh_token_reused` | Maps the real codes; the rate-limit wait comes from `Retry-After`. |
+| B-3 | state-to-ui.md Dispute, WEB-OPS-006 | Rework needs one ops approver | `POST /disputes/{id}/resolve` needs two different ops users for **both** outcomes, and the second must choose the same outcome (409 `second_approval_required` / `resolution_mismatch`) | The proposer sees "Waiting for 2nd approver"; another ops user can only confirm the proposed outcome. |
+| B-4 | WEB-OPS-001, AND-SUPERVISOR-003, WEB-CLIENT-023 sign-out | Sign-out ends the session | No sign-out endpoint (MX-19) | Sign-out clears the web cookies; the refresh token stays valid on the server until it expires. |
+| B-5 | 01-design-system/tokens.css | `@font-face` rules pointing at `../05-assets/fonts` | (web build) | The web copy drops them and loads the same files with `next/font/local`; `--ibh-font-sans` / `--ibh-font-mono` point at those fonts first. |
+
+### Web build notes (decided with Gabriel; recorded as each stage builds)
+
+| # | Where | What the designs show | What the web app does, and why |
+|---|---|---|---|
+| W-1 | Every top bar and the ops sidebar | Links to screens that aren't built yet | Each item is hidden until its screen exists (`web/src/common/layout/nav.ts`, flag `ready`), so nobody follows a link to a 404. The dev gallery shows them all for comparison. |
+| W-2 | ClientTop, ConTop, WEB-CLIENT-024 | "Help", "Help centre", "Contact us" | Hidden until those pages exist (WEB-PUBLIC-007; no help centre is designed). |
+| W-3 | ClientTop, ConTop | Notifications bell with a count | Hidden until WEB-CLIENT-020 and MX-11 exist. |
+| W-4 | Ops sidebar and header | Global search; "session 3 h left" | Hidden: no search endpoint, and the backend has no ops session limit (the design's 8 h is a placeholder). The environment badge (LOCAL / STAGING / PRODUCTION) is shown, from `IBH_ENVIRONMENT`. |
+| W-5 | WEB-CLIENT-024 session expired | "signed out after [12 hours]" | The bracketed placeholder is left out: "For your security, you were signed out." |
+| W-6 | WEB-CLIENT-008 route `/` vs WEB-PUBLIC-001 route `/` | Both the client home and the public landing page are at `/` | **Open conflict.** The client home stays at `/projects` until decided: `/` must stay a static public page (ADR 0003), so it can't also be a signed-in dashboard. |
+| W-7 | WEB-CONTRACTOR-003 | Contractor home at `/c` | Built at `/c` (W1a had `/c/projects`). |
+| W-8 | Focus ring | Sheet: 2px white + 4px accent ring | The token stylesheet's own `:focus-visible` outline (2px accent, 2px offset; on-dark colour inside `.ibh-on-navy`) is the one indicator everywhere. It is unlayered, so it always wins over component classes. |
+| W-9 | WEB-CLIENT-013/014/015 "People", "Verified by Ifeanyi Okafor" | Names of the contractor and supervisor | Named by role ("the contractor", "the supervisor"); the People card is hidden until MX-26. |
+| W-10 | WEB-CLIENT-013 evidence checklist before verification | Rows from ops checklist templates ("Not captured") | No template endpoint (missing field "Checklist templates"): before verification the card lists the supervisor's captures for the milestone; after it, the supervisor's own checklist. |
+| W-11 | WEB-CLIENT-010 filters | Date range filter | No date filter in `GET /projects/{id}/evidence`; left out. Cards show the short id where the design has a title (evidence has no title field). |
+| W-12 | WEB-CLIENT-015 raise a dispute | "Evidence it's about" picker | `DisputeCreate` has only `reason`; the picker is left out and the chosen "What's wrong?" starts the reason. |
+| W-13 | WEB-CLIENT-015 outcomes A and B, dispute timeline | Resolved dispute pages | Need MX-10 (no dispute read): only "Release paused" is built. |
+| W-14 | WEB-CLIENT-017 ledger | Nightly reconciliation sentence, "[£ FEE]", "Paid into bank accounts" card | No endpoint for the reconcile result; the fee placeholder is dropped; the payouts card and Payouts rows appear once the ledger has payout entries. |
+| W-15 | Milestones tab | No client milestone list is designed (the list is on WEB-CLIENT-009) | `/projects/{id}/milestones` uses the designed milestone rows of WEB-CONTRACTOR-005 with the client's amounts; `/projects/{id}` opens the milestone that needs attention until WEB-CLIENT-009 exists. |
+| W-16 | WEB-CLIENT-013 pending | "Fund this milestone", "≈ £ estimate at today's rate" | Hidden until the funding screens (WEB-CLIENT-007/016); no endpoint gives today's rate, so a pending milestone shows NGN only. |
+| W-17 | Evidence, receipts, ledger references (EV-2118, R-3307, T-2417) | Human-readable references | The API has UUIDs only: screens show the first 8 characters in mono. |
+| W-18 | WEB-CONTRACTOR-003 dashboard | "Paid to you", the BoQ item on each card, the track record | "Paid to you" comes from the MX-06 mock behind `IBH_MOCKS` and is hidden without it; the BoQ item (contractor BoQ stage) and track record (MX-23) aren't shown. "Needs you" lists milestones the supervisor sent back. |
+| W-19 | WEB-CONTRACTOR-005 milestones and claim | Evidence rows from ops checklist templates, supplier deductions, the supervisor card, "Client: name", BoQ / Evidence / Orders tabs | Like W-10, the open milestone lists the supervisor's captures; deductions need MX-05 and names MX-26, so "For you on release" equals the milestone amount; the other project tabs stay hidden until built (W-1). |
+| W-20 | WEB-CONTRACTOR-006 sent back | A note per checklist item, "Start rework", "Dispute this rejection" | The backend keeps one note per verification (shown as the supervisor's words) and passed / not ready per item; "Start rework" has no backend step, so the screen offers "Claim {milestone} again"; disputing a rejection is not built (C-11, MX-25). |
+| W-21 | WEB-OPS-006 queue | "Resolved 14" tab, "Unassigned", "[2 business days]" target, "Raised by Contractor" | No dispute list (MX-10) and no assignment in the backend: only open disputes are listed, the status is "Waiting for a proposal" or "Waiting for 2nd approver", and the placeholder target is left out. Only the client can raise a dispute (backend), so "Raised by" says Client. `/ops` opens on this queue until WEB-OPS-002 exists. |
+| W-22 | WEB-OPS-006 resolution | Timeline with names, "Disagree", supplier split of the money held | The timeline is real, read from `GET /ops/audit` (the milestone's and the dispute's entries; no MX-10 mock needed), with people by role and "you". "Disagree" isn't built: the backend can't withdraw a proposal. Money held shows the milestone amount only (supplier orders need MX-05). The proposer's note comes from the audit entry. |
+
 ## Colours outside the Stage 2 token set
 
 All hex values in `screen.html` style attributes and board CSS are mapped to `var(--ibh-*)`. Values on approved boards that are not in the Stage 2 token set are kept as `supplementary` tokens (`x-*` in tokens.json / tokens.css) so the screens render as approved; confirm or replace them:

@@ -1,0 +1,82 @@
+/* Copied from Docs/design/01-design-system/tokens.css by scripts/sync-tokens.sh; do not edit by hand.
+   @font-face rules are dropped: fonts load through next/font/local (fonts.ts). */
+:root {
+  --ibh-navy-900: #131F39; /* Primary: buttons, header and price blocks, active states */
+  --ibh-navy-800: #1E2B4A; /* Primary hover / pressed */
+  --ibh-navy-700: #2A3753; /* Raised surface on navy (inputs and chips on navy blocks) */
+  --ibh-navy-200: #C9D3E3; /* Text and lines on navy */
+  --ibh-ink: #0B1324; /* Headings and strong text */
+  --ibh-slate: #3A4354; /* Body text */
+  --ibh-muted: #5F6878; /* Secondary text (4.5:1 on white and mist) */
+  --ibh-white: #FFFFFF; /* Page and card background */
+  --ibh-mist: #F4F8FB; /* Secondary surface: secondary buttons, inputs, panels */
+  --ibh-canvas: #F1F3F5; /* App background behind cards; board background */
+  --ibh-line: #E4E8EE; /* Hairline borders and dividers */
+  --ibh-line-strong: #7E889A; /* Input borders, dashed placeholders (3:1 non-text contrast) */
+  --ibh-frame: #D5DBE3; /* Card outline, secondary button border */
+  --ibh-accent: #2F5FC4; /* Links, focus ring, selected states only */
+  --ibh-accent-hover: #1F4699; /* Link hover */
+  --ibh-accent-tint: #E8EFFC; /* Selected row / info chip background */
+  --ibh-row-highlight: #F7FAFF; /* Hovered or selected table row */
+  --ibh-focus-on-dark: #7FA2E8; /* Focus ring on navy surfaces */
+  --ibh-escrow-bar: #8C97AD; /* "In escrow" segment of the spend bar */
+  --ibh-placeholder: #E6ECF3; /* Photo / media placeholder blocks */
+  --ibh-camera: #1B2436; /* Camera preview surface */
+  --ibh-ok-bg: #E7F4EC; --ibh-ok-fg: #1E6B45; /* Accepted, released, paid, verified by iBackHome */
+  --ibh-warn-bg: #FDF1D8; --ibh-warn-fg: #8A5300; /* Claimed, flagged / under review, stale, waiting */
+  --ibh-bad-bg: #FDECEA; --ibh-bad-fg: #B42318; /* Rejected, disputed, failed */
+  --ibh-neutral-bg: #EEF1F5; --ibh-neutral-fg: #4A5363; /* Pending, funded, queued, draft, scheduled */
+  --ibh-info-bg: #E8EFFC; --ibh-info-fg: #2552B0; /* Verified (awaiting approval), active, in review */
+  /* Supplementary: on approved boards, not in the Stage 2 set (confirm or replace) */
+  --ibh-x-placeholder-border: #C2CAD5; /* Dashed border of "coming soon" and empty placeholders */
+  --ibh-x-map-land: #E6E9ED; /* Map illustration: plots */
+  --ibh-x-map-block: #E2E6EB; /* Map illustration: buildings */
+  --ibh-x-whatsapp-wallpaper: #ECE7DF; /* WhatsApp chat background in phone mocks (third-party UI) */
+  --ibh-x-whatsapp-bubble-out: #DCE8FB; /* Outgoing chat bubble in the assistant mock */
+  --ibh-x-chat-bg: #ECE9E4; /* Chat background in the invitation mock */
+  --ibh-x-on-navy-muted: #9AA6BB; /* Small caps headings in the footer; disabled text on navy */
+  --ibh-x-ok-on-dark: #8FD3AE; /* Success icon on a navy toast */
+  --ibh-x-bad-on-dark: #F1C4BF; /* Error text on a navy surface */
+  --ibh-x-bad-icon-on-dark: #F4A79F; /* Error icon on a navy toast */
+  --ibh-x-destructive-hover: #912018; /* Destructive button hover */
+  --ibh-font-sans: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+  --ibh-font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+  --ibh-type-display: 700 56px/62px var(--ibh-font-sans); --ibh-type-display-tracking: -0.02em;
+  --ibh-type-h1: 700 36px/44px var(--ibh-font-sans); --ibh-type-h1-tracking: -0.02em;
+  --ibh-type-h2: 700 28px/36px var(--ibh-font-sans); --ibh-type-h2-tracking: -0.02em;
+  --ibh-type-h3: 600 20px/28px var(--ibh-font-sans); --ibh-type-h3-tracking: -0.01em;
+  --ibh-type-body-lg: 400 16px/24px var(--ibh-font-sans); --ibh-type-body-lg-tracking: 0;
+  --ibh-type-body: 400 15px/24px var(--ibh-font-sans); --ibh-type-body-tracking: 0;
+  --ibh-type-small: 400 14px/20px var(--ibh-font-sans); --ibh-type-small-tracking: 0;
+  --ibh-type-caption: 600 12px/16px var(--ibh-font-sans); --ibh-type-caption-tracking: 0.06em;
+  --ibh-type-android-body: 400 15px/22px var(--ibh-font-sans); --ibh-type-android-body-tracking: 0;
+  --ibh-type-ops-body: 400 13px/19px var(--ibh-font-sans); --ibh-type-ops-body-tracking: 0;
+  --ibh-type-mono: 500 13px/20px var(--ibh-font-mono); --ibh-type-mono-tracking: 0;
+  --ibh-space-4: 4px;
+  --ibh-space-8: 8px;
+  --ibh-space-12: 12px;
+  --ibh-space-16: 16px;
+  --ibh-space-20: 20px;
+  --ibh-space-24: 24px;
+  --ibh-space-32: 32px;
+  --ibh-space-40: 40px;
+  --ibh-space-48: 48px;
+  --ibh-space-64: 64px;
+  --ibh-radius-tag: 6px;
+  --ibh-radius-control: 8px;
+  --ibh-radius-card: 12px;
+  --ibh-radius-dialog: 16px;
+  --ibh-radius-sheet: 20px;
+  --ibh-radius-device: 24px;
+  --ibh-radius-pill: 999px;
+  --ibh-shadow-card: 0 1px 2px rgba(19,31,57,0.06);
+  --ibh-shadow-raised: 0 4px 12px rgba(19,31,57,0.08);
+  --ibh-shadow-dialog: 0 24px 48px rgba(11,19,36,0.24);
+  --ibh-target-web: 44px;
+  --ibh-target-android: 48px;
+}
+
+/* Focus: visible on every interactive element */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 2px solid var(--ibh-accent); outline-offset: 2px; }
+.ibh-on-navy :where(a, button):focus-visible { outline-color: var(--ibh-focus-on-dark); }
+.ibh-tabular { font-variant-numeric: tabular-nums; }

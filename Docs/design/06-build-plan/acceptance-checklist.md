@@ -16,6 +16,52 @@ The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks belo
 - [x] Docker image (standalone, Node), `web` in local Compose and staging Compose, Caddy route on its own hostname
 - [x] ADR 0003 and the Spec update (separate commit)
 
+### W1a · Tokens, auth proxy, API wrapper, helpers (no designed screens)
+
+- [x] Tokens copied from `01-design-system/tokens.css` (drift test) and mapped into Tailwind with `@theme inline`; Tailwind's default colours, radii and shadows removed; no hex in the theme
+- [x] Inter and JetBrains Mono self-hosted with `next/font/local` (latin + latin-ext for ₦)
+- [x] Auth BFF: OTP exchange, httpOnly cookies, same-origin `/api/v1/*` proxy, single-flight refresh with a 30 s reuse window, Origin check on writes, token routes blocked
+- [x] Role guards: `src/proxy.ts` (session present, token fresh) + each portal layout (role from `GET /me`)
+- [x] API wrapper: generated client, `ApiError` → `error-codes-to-ui.md` patterns (409 = conflict), one Idempotency-Key per write action
+- [x] Money helper (BigInt minor units, decimal-string FX, no floats); time helper (client zone / WAT, UTC on hover)
+- [x] Status chip registry generated from `state-to-ui.md` (drift test, backend enums checked)
+- [x] Allowed-actions helper for milestones and disputes (two different ops users for either outcome)
+- [x] Plain OTP sign-in at `/sign-in` with the WEB-PUBLIC-010 copy for the backend's real errors (designed AuthCard states come in the auth stage)
+- [x] Signed-in pages, sign-in and the proxy send `Cache-Control: no-store` (Playwright test)
+- [x] Gaps logged: MX-19 (sign-out only clears cookies); backend differences B-1 to B-5 in PACKAGE-REPORT
+
+### W1b · UI kit, shells, system pages
+
+- [x] UI kit in `web/src/common/ui/`: buttons (loading keeps its colour), text field, select, error summary, segmented control, status chip, alert, toast, skeleton (slow after 10 s), empty state, card, avatar, table, dialog and alert dialog, money display, escrow trust line, wordmark, time with UTC on hover
+- [x] Tokens only: a test fails on any hex/rgb colour or Tailwind arbitrary value in `src/`
+- [x] Shells: ClientTop (project switcher, account menu), project header + ClientTabs, ClientNav (mobile), ConTop, ops sidebar with queue counts and environment badge
+- [x] System states (WEB-CLIENT-024): 404, 500 with reference, 403, 409 conflict, form validation, session expired (can't be dismissed, returns to the page), offline bar (follows the connection), loading skeleton, toasts, confirmation and destructive dialogs
+- [x] Dialogs trap focus and return it to the opener; Escape doesn't close a dialog about money; the safe choice is on the left
+- [x] axe: no WCAG 2.1 AA violations in any frame at 960, 1280 and 390 px (`e2e/states.spec.ts`)
+- [x] Not built yet, logged as W-1 to W-8 in PACKAGE-REPORT (hidden links, Help, bell, ops search and session timer, a dropped placeholder, the `/` route conflict)
+
+### W2 · Client milestone release
+
+- [x] WEB-CLIENT-013 milestone detail in all six states, against the real API (local stack, seed driver): stepper, state panel, evidence checklist, supervisor's verification, money (client currency, NGN, rate at funding), activity in the client's time zone
+- [x] Approve and dispute only on Verified and only for the project's client; no approve button while disputed (stack test)
+- [x] WEB-CLIENT-014 approve in 3 taps on a phone (detail → review → confirm), desktop confirm dialog that ignores Escape; 409 shows the designed conflict state
+- [x] Receipt as a print-styled page (MX-22)
+- [x] WEB-CLIENT-015 raise a dispute and "Release paused"
+- [x] WEB-CLIENT-010 evidence gallery (read-only) with the three checks on every item; rejected captures never shown to the client
+- [x] WEB-CLIENT-017 ledger with escrow now (MX-20, computed), summary, filters and a CSV made in the browser
+- [x] axe: no WCAG 2.1 AA violations on these screens at 1280 and 390 px with real data
+- [x] Mocks behind `IBH_MOCKS`: MX-03 (pays to), MX-10 (dispute reason). Gaps logged: MX-26, MX-27 (new), W-9 to W-17
+
+### W3 · Contractor claim and ops disputes
+
+- [x] WEB-CONTRACTOR-003 dashboard at `/c`: greeting in WAT, "Needs you" (milestones sent back), one card per project with released and held NGN
+- [x] WEB-CONTRACTOR-005 milestones with the project row (‹ Projects, title, status, Milestones tab); "Claim milestone" only on Funded, confirm dialog, 409 as the designed conflict; NGN only
+- [x] WEB-CONTRACTOR-006 sent back: the supervisor's notes, each item Accepted / Not ready, money still held, "Claim again" (the stack test claims it)
+- [x] WEB-OPS-006 queue from `GET /ops/queue` with project, milestone and money held; Disputes in the ops sidebar
+- [x] WEB-OPS-006 resolution: real timeline from the audit log, evidence by supervisor / contractor, money held; step 1 proposes with a required note, step 2 a different ops user confirms the same outcome; the same user confirming gets 409 `second_approval_required` (stack test, two seeded ops users)
+- [x] axe: no WCAG 2.1 AA violations on these screens (contractor at 1280 and 390 px, ops at 1440 px) with real data
+- [x] Mocks behind `IBH_MOCKS`: MX-06 (paid to you). Backend: a second ops user in `seed.py` (#62), proposal fields on the ops queue (#63). Gaps logged: W-18 to W-22
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page

@@ -1,0 +1,132 @@
+/* Tailwind theme mapped onto the design tokens (tokens.css). Every value is a var(--ibh-*) reference:
+   change a token there, never here. Tailwind's default colours, radii and shadows are removed, so a
+   class like bg-red-500 doesn't exist and only token-based utilities can be used. */
+
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Brand and neutrals */
+  --color-navy-900: var(--ibh-navy-900);
+  --color-navy-800: var(--ibh-navy-800);
+  --color-navy-700: var(--ibh-navy-700);
+  --color-navy-200: var(--ibh-navy-200);
+  --color-primary: var(--ibh-navy-900);
+  --color-primary-hover: var(--ibh-navy-800);
+  --color-ink: var(--ibh-ink);
+  --color-slate: var(--ibh-slate);
+  --color-muted: var(--ibh-muted);
+  --color-white: var(--ibh-white);
+  --color-mist: var(--ibh-mist);
+  --color-canvas: var(--ibh-canvas);
+  --color-line: var(--ibh-line);
+  --color-line-strong: var(--ibh-line-strong);
+  --color-frame: var(--ibh-frame);
+  --color-accent: var(--ibh-accent);
+  --color-accent-hover: var(--ibh-accent-hover);
+  --color-accent-tint: var(--ibh-accent-tint);
+  --color-row-highlight: var(--ibh-row-highlight);
+  --color-focus-on-dark: var(--ibh-focus-on-dark);
+  --color-escrow-bar: var(--ibh-escrow-bar);
+  --color-placeholder: var(--ibh-placeholder);
+  --color-camera: var(--ibh-camera);
+
+  /* Status pairs: only inside chips and alerts (components.md) */
+  --color-ok-bg: var(--ibh-ok-bg);
+  --color-ok-fg: var(--ibh-ok-fg);
+  --color-warn-bg: var(--ibh-warn-bg);
+  --color-warn-fg: var(--ibh-warn-fg);
+  --color-bad-bg: var(--ibh-bad-bg);
+  --color-bad-fg: var(--ibh-bad-fg);
+  --color-neutral-bg: var(--ibh-neutral-bg);
+  --color-neutral-fg: var(--ibh-neutral-fg);
+  --color-info-bg: var(--ibh-info-bg);
+  --color-info-fg: var(--ibh-info-fg);
+
+  /* Supplementary tokens kept from the approved boards (PACKAGE-REPORT "Colours outside the Stage 2 set") */
+  --color-x-placeholder-border: var(--ibh-x-placeholder-border);
+  --color-x-map-land: var(--ibh-x-map-land);
+  --color-x-map-block: var(--ibh-x-map-block);
+  --color-x-on-navy-muted: var(--ibh-x-on-navy-muted);
+  --color-x-ok-on-dark: var(--ibh-x-ok-on-dark);
+  --color-x-bad-on-dark: var(--ibh-x-bad-on-dark);
+  --color-x-bad-icon-on-dark: var(--ibh-x-bad-icon-on-dark);
+  --color-x-destructive-hover: var(--ibh-x-destructive-hover);
+
+  --font-sans: var(--ibh-font-sans);
+  --font-mono: var(--ibh-font-mono);
+
+  --radius-*: initial;
+  --radius-tag: var(--ibh-radius-tag);
+  --radius-control: var(--ibh-radius-control);
+  --radius-card: var(--ibh-radius-card);
+  --radius-dialog: var(--ibh-radius-dialog);
+  --radius-sheet: var(--ibh-radius-sheet);
+  --radius-device: var(--ibh-radius-device);
+  --radius-pill: var(--ibh-radius-pill);
+
+  --shadow-*: initial;
+  --shadow-card: var(--ibh-shadow-card);
+  --shadow-raised: var(--ibh-shadow-raised);
+  --shadow-dialog: var(--ibh-shadow-dialog);
+
+  /* Minimum touch targets: min-h-target, size-target */
+  --spacing-target: var(--ibh-target-web);
+}
+
+/* The one token override: tokens.css names the families 'Inter' and 'JetBrains Mono', but next/font/local
+   registers the same files under hashed names (fonts.ts). Point the stacks at those first; the rest of each
+   stack is the token's own fallback list. The type tokens below use these stacks, so they follow. */
+:root {
+  --ibh-font-sans:
+    var(--font-inter-latin), var(--font-inter-latin-ext), "Segoe UI", Roboto, Arial, sans-serif;
+  --ibh-font-mono:
+    var(--font-mono-latin), var(--font-mono-latin-ext), ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* Type scale: the tokens are font shorthands, so each style is one class (type-h1, type-body, ...).
+   They live in the components layer, below every utility: the font shorthand would otherwise reset a
+   font-semibold or tracking-normal written next to it, depending on stylesheet order. */
+@layer components {
+  .type-display {
+    font: var(--ibh-type-display);
+    letter-spacing: var(--ibh-type-display-tracking);
+  }
+  .type-h1 {
+    font: var(--ibh-type-h1);
+    letter-spacing: var(--ibh-type-h1-tracking);
+  }
+  .type-h2 {
+    font: var(--ibh-type-h2);
+    letter-spacing: var(--ibh-type-h2-tracking);
+  }
+  .type-h3 {
+    font: var(--ibh-type-h3);
+    letter-spacing: var(--ibh-type-h3-tracking);
+  }
+  .type-body-lg {
+    font: var(--ibh-type-body-lg);
+    letter-spacing: var(--ibh-type-body-lg-tracking);
+  }
+  .type-body {
+    font: var(--ibh-type-body);
+    letter-spacing: var(--ibh-type-body-tracking);
+  }
+  .type-small {
+    font: var(--ibh-type-small);
+    letter-spacing: var(--ibh-type-small-tracking);
+  }
+  .type-caption {
+    font: var(--ibh-type-caption);
+    letter-spacing: var(--ibh-type-caption-tracking);
+  }
+  .type-ops-body {
+    font: var(--ibh-type-ops-body);
+    letter-spacing: var(--ibh-type-ops-body-tracking);
+  }
+  .type-mono {
+    font: var(--ibh-type-mono);
+    letter-spacing: var(--ibh-type-mono-tracking);
+  }
+}
