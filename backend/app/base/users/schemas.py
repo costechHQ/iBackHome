@@ -1,6 +1,7 @@
 """Request and response shapes (Pydantic) for users. Owner: Christopher."""
 
 import uuid
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -55,3 +56,38 @@ class MeOut(BaseModel):
     status: str
     timezone: str
     country: str | None
+    consented_at: datetime | None = None
+    consent_required: bool = Field(
+        default=False,
+        description="True until the person agrees to the current terms of use and privacy policy.",
+    )
+
+
+class MeUpdate(BaseModel):
+    """PATCH /me: only the fields sent change. Phone and email are sign-in identifiers, not changed here."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=120)
+    country: str | None = Field(default=None, pattern=r"^[A-Z]{2}$", description="ISO 3166-1 alpha-2")
+    timezone: str | None = Field(
+        default=None, min_length=1, max_length=64, description="IANA, e.g. Europe/London"
+    )
+
+
+class ConsentIn(BaseModel):
+    """The versions the person saw and agreed to; they must be the current ones."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    terms_version: str = Field(min_length=1, max_length=32)
+    privacy_version: str = Field(min_length=1, max_length=32)
+
+
+class ConsentOut(BaseModel):
+    """The current documents to agree to, and what this person agreed to."""
+
+    terms_version: str = Field(description="The current terms of use version")
+    privacy_version: str = Field(description="The current privacy policy version")
+    consented_at: datetime | None
+    consent_required: bool
