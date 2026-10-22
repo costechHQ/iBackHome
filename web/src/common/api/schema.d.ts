@@ -163,6 +163,34 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /**
+         * Update Me
+         * @description The signed-in person changes their own name, country or time zone (only the fields sent).
+         */
+        patch: operations["update_me_api_v1_me_patch"];
+        trace?: never;
+    };
+    "/api/v1/me/consent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Consent
+         * @description The terms of use and privacy policy versions to agree to (NDPA 2023), and whether this person has.
+         */
+        get: operations["consent_api_v1_me_consent_get"];
+        put?: never;
+        /**
+         * Give Consent
+         * @description The person agrees to the current versions; older ones get 409 consent_version_outdated.
+         */
+        post: operations["give_consent_api_v1_me_consent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -1040,6 +1068,36 @@ export interface components {
             evidence_ids?: string[];
         };
         /**
+         * ConsentIn
+         * @description The versions the person saw and agreed to; they must be the current ones.
+         */
+        ConsentIn: {
+            /** Terms Version */
+            terms_version: string;
+            /** Privacy Version */
+            privacy_version: string;
+        };
+        /**
+         * ConsentOut
+         * @description The current documents to agree to, and what this person agreed to.
+         */
+        ConsentOut: {
+            /**
+             * Terms Version
+             * @description The current terms of use version
+             */
+            terms_version: string;
+            /**
+             * Privacy Version
+             * @description The current privacy policy version
+             */
+            privacy_version: string;
+            /** Consented At */
+            consented_at: string | null;
+            /** Consent Required */
+            consent_required: boolean;
+        };
+        /**
          * CurrentPrice
          * @description The index price of one item: the median of each supplier's latest price.
          */
@@ -1644,6 +1702,32 @@ export interface components {
             timezone: string;
             /** Country */
             country: string | null;
+            /** Consented At */
+            consented_at?: string | null;
+            /**
+             * Consent Required
+             * @description True until the person agrees to the current terms of use and privacy policy.
+             * @default false
+             */
+            consent_required: boolean;
+        };
+        /**
+         * MeUpdate
+         * @description PATCH /me: only the fields sent change. Phone and email are sign-in identifiers, not changed here.
+         */
+        MeUpdate: {
+            /** Full Name */
+            full_name?: string | null;
+            /**
+             * Country
+             * @description ISO 3166-1 alpha-2
+             */
+            country?: string | null;
+            /**
+             * Timezone
+             * @description IANA, e.g. Europe/London
+             */
+            timezone?: string | null;
         };
         /** MilestoneOut */
         MilestoneOut: {
@@ -2679,6 +2763,96 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeOut"];
+                };
+            };
+        };
+    };
+    update_me_api_v1_me_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    consent_api_v1_me_consent_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentOut"];
+                };
+            };
+        };
+    };
+    give_consent_api_v1_me_consent_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

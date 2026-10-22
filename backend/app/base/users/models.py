@@ -57,6 +57,10 @@ class User(TimestampedBase):
     )
     timezone: Mapped[str] = mapped_column(String(64), nullable=False, default="UTC", server_default="UTC")
     country: Mapped[str | None] = mapped_column(String(2))  # ISO 3166-1 alpha-2
+    # NDPA 2023 consent: the terms of use and privacy policy the person agreed to, and when.
+    terms_version: Mapped[str | None] = mapped_column(String(32))
+    privacy_version: Mapped[str | None] = mapped_column(String(32))
+    consented_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class OtpCode(TimestampedBase):
