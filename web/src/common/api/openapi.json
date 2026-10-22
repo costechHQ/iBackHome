@@ -789,6 +789,81 @@
         }
       }
     },
+    "/api/v1/projects/{project_id}/funding/quote": {
+      "get": {
+        "tags": [
+          "escrow"
+        ],
+        "summary": "Funding Quote",
+        "description": "Client: what funding this pending milestone would cost today (amount, fee, rate), before Stripe.\n\nRead-only: no checkout, no audit entry. Same checks and errors as POST /funding.",
+        "operationId": "funding_quote_api_v1_projects__project_id__funding_quote_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "milestone_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Milestone Id"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "enum": [
+                "GBP",
+                "USD",
+                "EUR"
+              ],
+              "type": "string",
+              "description": "GBP, USD or EUR",
+              "title": "Currency"
+            },
+            "description": "GBP, USD or EUR"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FundingQuoteOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/funding": {
       "post": {
         "tags": [
@@ -4748,6 +4823,66 @@
           "currency"
         ],
         "title": "FundingCreate"
+      },
+      "FundingQuoteOut": {
+        "properties": {
+          "milestone_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Milestone Id"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_ngn_minor": {
+            "type": "integer",
+            "title": "Amount Ngn Minor",
+            "description": "What the escrow will hold, in kobo"
+          },
+          "net_minor": {
+            "type": "integer",
+            "title": "Net Minor",
+            "description": "amount_ngn_minor converted at fx_rate, rounded up"
+          },
+          "fee_minor": {
+            "type": "integer",
+            "title": "Fee Minor"
+          },
+          "fee_bps": {
+            "type": "integer",
+            "title": "Fee Bps"
+          },
+          "total_minor": {
+            "type": "integer",
+            "title": "Total Minor",
+            "description": "net_minor + fee_minor: what the client would pay"
+          },
+          "fx_rate": {
+            "type": "string",
+            "title": "Fx Rate",
+            "description": "NGN per 1 unit of currency (fixed when they pay)"
+          },
+          "fx_as_of": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fx As Of"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestone_id",
+          "currency",
+          "amount_ngn_minor",
+          "net_minor",
+          "fee_minor",
+          "fee_bps",
+          "total_minor",
+          "fx_rate",
+          "fx_as_of"
+        ],
+        "title": "FundingQuoteOut",
+        "description": "What funding a milestone would cost today, before going to Stripe. Nothing is recorded."
       },
       "GalleryItem": {
         "properties": {
