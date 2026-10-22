@@ -18,14 +18,18 @@ export function ContractorTop({ name, showAll = false }: { name: string; showAll
   const items = shown(CONTRACTOR_NAV, showAll);
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:gap-8 sm:px-8">
-        <Link href="/c" className="flex items-center gap-2 rounded-control">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 px-4 sm:h-16 sm:flex-nowrap sm:gap-8 sm:px-8">
+        <Link href="/c" className="flex h-16 items-center gap-2 rounded-control sm:h-auto">
           <Wordmark />
           <span className="type-caption hidden rounded-tag bg-mist px-2 py-0.5 font-semibold tracking-normal text-slate sm:inline">
             Contractor
           </span>
         </Link>
-        <nav aria-label="Main" className="flex h-full">
+        {/* On phones the items sit in their own row under the wordmark, so the bar never runs off the screen. */}
+        <nav
+          aria-label="Main"
+          className="order-last flex h-12 basis-full overflow-x-auto border-t border-line sm:order-none sm:h-full sm:basis-auto sm:border-t-0"
+        >
           <ul className="flex h-full gap-1">
             {items.map((item) => {
               const active =
@@ -52,7 +56,7 @@ export function ContractorTop({ name, showAll = false }: { name: string; showAll
             })}
           </ul>
         </nav>
-        <div className="ml-auto">
+        <div className="ml-auto flex h-16 items-center sm:h-auto">
           <AvatarMenu name={name} />
         </div>
       </div>

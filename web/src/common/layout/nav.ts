@@ -42,14 +42,14 @@ export const CLIENT_MOBILE_NAV = [
 export const CONTRACTOR_NAV: readonly NavItem[] = [
   { label: "Projects", href: "/c", ready: true }, // WEB-CONTRACTOR-003
   { label: "Orders", href: "/c/orders", ready: false }, // WEB-CONTRACTOR-007
-  { label: "Payouts", href: "/c/payouts", ready: false }, // WEB-CONTRACTOR-008
-  { label: "Profile", href: "/c/profile", ready: false }, // WEB-CONTRACTOR-009
+  { label: "Payouts", href: "/c/payouts", ready: true }, // WEB-CONTRACTOR-008 (W7)
+  { label: "Profile", href: "/c/profile", ready: true }, // WEB-CONTRACTOR-009 (W7)
 ];
 
 /** Contractor project tabs (ConTop project row), relative to /c/projects/:id. */
 export const CONTRACTOR_PROJECT_TABS = [
   { label: "Milestones", path: "/milestones", ready: true }, // WEB-CONTRACTOR-005 (W3)
-  { label: "BoQ", path: "/boq", ready: false }, // WEB-CONTRACTOR-004
+  { label: "BoQ", path: "/boq", ready: true }, // WEB-CONTRACTOR-004 (W7)
   { label: "Evidence", path: "/evidence", ready: false },
   { label: "Orders", path: "/orders", ready: false }, // WEB-CONTRACTOR-007
 ] as const;

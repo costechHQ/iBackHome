@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { readLedger, type LedgerEntry } from "../ledger";
 import { api, call } from "./client";
@@ -47,6 +47,33 @@ export function useMilestones(projectId: string) {
         }),
       ),
   });
+}
+
+/** The viewer's projects, each with its milestones (the contractor's payouts and profile). */
+export function useProjectsWithMilestones() {
+  const projects = useProjects();
+  const milestones = useQueries({
+    queries: (projects.data?.items ?? []).map((p) => ({
+      queryKey: keys.milestones(p.id),
+      queryFn: () =>
+        call(
+          api().GET("/api/v1/projects/{project_id}/milestones", { params: { path: { project_id: p.id } } }),
+        ),
+    })),
+  });
+  const items = (projects.data?.items ?? []).map((project, i) => ({
+    project,
+    milestones: (milestones[i]?.data ?? []) as Milestone[],
+  }));
+  return {
+    items,
+    isPending: projects.isPending || milestones.some((q) => q.isPending),
+    error: projects.error ?? milestones.find((q) => q.error)?.error ?? null,
+    refetch: () => {
+      void projects.refetch();
+      milestones.forEach((q) => void q.refetch());
+    },
+  };
 }
 
 /** Every ledger entry of the project (all pages), read into payments, releases and escrow now. */
