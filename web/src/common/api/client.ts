@@ -35,7 +35,8 @@ export async function call<T>(
     throw new NetworkError(cause);
   }
   if (!result.response.ok) {
-    const error = await apiErrorFrom(result.response);
+    // openapi-fetch has already read the body into `result.error`.
+    const error = await apiErrorFrom(result.response, result.error);
     if (error.status === 401) window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
     throw error;
   }

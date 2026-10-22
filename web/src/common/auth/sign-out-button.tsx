@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-/** Ends the session on this browser (clears the cookies) and goes to sign-in. */
+import { signOutHere } from "./leave";
+
+/** Ends the session on this browser and shows the signed-out page. */
 export function SignOutButton({ className }: { className?: string }) {
   const [busy, setBusy] = useState(false);
   return (
@@ -10,12 +12,9 @@ export function SignOutButton({ className }: { className?: string }) {
       type="button"
       className={className}
       disabled={busy}
-      onClick={async () => {
+      onClick={() => {
         setBusy(true);
-        await fetch("/api/session/sign-out", { method: "POST" }).catch(() => null);
-        // A full page load, not router.push: it drops every cached query of the person who just left.
-        // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-        window.location.assign("/sign-in");
+        void signOutHere();
       }}
     >
       Sign out

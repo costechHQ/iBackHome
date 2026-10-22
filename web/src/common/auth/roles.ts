@@ -12,6 +12,12 @@ export function homeFor(role: string): string | null {
   return HOME[role] ?? null;
 }
 
+/** Where a signed-out visitor signs in: staff at /ops/sign-in (WEB-OPS-001), everyone else at /sign-in. */
+export function signInPathFor(next: string, expired = false): string {
+  const page = next === "/ops" || next.startsWith("/ops/") ? "/ops/sign-in" : "/sign-in";
+  return `${page}?next=${encodeURIComponent(next)}${expired ? "&expired=1" : ""}`;
+}
+
 /**
  * A safe place to return to after sign-in: a path on this site, not another origin ("//evil.example",
  * "/\evil.example") and not an API route.

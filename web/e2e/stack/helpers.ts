@@ -44,16 +44,16 @@ export function latestCode(identifier: string): string {
 export async function signIn(page: Page, identifier: string, next = "/projects") {
   await page.goto(`/sign-in?next=${encodeURIComponent(next)}`);
   if (identifier.startsWith("+")) {
-    await page.getByLabel("Phone", { exact: true }).check();
-    await page.getByLabel("Phone number").fill(identifier);
+    await page.getByRole("radio", { name: "Phone" }).click();
+    await page.getByRole("textbox", { name: "Phone number" }).fill(identifier);
     await page.getByLabel("SMS").check();
   } else {
-    await page.getByLabel("Email", { exact: true }).check();
+    await page.getByRole("radio", { name: "Email" }).click();
     await page.getByLabel("Email address").fill(identifier);
   }
   await page.getByRole("button", { name: "Send code" }).click();
   await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
-  await page.getByLabel("6-digit code").fill(latestCode(identifier));
+  await page.getByLabel("Digit 1 of 6").fill(latestCode(identifier));
   await page.getByRole("button", { name: "Verify" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"));
 }

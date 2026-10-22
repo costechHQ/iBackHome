@@ -265,7 +265,7 @@ describe("session routes", () => {
     const res = await refreshAndReturn(
       request("/api/session/refresh?next=/ops", { cookies: { ibh_rt: "rt-0" } }),
     );
-    expect(res.headers.get("location")).toBe(`${SITE}/sign-in?next=%2Fops&expired=1`);
+    expect(res.headers.get("location")).toBe(`${SITE}/ops/sign-in?next=%2Fops&expired=1`);
     expect(res.cookies.get("ibh_s")?.value).toBe("");
   });
 
