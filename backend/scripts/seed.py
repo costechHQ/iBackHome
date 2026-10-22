@@ -12,6 +12,8 @@ v4 (backend gate):  a verified supplier owned by the seeded supplier user, and P
                     code is used; elsewhere without a key they are skipped (and said so).
 v5 (web W3):        a second human ops user, because resolving a dispute needs two different ops users
                     (escrow.resolve_dispute); the agent ops users can't sign in with a code.
+v6 (web W5b):       the seeded people have agreed to the current terms and privacy policy (NDPA consent,
+                    users.record_consent), so the web portals don't stop them at the consent card.
 
 Refuses to run when ENVIRONMENT=production.
 
@@ -132,6 +134,9 @@ async def upsert_user(session: AsyncSession, seed: SeedUser) -> User:
     user.timezone = seed.timezone
     user.status = UserStatus.ACTIVE.value
     await session.flush()
+    # Agreed to the current terms and privacy policy (audited; does nothing if already agreed).
+    settings = get_settings()
+    await users.record_consent(session, user, settings.terms_version, settings.privacy_version)
     return user
 
 
