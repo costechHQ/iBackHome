@@ -13,13 +13,16 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
-    "gen:api": "sh scripts/gen-api.sh"
+    "gen:api": "sh scripts/gen-api.sh",
+    "sync:tokens": "sh scripts/sync-tokens.sh"
   },
   "dependencies": {
+    "@tanstack/react-query": "5.104.5",
     "next": "16.4.2",
     "openapi-fetch": "0.17.0",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",

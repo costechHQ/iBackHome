@@ -1,1 +1,9 @@
 @import "tailwindcss";
+@import "../common/theme/tokens.css";
+@import "../common/theme/theme.css";
+
+@layer base {
+  body {
+    @apply bg-white font-sans type-body text-slate antialiased;
+  }
+}

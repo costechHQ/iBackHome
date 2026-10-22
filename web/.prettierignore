@@ -7,3 +7,5 @@ test-results/
 # Generated from the backend's OpenAPI document (scripts/gen-api.sh); CI checks them for drift.
 src/common/api/openapi.json
 src/common/api/schema.d.ts
+# A byte-for-byte copy of the handoff tokens (scripts/sync-tokens.sh); a test checks it.
+src/common/theme/tokens.css
