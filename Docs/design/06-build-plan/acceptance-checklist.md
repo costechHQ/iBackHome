@@ -16,6 +16,20 @@ The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks belo
 - [x] Docker image (standalone, Node), `web` in local Compose and staging Compose, Caddy route on its own hostname
 - [x] ADR 0003 and the Spec update (separate commit)
 
+### W1a · Tokens, auth proxy, API wrapper, helpers (no designed screens)
+
+- [x] Tokens copied from `01-design-system/tokens.css` (drift test) and mapped into Tailwind with `@theme inline`; Tailwind's default colours, radii and shadows removed; no hex in the theme
+- [x] Inter and JetBrains Mono self-hosted with `next/font/local` (latin + latin-ext for ₦)
+- [x] Auth BFF: OTP exchange, httpOnly cookies, same-origin `/api/v1/*` proxy, single-flight refresh with a 30 s reuse window, Origin check on writes, token routes blocked
+- [x] Role guards: `src/proxy.ts` (session present, token fresh) + each portal layout (role from `GET /me`)
+- [x] API wrapper: generated client, `ApiError` → `error-codes-to-ui.md` patterns (409 = conflict), one Idempotency-Key per write action
+- [x] Money helper (BigInt minor units, decimal-string FX, no floats); time helper (client zone / WAT, UTC on hover)
+- [x] Status chip registry generated from `state-to-ui.md` (drift test, backend enums checked)
+- [x] Allowed-actions helper for milestones and disputes (two different ops users for either outcome)
+- [x] Plain OTP sign-in at `/sign-in` with the WEB-PUBLIC-010 copy for the backend's real errors (designed AuthCard states come in the auth stage)
+- [x] Signed-in pages, sign-in and the proxy send `Cache-Control: no-store` (Playwright test)
+- [x] Gaps logged: MX-19 (sign-out only clears cookies); backend differences B-1 to B-5 in PACKAGE-REPORT
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
