@@ -1,14 +1,15 @@
 name: web-ci
 
 # Lint, type check, build and test the Next.js web app (ADR 0003). Owner of web/: Gabriel.
-# Runs only when web/ or this file changes. The OpenAPI drift check is in api-contract.yml.
+# Runs when web/, this file, or a handoff file the web app copies (tokens.css, state-to-ui.md) changes:
+# the drift tests fail if the copies are out of date. The OpenAPI drift check is in api-contract.yml.
 
 on:
   pull_request:
-    paths: ["web/**", ".github/workflows/web-ci.yml"]
+    paths: ["web/**", "Docs/design/01-design-system/tokens.css", "Docs/design/04-api-mapping/state-to-ui.md", ".github/workflows/web-ci.yml"]
   push:
     branches: [main]
-    paths: ["web/**", ".github/workflows/web-ci.yml"]
+    paths: ["web/**", "Docs/design/01-design-system/tokens.css", "Docs/design/04-api-mapping/state-to-ui.md", ".github/workflows/web-ci.yml"]
 
 jobs:
   test:

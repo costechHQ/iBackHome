@@ -174,6 +174,16 @@ Superseded later (the later approved stage wins): G-05 (suppliers now enter thei
 | C-10 | WEB-CONTRACTOR-006 | Dispute "Under review" chip in bad tone | Evidence "Under review" is warn | Keep Disputed (bad) for disputes, warn for evidence. |
 | C-11 | Stage 1 G-12 vs Spec | Contractor can dispute a supervisor rejection | Spec state machine only has verified → disputed | Decided 2026-10-21 (Gabriel): not built. Logged in 04-api-mapping/missing-endpoints.md (MX-25). |
 
+### Where the backend differs from the designs (found while building; the backend wins)
+
+| # | Where | Design says | Backend does | What the web app does |
+|---|---|---|---|---|
+| B-1 | WEB-PUBLIC-010 "Wrong code" | Shows "3 attempts left" | `invalid_code` (400) has no attempts-left count | Shows the designed wrong-code message without the count. |
+| B-2 | error-codes-to-ui.md, OTP rows | Assumed codes and statuses | `invalid_code` 400, `otp_expired` 400, `too_many_attempts` 429, `rate_limited` 429 with `Retry-After`; refresh reuse is 401 `refresh_token_reused` | Maps the real codes; the rate-limit wait comes from `Retry-After`. |
+| B-3 | state-to-ui.md Dispute, WEB-OPS-006 | Rework needs one ops approver | `POST /disputes/{id}/resolve` needs two different ops users for **both** outcomes, and the second must choose the same outcome (409 `second_approval_required` / `resolution_mismatch`) | The proposer sees "Waiting for 2nd approver"; another ops user can only confirm the proposed outcome. |
+| B-4 | WEB-OPS-001, AND-SUPERVISOR-003, WEB-CLIENT-023 sign-out | Sign-out ends the session | No sign-out endpoint (MX-19) | Sign-out clears the web cookies; the refresh token stays valid on the server until it expires. |
+| B-5 | 01-design-system/tokens.css | `@font-face` rules pointing at `../05-assets/fonts` | (web build) | The web copy drops them and loads the same files with `next/font/local`; `--ibh-font-sans` / `--ibh-font-mono` point at those fonts first. |
+
 ## Colours outside the Stage 2 token set
 
 All hex values in `screen.html` style attributes and board CSS are mapped to `var(--ibh-*)`. Values on approved boards that are not in the Stage 2 token set are kept as `supplementary` tokens (`x-*` in tokens.json / tokens.css) so the screens render as approved; confirm or replace them:

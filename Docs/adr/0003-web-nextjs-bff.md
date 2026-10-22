@@ -68,3 +68,14 @@ The web app is built from the approved design handoff in `Docs/design/`. It need
 - The web app's server owns the refresh rotation. A bug there signs users out (refresh reuse revokes sessions), so the single-flight refresh has its own tests.
 - Scaling the web app beyond one instance needs a shared refresh lock first (see above).
 - The OpenAPI drift check runs on every backend change, so a backend PR that changes the contract must regenerate the web client in the same PR.
+
+## Amendment (2026-10-22, stage W1a): details found while building the auth proxy
+
+- **Writes check `Origin` (CSRF).** SameSite=Lax cookies alone still allow some cross-site requests, so the API proxy and the `/api/session/*` routes refuse any non-GET request whose `Origin` isn't this site.
+- **Three cookies.**
+  - `ibh_at` holds the access token (path `/`).
+  - `ibh_rt` holds the refresh token on path `/api` only, so it never travels with a page request.
+  - `ibh_s` is a plain "a session exists" flag. `src/proxy.ts` uses it to tell a signed-out visitor from an expired token.
+- **Pages refresh by redirect.** Server components can't set cookies, and Next runs `src/proxy.ts` apart from the server's own memory, so neither may call the refresh. When a page's access token is about to expire, `src/proxy.ts` redirects to `/api/session/refresh?next=…`. That route handler refreshes through the single-flight module, sets the new cookies and redirects back. The API proxy refreshes inside its own handler.
+- **The single-flight result is kept for 30 seconds**, keyed by the old refresh token. A request that was already in flight with the old cookie gets the new pair instead of reusing the old token, which the backend would treat as theft. A failed refresh is kept for the same window and never retried.
+- **Sign-out only clears the cookies.** The backend has no sign-out endpoint (MX-19), so the refresh token stays valid on the server until it expires.
