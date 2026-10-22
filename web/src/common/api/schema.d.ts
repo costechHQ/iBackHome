@@ -258,6 +258,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/funding/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Funding Quote
+         * @description Client: what funding this pending milestone would cost today (amount, fee, rate), before Stripe.
+         *
+         *     Read-only: no checkout, no audit entry. Same checks and errors as POST /funding.
+         */
+        get: operations["funding_quote_api_v1_projects__project_id__funding_quote_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/funding": {
         parameters: {
             query?: never;
@@ -1644,6 +1666,48 @@ export interface components {
              * @enum {string}
              */
             currency: "GBP" | "USD" | "EUR";
+        };
+        /**
+         * FundingQuoteOut
+         * @description What funding a milestone would cost today, before going to Stripe. Nothing is recorded.
+         */
+        FundingQuoteOut: {
+            /**
+             * Milestone Id
+             * Format: uuid
+             */
+            milestone_id: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Amount Ngn Minor
+             * @description What the escrow will hold, in kobo
+             */
+            amount_ngn_minor: number;
+            /**
+             * Net Minor
+             * @description amount_ngn_minor converted at fx_rate, rounded up
+             */
+            net_minor: number;
+            /** Fee Minor */
+            fee_minor: number;
+            /** Fee Bps */
+            fee_bps: number;
+            /**
+             * Total Minor
+             * @description net_minor + fee_minor: what the client would pay
+             */
+            total_minor: number;
+            /**
+             * Fx Rate
+             * @description NGN per 1 unit of currency (fixed when they pay)
+             */
+            fx_rate: string;
+            /**
+             * Fx As Of
+             * Format: date-time
+             */
+            fx_as_of: string;
         };
         /**
          * GalleryItem
@@ -3065,6 +3129,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    funding_quote_api_v1_projects__project_id__funding_quote_get: {
+        parameters: {
+            query: {
+                milestone_id: string;
+                /** @description GBP, USD or EUR */
+                currency: "GBP" | "USD" | "EUR";
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundingQuoteOut"];
                 };
             };
             /** @description Validation Error */
