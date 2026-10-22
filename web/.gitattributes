@@ -2,3 +2,4 @@
 *.sh text eol=lf
 src/common/api/openapi.json text eol=lf
 src/common/api/schema.d.ts text eol=lf
+src/common/status/registry.generated.ts text eol=lf

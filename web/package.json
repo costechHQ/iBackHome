@@ -14,7 +14,8 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "gen:api": "sh scripts/gen-api.sh",
-    "sync:tokens": "sh scripts/sync-tokens.sh"
+    "sync:tokens": "sh scripts/sync-tokens.sh",
+    "gen:status": "bun scripts/gen-status.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "5.104.5",
