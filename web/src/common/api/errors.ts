@@ -33,13 +33,19 @@ const HTTP_FALLBACK_CODES: Record<number, string> = {
   429: "rate_limited",
 };
 
-export async function apiErrorFrom(response: Response): Promise<ApiError> {
+/**
+ * The ApiError for a failed response. Pass `parsed` when the body was already read (openapi-fetch reads it into
+ * `error`, so the response body can't be read again); otherwise the body is read here.
+ */
+export async function apiErrorFrom(response: Response, parsed?: unknown): Promise<ApiError> {
   let code = HTTP_FALLBACK_CODES[response.status] ?? (response.status >= 500 ? "server_error" : "error");
   let message = response.statusText || "Request failed";
   try {
-    const body = (await response.clone().json()) as { error?: { code?: unknown; message?: unknown } };
-    if (typeof body.error?.code === "string") code = body.error.code;
-    if (typeof body.error?.message === "string") message = body.error.message;
+    const body = (parsed !== undefined ? parsed : await response.clone().json()) as {
+      error?: { code?: unknown; message?: unknown };
+    } | null;
+    if (typeof body?.error?.code === "string") code = body.error.code;
+    if (typeof body?.error?.message === "string") message = body.error.message;
   } catch {
     // Not JSON (a proxy or gateway page): keep the HTTP fallback.
   }

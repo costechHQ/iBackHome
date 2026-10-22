@@ -2,7 +2,7 @@
 
 import { Inbox } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Alert } from "../ui/alert";
 import { Button } from "../ui/button";
@@ -21,7 +21,6 @@ import { ContractorTop } from "../layout/contractor-shell";
 import { ForbiddenPage } from "../layout/forbidden-page";
 import { OfflineBar, useOnline } from "../layout/online";
 import { OpsHeader, OpsSidebar } from "../layout/ops-shell";
-import { SessionExpiredDialog } from "../layout/session-expired-dialog";
 import { ConflictState, NotFoundContent, ServerErrorContent } from "../layout/system-pages";
 
 // DEV ONLY (/dev/states, 404 unless IBH_DEV_PAGES=1): every shared state and shell, one frame per ?frame=,
@@ -189,7 +188,10 @@ function Kit() {
   );
 }
 
-const FRAMES: Record<string, { label: string; render: () => React.ReactNode }> = {
+/** Frames built from a feature (common/ can't import features/): the gallery page passes them in. */
+export type GallerySlots = { sessionExpired: ReactNode };
+
+const FRAMES: Record<string, { label: string; render: (slots: GallerySlots) => ReactNode }> = {
   "404": {
     label: "404 · page not found",
     render: () => (
@@ -271,10 +273,10 @@ const FRAMES: Record<string, { label: string; render: () => React.ReactNode }> =
   },
   session: {
     label: "Session expired",
-    render: () => (
+    render: (slots) => (
       <ClientFrame>
         <Backdrop />
-        <SessionExpiredDialog forceOpen />
+        {slots.sessionExpired}
       </ClientFrame>
     ),
   },
@@ -412,9 +414,9 @@ const FRAMES: Record<string, { label: string; render: () => React.ReactNode }> =
   },
 };
 
-export function StatesGallery({ frame }: { frame: string | null }) {
+export function StatesGallery({ frame, slots }: { frame: string | null; slots: GallerySlots }) {
   const selected = frame ? FRAMES[frame] : undefined;
-  if (selected) return <>{selected.render()}</>;
+  if (selected) return <>{selected.render(slots)}</>;
   return (
     <main className="flex flex-col gap-4 p-8">
       <h1 className="type-h2 text-ink">States gallery (development only)</h1>

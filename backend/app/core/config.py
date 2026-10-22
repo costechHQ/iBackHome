@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     otp_limit_per_ip: int = 10
     otp_limit_window_minutes: int = 15
 
+    # NDPA 2023 consent: the terms of use and privacy policy versions everyone must have agreed to.
+    # Bump either one and everyone is asked again (GET /me says consent_required). The product owner
+    # sets them when the documents are published.
+    terms_version: str = "2026-10-22"
+    privacy_version: str = "2026-10-22"
+
     # Comma-separated list of web origins allowed to call the API
     cors_origins: str = "http://localhost:5173"
 

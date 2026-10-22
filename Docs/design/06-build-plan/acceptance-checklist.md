@@ -73,6 +73,16 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] CI: `.github/workflows/web-stack.yml` runs every stack test against Docker Compose from an empty database (seed, simulator, driver), on web and backend changes; simulated locally from an empty database: 22 of 22 pass
 - [ ] On staging: waits for a web host (the backend is moving to Render, ADR 0003; the web app has none yet)
 
+### W5a · Sign-in and session
+
+- [x] WEB-PUBLIC-010 sign-in at `/sign-in`: split screen on desktop, card on mobile; Phone / Email switch, country picker (search, common countries first, keyboard), WhatsApp or SMS, then six code boxes (paste fills them) with the expiry countdown and resend after 30 s; Back and Change keep what was typed
+- [x] Every designed sign-in state from the backend's real answers: wrong code, too many attempts (code cancelled), expired, rate limited with the wait from `Retry-After`, channel unavailable (503, the channel marked and the other chosen), send failed (502, "Try again")
+- [x] WEB-OPS-001: staff sign-in at `/ops/sign-in` (work email), signed-out visitors to `/ops/*` go there; the signed-out page after every sign-out
+- [x] WEB-CLIENT-002 and the desktop frame: when a session ends, the code is sent to the person and entered in the sheet or dialog, so they stay on the page; it can't be dismissed and "Not now" signs out
+- [x] Fixed: the API client lost the backend's error code (openapi-fetch had already read the body), so only status-based states showed; regression test added
+- [x] axe: no WCAG 2.1 AA violations on sign-in, ops sign-in and signed-out at 1280 and 390 px, and on the code step
+- [x] Backend PRs for W5b: #67 (`PATCH /me`, NDPA consent; reviewer Christopher), #68 (contractor payout account; reviewers Christopher and James). Gaps logged: W-23 to W-26
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
