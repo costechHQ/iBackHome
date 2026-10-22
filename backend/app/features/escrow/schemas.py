@@ -17,6 +17,20 @@ class FundingCreate(BaseModel):
     currency: FundingCurrency = Field(description="The currency the client pays in: GBP, USD or EUR")
 
 
+class FundingQuoteOut(BaseModel):
+    """What funding a milestone would cost today, before going to Stripe. Nothing is recorded."""
+
+    milestone_id: uuid.UUID
+    currency: str
+    amount_ngn_minor: int = Field(description="What the escrow will hold, in kobo")
+    net_minor: int = Field(description="amount_ngn_minor converted at fx_rate, rounded up")
+    fee_minor: int
+    fee_bps: int
+    total_minor: int = Field(description="net_minor + fee_minor: what the client would pay")
+    fx_rate: Decimal = Field(description="NGN per 1 unit of currency (fixed when they pay)")
+    fx_as_of: datetime
+
+
 class FundingCheckoutOut(BaseModel):
     """What the client is about to pay. Nothing is in the ledger until Stripe confirms."""
 

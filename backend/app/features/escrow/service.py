@@ -171,27 +171,10 @@ def _funding_metadata(
     }
 
 
-async def create_funding_checkout(
-    session: AsyncSession,
-    user: User,
-    project_id: uuid.UUID,
-    milestone_id: uuid.UUID,
-    currency: str,
-    *,
-    gateway: CheckoutGateway,
-    idempotency_key: str | None = None,
-    request: Request | None = None,
-) -> FundingCheckout:
-    """Start paying for a milestone: a Stripe Checkout session for its NGN amount plus our fee.
-
-    - 404 project_not_found, milestone_not_found
-    - 403 not_project_member, not_project_client (only the project's own client funds it)
-    - 409 project_not_active, milestone_not_in_project, milestone_not_pending
-    - 422 currency_not_supported; 502 stripe_unavailable
-
-    Writes NO ledger entries: money only counts when Stripe's signed webhook confirms payment.
-    Writes an audit entry. Does not commit.
-    """
+async def _fundable_milestone(
+    session: AsyncSession, user: User, project_id: uuid.UUID, milestone_id: uuid.UUID, currency: str
+) -> tuple[Any, Any]:
+    """The project and milestone, if this client may fund it now (the checks shared by quote and checkout)."""
     if currency not in FUNDING_CURRENCIES:
         raise AppError(
             "currency_not_supported", f"Funding currency must be one of {FUNDING_CURRENCIES}.", 422
@@ -216,7 +199,43 @@ async def create_funding_checkout(
         )
     if milestone.currency != ESCROW_CURRENCY:
         raise AppError("milestone_currency_unsupported", "Only naira milestones can be funded.", 409)
+    return project, milestone
 
+
+async def quote_milestone_funding(
+    session: AsyncSession, user: User, project_id: uuid.UUID, milestone_id: uuid.UUID, currency: str
+) -> FundingQuote:
+    """What the client would pay today to fund this milestone, before going to Stripe.
+
+    Read-only: no Stripe session, no audit entry, nothing recorded. The same checks (and errors) as
+    create_funding_checkout(). The rate can change before they pay; the checkout fixes it.
+    """
+    _, milestone = await _fundable_milestone(session, user, project_id, milestone_id, currency)
+    return await quote_funding(milestone.amount_minor, currency)
+
+
+async def create_funding_checkout(
+    session: AsyncSession,
+    user: User,
+    project_id: uuid.UUID,
+    milestone_id: uuid.UUID,
+    currency: str,
+    *,
+    gateway: CheckoutGateway,
+    idempotency_key: str | None = None,
+    request: Request | None = None,
+) -> FundingCheckout:
+    """Start paying for a milestone: a Stripe Checkout session for its NGN amount plus our fee.
+
+    - 404 project_not_found, milestone_not_found
+    - 403 not_project_member, not_project_client (only the project's own client funds it)
+    - 409 project_not_active, milestone_not_in_project, milestone_not_pending
+    - 422 currency_not_supported; 502 stripe_unavailable
+
+    Writes NO ledger entries: money only counts when Stripe's signed webhook confirms payment.
+    Writes an audit entry. Does not commit.
+    """
+    project, milestone = await _fundable_milestone(session, user, project_id, milestone_id, currency)
     quote = await quote_funding(milestone.amount_minor, currency)
     metadata = _funding_metadata(project_id, milestone_id, user.id, quote)
     line_items = [
