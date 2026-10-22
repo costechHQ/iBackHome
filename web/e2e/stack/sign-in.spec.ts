@@ -32,7 +32,7 @@ function latestCode(identifier: string): string {
   return code;
 }
 
-test("a client signs in by email, lands on their portal, and can't open ops", async ({ page }) => {
+test("a new client signs in by email, is asked to onboard first, and can't open ops", async ({ page }) => {
   const email = newEmail("client");
   await page.goto("/projects");
   await expect(page).toHaveURL(/\/sign-in\?next=%2Fprojects/);
@@ -47,16 +47,19 @@ test("a client signs in by email, lands on their portal, and can't open ops", as
 
   await page.getByLabel("Digit 1 of 6").fill(latestCode(email));
   await page.getByRole("button", { name: "Verify" }).click();
-  await expect(page).toHaveURL(/\/projects$/);
+  // A new account goes to onboarding (consent first) before the portal; e2e/stack/onboarding.spec.ts finishes it.
+  await expect(page).toHaveURL(/\/welcome$/);
+  await expect(page.getByRole("heading", { name: "Your data, your consent" })).toBeVisible();
+  await page.goto("/projects");
+  await expect(page).toHaveURL(/\/welcome$/);
 
   // A client can't open the ops console.
   await page.goto("/ops");
   await expect(page.getByRole("heading", { name: /This page is only for/ })).toBeVisible();
 
-  // Signing out ends the session on this browser and says so.
-  await page.goto("/projects");
-  await page.getByRole("button", { name: /account menu/ }).click();
-  await page.getByRole("menuitem", { name: "Sign out" }).click();
+  // Signing out (here from onboarding) ends the session on this browser and says so.
+  await page.goto("/welcome");
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/\/signed-out$/);
   await expect(page.getByRole("heading", { name: "You've signed out" })).toBeVisible();
   await page.goto("/projects");

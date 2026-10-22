@@ -80,7 +80,12 @@ export async function openSignedIn(
   const context = await browser.newContext({ baseURL, storageState: existsSync(file) ? file : undefined });
   const page = await context.newPage();
   await page.goto("/projects");
-  if (new URL(page.url()).pathname.startsWith("/sign-in")) await signIn(page, identifier);
+  if (new URL(page.url()).pathname.startsWith("/sign-in")) {
+    await signIn(page, identifier);
+    // Kept at once, so a test that fails later doesn't spend another of the 3 codes per 15 minutes.
+    mkdirSync(dirname(file), { recursive: true });
+    await context.storageState({ path: file });
+  }
   return page;
 }
 

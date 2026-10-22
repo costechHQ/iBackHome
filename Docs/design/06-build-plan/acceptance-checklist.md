@@ -83,6 +83,17 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] axe: no WCAG 2.1 AA violations on sign-in, ops sign-in and signed-out at 1280 and 390 px, and on the code step
 - [x] Backend PRs for W5b: #67 (`PATCH /me`, NDPA consent; reviewer Christopher), #68 (contractor payout account; reviewers Christopher and James). Gaps logged: W-23 to W-26
 
+### W5b · Onboarding and consent
+
+- [x] Portal layouts send a client or contractor to `/welcome` while consent or a required step is missing (one tested rule, `features/auth/onboarding/steps.ts`); ops never onboard
+- [x] NDPA consent card first: both boxes required, records agreement to the current versions (`POST /me/consent`), an outdated version is refused and shown again; "Don't agree — sign out"
+- [x] WEB-CLIENT-001: details (full name; the sign-in phone or email shown as verified) and location (country, common first; time zone from the browser, all zones), saved with `PATCH /me`
+- [x] WEB-CONTRACTOR-002: details, then the payout account: bank list, "Account found NAME", save, saved card with the number masked, "Change account" (`/banks`, `/me/payout/recipient`)
+- [x] Contractor home: "Getting ready" (profile, payout account, BoQ) on draft projects
+- [x] axe: no WCAG 2.1 AA violations on every onboarding step at 1280 and 390 px
+- [x] Backend: seed.py records consent for the seeded people (#71, reviewer James). Gaps logged: W-27 to W-29
+- [ ] Legal: the real terms of use and privacy policy, their versions and links (launch blocker, W-27)
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
