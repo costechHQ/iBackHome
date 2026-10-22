@@ -34,7 +34,10 @@ export function zoneLabel(iso: string, tz: string): string {
   const parts = new Intl.DateTimeFormat(LOCALE, { timeZone: tz, timeZoneName: "short" }).formatToParts(
     toDate(iso),
   );
-  return part(parts, "timeZoneName");
+  // ICU builds differ: Node says "GMT" where Chrome says "GMT+0" for London in winter. Use one spelling, so the
+  // label reads well and the server and browser render the same text.
+  const label = part(parts, "timeZoneName");
+  return /^(GMT|UTC)[+-]0$/.test(label) ? "GMT" : label;
 }
 
 /** "Mon 30 Nov", with the year added when it isn't the current year in that zone. */
@@ -52,15 +55,19 @@ export function formatDate(iso: string, tz: string, now: Date = new Date()): str
   return year(d) === year(now) ? base : `${base} ${part(parts, "year")}`;
 }
 
-/** "09:12 GMT" (24-hour, with the zone). */
-export function formatTime(iso: string, tz: string): string {
-  const time = new Intl.DateTimeFormat(LOCALE, {
+/** "09:12" (24-hour, no zone): where the zone is already said, as in "Showing what loaded at 14:02". */
+export function formatClock(iso: string, tz: string): string {
+  return new Intl.DateTimeFormat(LOCALE, {
     timeZone: tz,
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
   }).format(toDate(iso));
-  return `${time} ${zoneLabel(iso, tz)}`;
+}
+
+/** "09:12 GMT" (24-hour, with the zone). */
+export function formatTime(iso: string, tz: string): string {
+  return `${formatClock(iso, tz)} ${zoneLabel(iso, tz)}`;
 }
 
 /** "Fri 8 Jan, 08:10 WAT". */
