@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = Number(process.env.PORT ?? 3000);
+// Not 3000: the Docker Compose `web` service uses it, and a test must never run against that build by mistake.
+const port = Number(process.env.PORT ?? 3010);
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`;
 
 // Runs against the production build (`next build` first, then `next start`), as in CI.
@@ -16,8 +17,9 @@ export default defineConfig({
     ? undefined
     : {
         command: `bun run start -- --port ${port}`,
+        env: { API_INTERNAL_URL: process.env.API_INTERNAL_URL ?? "http://127.0.0.1:8000" },
         url: `${baseURL}/api/healthz`,
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
         timeout: 60_000,
       },
 });
