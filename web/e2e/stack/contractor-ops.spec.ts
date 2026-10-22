@@ -110,7 +110,10 @@ test.describe("ops: two-approver dispute resolution", () => {
 
   test("the queue", async () => {
     await shoot(first, "/ops/disputes", "ops-disputes", [1440]);
-    await expect(first.getByRole("table", { name: "Open disputes" })).toBeVisible();
+    // A table when disputes are open (CI puts one there with the driver), else the empty state.
+    await expect(
+      first.getByRole("table", { name: "Open disputes" }).or(first.getByText("No open disputes")),
+    ).toBeVisible();
   });
 
   test("one proposes, the same person can't confirm, a second one does", async () => {

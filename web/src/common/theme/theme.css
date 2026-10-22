@@ -130,3 +130,16 @@
     letter-spacing: var(--ibh-type-mono-tracking);
   }
 }
+
+/* Geofence map (common/map/geofence-map.tsx): Leaflet's own icons, in the tokens. */
+@layer components {
+  .ibh-map-corner {
+    background: var(--ibh-white);
+    border: 2px solid var(--ibh-accent);
+    border-radius: 3px;
+  }
+  .ibh-map-pin {
+    background: transparent;
+    border: 0;
+  }
+}

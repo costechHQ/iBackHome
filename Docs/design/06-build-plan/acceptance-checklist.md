@@ -94,6 +94,17 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Backend: seed.py records consent for the seeded people (#71, reviewer James). Gaps logged: W-27 to W-29
 - [ ] Legal: the real terms of use and privacy policy, their versions and links (launch blocker, W-27)
 
+### W6a · Project set-up
+
+- [x] WEB-CLIENT-003: projects list with set-up progress and the next step, the empty state, create a project (validation with the design's Nigerian-number message) that invites the contractor by phone, and the six-step set-up tracker
+- [x] WEB-CLIENT-004: site pin and boundary on a street map (drag the pin, click corners, undo, clear), the 25 m tolerance band, pin-outside error, saved, locked once active; a keyboard way to set the site
+- [x] WEB-CLIENT-005: BoQ by milestone with every line, total against budget, the three approvals, the final approval (needs a saved site) that makes the project active
+- [x] WEB-CLIENT-006: quote check of the submitted BoQ or a PDF, flagged lines first, the over-index total, and the price index
+- [x] Set-up tabs (Set-up, BoQ, Quote check, Site) while a project is draft or in BoQ review; `/projects/:id` opens the tracker for those
+- [x] Unit tests for the set-up steps, the map geometry and the quote figures (BigInt, no floats); stack test of the whole set-up through to an active project; axe clean at 1280 and 390 px
+- [x] Gaps logged: B-6 (projects in naira), W-30 to W-32, MX-08 proposal
+- [ ] Production map tiles (W-30, launch item)
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page

@@ -122,6 +122,8 @@ test("after the session ends, the client signs back in without leaving the page"
   await page.screenshot({ path: test.info().outputPath("session-expired-390.png") });
   await dialog.getByRole("button", { name: "Send me a code" }).click();
   const code = page.getByRole("alertdialog", { name: "Enter your code" });
+  // The code step appears once the code was sent, so it's in the API log by then.
+  await expect(code).toBeVisible();
   await code.getByLabel("Digit 1 of 6").fill(latestCode(client));
   await code.getByRole("button", { name: "Verify" }).click();
   await expect(page.getByRole("alertdialog")).toHaveCount(0);
