@@ -6,14 +6,14 @@ export type NavItem = { label: string; href: string; ready: boolean };
 
 /** Project tabs (ClientTabs), relative to /projects/:id. */
 export const CLIENT_PROJECT_TABS = [
-  { label: "Overview", path: "", ready: false }, // WEB-CLIENT-009
+  { label: "Overview", path: "", ready: true }, // WEB-CLIENT-009 (W6b)
   { label: "Milestones", path: "/milestones", ready: true }, // WEB-CLIENT-013 (W2)
   { label: "Evidence", path: "/evidence", ready: true }, // WEB-CLIENT-010 (W2)
-  { label: "Reports", path: "/reports", ready: false }, // WEB-CLIENT-018
+  { label: "Reports", path: "/reports", ready: true }, // WEB-CLIENT-018 (W6b)
   { label: "Ledger", path: "/ledger", ready: true }, // WEB-CLIENT-017 (W2)
   { label: "Orders", path: "/orders", ready: false }, // WEB-CLIENT-019
   { label: "BoQ", path: "/boq", ready: true }, // WEB-CLIENT-005 (W6a; read-only once approved)
-  { label: "Site map", path: "/site-map", ready: false }, // WEB-CLIENT-012
+  { label: "Site map", path: "/site-map", ready: true }, // WEB-CLIENT-012 (W6b)
 ] as const;
 
 /** Project tabs while the project is being set up (draft, BoQ review): WEB-CLIENT-003 to 006. */
@@ -35,7 +35,7 @@ export const CLIENT_MOBILE_NAV = [
   { label: "Milestones", path: "/milestones", projectScoped: true, ready: true },
   { label: "Evidence", path: "/evidence", projectScoped: true, ready: true },
   { label: "Money", path: "/ledger", projectScoped: true, ready: true },
-  { label: "Reports", path: "/reports", projectScoped: true, ready: false },
+  { label: "Reports", path: "/reports", projectScoped: true, ready: true },
 ] as const;
 
 /** Contractor top bar (ConTop). */

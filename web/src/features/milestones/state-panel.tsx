@@ -13,7 +13,7 @@ import type { MilestoneView } from "./use-milestone";
 
 // The panel under the stepper that says where this milestone is and what happens next (WEB-CLIENT-013, one
 // designed panel per state). Approve and dispute appear only on Verified, and only when the viewer may act.
-// The Fund button waits for the funding screens (WEB-CLIENT-007/016, a later stage).
+// A pending milestone links to its funding page (WEB-CLIENT-007/016).
 
 function Panel({
   tone,
@@ -80,7 +80,18 @@ export function StatePanel({
   switch (m.status) {
     case "pending":
       return (
-        <Panel tone="mist" eyebrow="Next step" title={`Fund ${m.name} to let work start`}>
+        <Panel
+          tone="mist"
+          eyebrow="Next step"
+          title={`Fund ${m.name} to let work start`}
+          actions={
+            actions.has("fund") ? (
+              <Button asChild size="lg">
+                <Link href={`/projects/${m.project_id}/fund/${m.id}`}>Fund this milestone</Link>
+              </Button>
+            ) : undefined
+          }
+        >
           <p>The contractor can start once the escrow partner holds the money for this milestone.</p>
         </Panel>
       );

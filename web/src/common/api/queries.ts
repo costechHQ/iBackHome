@@ -51,7 +51,12 @@ export function useMilestones(projectId: string) {
 
 /** Every ledger entry of the project (all pages), read into payments, releases and escrow now. */
 export function useLedger(projectId: string) {
-  return useQuery({
+  return useQuery(ledgerQuery(projectId));
+}
+
+/** The ledger query itself, for screens that read several projects at once (useQueries). */
+export function ledgerQuery(projectId: string) {
+  return {
     queryKey: keys.ledger(projectId),
     queryFn: async () => {
       const entries: LedgerEntry[] = [];
@@ -68,7 +73,7 @@ export function useLedger(projectId: string) {
       }
       return { entries, ledger: readLedger(projectId, entries) };
     },
-  });
+  };
 }
 
 /** The gallery's filters, exactly as the API defines them. */

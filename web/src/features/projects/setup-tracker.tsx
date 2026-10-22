@@ -20,7 +20,7 @@ import { setupSteps, type SetupKey } from "./setup";
 
 // WEB-CLIENT-003 CS-05 set-up tracker at /projects/:id/setup. People are named by role until MX-26; an
 // invitation's accepted / declined state needs MX-02, so "Contractor added" says only that they are on the
-// project. "Fund the first milestone" links to funding once W6b builds it.
+// project. "Fund the first milestone" opens its funding page (WEB-CLIENT-007).
 
 const ROLE_NAMES: Record<string, string> = { client: "you", contractor: "your contractor", ops: "our team" };
 
@@ -69,7 +69,14 @@ export function SetupTracker({ projectId }: { projectId: string }) {
     funded: steps[4]!.done ? "Opens now" : "Opens once all three have approved",
   };
 
+  const firstPending = [...ms].sort((a, b) => a.sequence - b.sequence).find((x) => x.status === "pending");
   const action: Partial<Record<SetupKey, React.ReactNode>> = {
+    funded:
+      steps[4]!.done && !steps[5]!.done && firstPending ? (
+        <Button asChild>
+          <Link href={`/projects/${p.id}/fund/${firstPending.id}`}>Fund {firstPending.name}</Link>
+        </Button>
+      ) : null,
     site: (
       <Button asChild variant={p.site ? "outline" : "primary"}>
         <Link href={`/projects/${p.id}/site`}>{p.site ? "View map" : "Pin your site"}</Link>

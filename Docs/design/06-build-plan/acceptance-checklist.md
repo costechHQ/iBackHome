@@ -105,6 +105,17 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Gaps logged: B-6 (projects in naira), W-30 to W-32, MX-08 proposal
 - [ ] Production map tiles (W-30, launch item)
 
+### W6b · Money and home
+
+- [x] WEB-CLIENT-007 / 016 funding: today's amounts before paying (quote: nothing recorded), GBP, USD or EUR, the hand-off to Stripe Checkout, waiting for escrow until the webhook funds it, funded (what was paid, the rate, the reference), cancelled; "Fund this milestone" on a pending milestone and in the set-up tracker
+- [x] WEB-CLIENT-008 home at `/projects`: needs your attention (approvals, a new weekly report, set-up steps) and the projects with progress and money
+- [x] WEB-CLIENT-009 overview: needs your approval, progress, spend against budget, milestones, latest evidence, latest report, in escrow now
+- [x] WEB-CLIENT-012 site map: the boundary, the tolerance band, the pin and the captures, filtered by milestone and by who captured them, listed in words
+- [x] WEB-CLIENT-018 weekly reports: the list and the viewer, AI-generated and reviewed labels, drafts kept from the client, Markdown rendered as text only
+- [x] Backend: `GET /funding/quote` and Stripe's return to the web funding page (#74, two reviewers)
+- [x] Unit tests (money summary, report Markdown); stack test of the whole W6b flow; axe clean at 1280 and 390 px
+- [x] Gaps logged: B-7 (drafts listed to clients), W-33 to W-36, MX-13 note
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
