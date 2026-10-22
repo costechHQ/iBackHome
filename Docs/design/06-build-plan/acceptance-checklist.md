@@ -30,6 +30,16 @@ The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks belo
 - [x] Signed-in pages, sign-in and the proxy send `Cache-Control: no-store` (Playwright test)
 - [x] Gaps logged: MX-19 (sign-out only clears cookies); backend differences B-1 to B-5 in PACKAGE-REPORT
 
+### W1b · UI kit, shells, system pages
+
+- [x] UI kit in `web/src/common/ui/`: buttons (loading keeps its colour), text field, select, error summary, segmented control, status chip, alert, toast, skeleton (slow after 10 s), empty state, card, avatar, table, dialog and alert dialog, money display, escrow trust line, wordmark, time with UTC on hover
+- [x] Tokens only: a test fails on any hex/rgb colour or Tailwind arbitrary value in `src/`
+- [x] Shells: ClientTop (project switcher, account menu), project header + ClientTabs, ClientNav (mobile), ConTop, ops sidebar with queue counts and environment badge
+- [x] System states (WEB-CLIENT-024): 404, 500 with reference, 403, 409 conflict, form validation, session expired (can't be dismissed, returns to the page), offline bar (follows the connection), loading skeleton, toasts, confirmation and destructive dialogs
+- [x] Dialogs trap focus and return it to the opener; Escape doesn't close a dialog about money; the safe choice is on the left
+- [x] axe: no WCAG 2.1 AA violations in any frame at 960, 1280 and 390 px (`e2e/states.spec.ts`)
+- [x] Not built yet, logged as W-1 to W-8 in PACKAGE-REPORT (hidden links, Help, bell, ops search and session timer, a dropped placeholder, the `/` route conflict)
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page
