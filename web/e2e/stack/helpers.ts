@@ -25,13 +25,20 @@ export function latestCode(identifier: string): string {
   return code;
 }
 
-export async function signInByEmail(page: Page, email: string, next = "/projects") {
+/** Signs in by email, or by phone (SMS) when the identifier starts with +. */
+export async function signIn(page: Page, identifier: string, next = "/projects") {
   await page.goto(`/sign-in?next=${encodeURIComponent(next)}`);
-  await page.getByLabel("Email").check();
-  await page.getByLabel("Email address").fill(email);
+  if (identifier.startsWith("+")) {
+    await page.getByLabel("Phone", { exact: true }).check();
+    await page.getByLabel("Phone number").fill(identifier);
+    await page.getByLabel("SMS").check();
+  } else {
+    await page.getByLabel("Email", { exact: true }).check();
+    await page.getByLabel("Email address").fill(identifier);
+  }
   await page.getByRole("button", { name: "Send code" }).click();
   await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
-  await page.getByLabel("6-digit code").fill(latestCode(email));
+  await page.getByLabel("6-digit code").fill(latestCode(identifier));
   await page.getByRole("button", { name: "Verify" }).click();
   await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"));
 }
@@ -52,13 +59,13 @@ const sessionFile = (who: string) =>
 export async function openSignedIn(
   browser: Browser,
   baseURL: string | undefined,
-  email: string,
+  identifier: string,
 ): Promise<Page> {
-  const file = sessionFile(email);
+  const file = sessionFile(identifier);
   const context = await browser.newContext({ baseURL, storageState: existsSync(file) ? file : undefined });
   const page = await context.newPage();
   await page.goto("/projects");
-  if (new URL(page.url()).pathname.startsWith("/sign-in")) await signInByEmail(page, email);
+  if (new URL(page.url()).pathname.startsWith("/sign-in")) await signIn(page, identifier);
   return page;
 }
 

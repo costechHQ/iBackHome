@@ -14,11 +14,20 @@ export type Milestone = components["schemas"]["ProjectMilestoneOut"];
 export type Evidence = components["schemas"]["GalleryItem"];
 
 export const keys = {
+  projects: () => ["projects"] as const,
   project: (id: string) => ["project", id] as const,
   milestones: (id: string) => ["project", id, "milestones"] as const,
   ledger: (id: string) => ["project", id, "ledger"] as const,
   evidence: (id: string, filters: EvidenceFilters) => ["project", id, "evidence", filters] as const,
 };
+
+/** The viewer's projects (a client's own, a contractor's, every project for ops); the first 200 is plenty. */
+export function useProjects() {
+  return useQuery({
+    queryKey: keys.projects(),
+    queryFn: () => call(api().GET("/api/v1/projects", { params: { query: { limit: 200 } } })),
+  });
+}
 
 export function useProject(projectId: string) {
   return useQuery({

@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "../ui/cn";
+import { StatusChip } from "../ui/status-chip";
 import { Wordmark } from "../ui/wordmark";
 import { AvatarMenu } from "./avatar-menu";
-import { CONTRACTOR_NAV, isActive, shown } from "./nav";
+import { CONTRACTOR_NAV, CONTRACTOR_PROJECT_TABS, isActive, shown } from "./nav";
 
 // Contractor top bar (components.md: ConTop): wordmark with a "Contractor" tag, Projects / Orders / Payouts /
 // Profile, and the person. The project row under it (back link, title, project tabs) comes with the project
-// screens. Help and the bell are hidden until their pages exist.
+// screens (ContractorProjectHeader). Help and the bell are hidden until their pages exist.
 
 export function ContractorTop({ name, showAll = false }: { name: string; showAll?: boolean }) {
   const pathname = usePathname();
@@ -56,5 +57,59 @@ export function ContractorTop({ name, showAll = false }: { name: string; showAll
         </div>
       </div>
     </header>
+  );
+}
+
+/** The project row under the top bar: back to Projects, the title and status, then the project tabs. The design's
+ *  "Client: name" waits for names on the project (MX-26). */
+export function ContractorProjectHeader({
+  id,
+  title,
+  status,
+  showAll = false,
+}: {
+  id: string;
+  title: string;
+  status: string;
+  showAll?: boolean;
+}) {
+  const pathname = usePathname();
+  const tabs = shown(CONTRACTOR_PROJECT_TABS, showAll);
+  return (
+    <div className="border-b border-line bg-white">
+      <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-10">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <Link href="/c" className="type-small rounded-control font-semibold text-accent">
+            ‹ Projects
+          </Link>
+          <h1 className="type-h2 text-ink">{title}</h1>
+          <StatusChip entity="project" state={status} audience="contractor" />
+        </div>
+        <nav aria-label="Project sections" className="mt-2">
+          <ul className="flex gap-1 overflow-x-auto">
+            {tabs.map((tab) => {
+              const href = `/c/projects/${id}${tab.path}`;
+              const active = isActive(pathname, href);
+              return (
+                <li key={tab.label}>
+                  <Link
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "type-small flex min-h-target items-center border-b-2 px-3.5 whitespace-nowrap",
+                      active
+                        ? "border-navy-900 font-semibold text-ink"
+                        : "border-transparent text-slate hover:text-ink",
+                    )}
+                  >
+                    {tab.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </div>
+    </div>
   );
 }

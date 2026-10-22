@@ -10,6 +10,8 @@ export default defineConfig({
   testDir: "./e2e",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  // The stack tests share one database and change it (claims, approvals, resolutions): one at a time.
+  workers: process.env.IBH_STACK ? 1 : undefined,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: { baseURL, trace: "retain-on-failure" },
   projects: [

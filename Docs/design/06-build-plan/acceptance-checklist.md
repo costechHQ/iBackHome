@@ -52,6 +52,16 @@ The repo builds the web app in stages W0–W4 (ADR 0003); the screen blocks belo
 - [x] axe: no WCAG 2.1 AA violations on these screens at 1280 and 390 px with real data
 - [x] Mocks behind `IBH_MOCKS`: MX-03 (pays to), MX-10 (dispute reason). Gaps logged: MX-26, MX-27 (new), W-9 to W-17
 
+### W3 · Contractor claim and ops disputes
+
+- [x] WEB-CONTRACTOR-003 dashboard at `/c`: greeting in WAT, "Needs you" (milestones sent back), one card per project with released and held NGN
+- [x] WEB-CONTRACTOR-005 milestones with the project row (‹ Projects, title, status, Milestones tab); "Claim milestone" only on Funded, confirm dialog, 409 as the designed conflict; NGN only
+- [x] WEB-CONTRACTOR-006 sent back: the supervisor's notes, each item Accepted / Not ready, money still held, "Claim again" (the stack test claims it)
+- [x] WEB-OPS-006 queue from `GET /ops/queue` with project, milestone and money held; Disputes in the ops sidebar
+- [x] WEB-OPS-006 resolution: real timeline from the audit log, evidence by supervisor / contractor, money held; step 1 proposes with a required note, step 2 a different ops user confirms the same outcome; the same user confirming gets 409 `second_approval_required` (stack test, two seeded ops users)
+- [x] axe: no WCAG 2.1 AA violations on these screens (contractor at 1280 and 390 px, ops at 1440 px) with real data
+- [x] Mocks behind `IBH_MOCKS`: MX-06 (paid to you). Backend: a second ops user in `seed.py` (#62), proposal fields on the ops queue (#63). Gaps logged: W-18 to W-22
+
 ## Stage 3 · Public site
 
 ### WEB-PUBLIC-001 · Landing page

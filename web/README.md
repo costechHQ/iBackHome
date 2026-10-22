@@ -58,9 +58,11 @@ bun scripts/drive/index.ts --to verified --milestone 2 --project "3-bedroom bung
 bun scripts/drive/index.ts --to disputed --milestone 1 --project "4-bedroom duplex, Independence Layout"
 ```
 
-States: `funded`, `claimed`, `verified`, `approved`, `released`, `disputed`. Funding sends the signed `checkout.session.completed` webhook Stripe would send, so it needs only `STRIPE_WEBHOOK_SECRET` in the repo's `.env` (any random value locally; no Stripe account). Captures are signed with an ECDSA P-256 key per SIGNING.md and pass the real checks (the worker must run). Tokens and device keys are kept in `web/.drive/` (gitignored).
+States: `funded`, `claimed`, `verified`, `approved`, `released`, `disputed`, `sent-back` (the supervisor rejects the claim with reasons). Funding sends the signed `checkout.session.completed` webhook Stripe would send, so it needs only `STRIPE_WEBHOOK_SECRET` in the repo's `.env` (any random value locally; no Stripe account). Captures are signed with an ECDSA P-256 key per SIGNING.md and pass the real checks (the worker must run). Tokens and device keys are kept in `web/.drive/` (gitignored).
 
 Then `IBH_STACK=1 bun run e2e e2e/stack/client-release.spec.ts` checks every client screen against that data (axe at 1280 and 390 px, and a real approval in three taps). The backend allows 3 login codes per email per 15 minutes; the stack tests keep their browser session in `web/.drive/` between runs.
+
+For the contractor and ops screens (W3), put one milestone into `sent-back` and another into `disputed`, then run `IBH_STACK=1 bun run e2e e2e/stack/contractor-ops.spec.ts`. It claims the sent-back milestone again as the contractor, and resolves the dispute for release as the two seeded ops users (one proposes, the other confirms), so run the driver again before the next run. The stack tests run one at a time because they share the database.
 
 **Evidence photos locally:** the API signs photo URLs for the Docker host `storage:9000`, so a browser outside Docker can't load them. Add `127.0.0.1 storage` to your hosts file (`C:\Windows\System32\drivers\etc\hosts` on Windows, admin rights) to see them. Playwright maps the name itself. Staging uses R2's public URLs, so this is local only.
 

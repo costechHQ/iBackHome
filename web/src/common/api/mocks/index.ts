@@ -4,10 +4,10 @@
 // Docker Compose turns them on locally and on staging; production leaves IBH_MOCKS unset, and the element a
 // mock would fill is hidden instead. Nothing here is real data: never use it outside this folder's callers.
 
-export type MockGap = "MX-03" | "MX-10";
+export type MockGap = "MX-03" | "MX-06" | "MX-10";
 export type MockFlags = readonly MockGap[];
 
-const ALL: MockFlags = ["MX-03", "MX-10"];
+const ALL: MockFlags = ["MX-03", "MX-06", "MX-10"];
 
 /** Parses IBH_MOCKS. Unknown ids are ignored. */
 export function parseMockFlags(value: string | undefined): MockFlags {
@@ -34,5 +34,31 @@ export function mockDispute(milestoneId: string): {
     reason: "Rear gutter outlet is blocked; please check before release.",
     status: "open",
     raisedAt: "2026-12-12T09:20:00Z",
+  };
+}
+
+/** MX-06 (payout history): the contractor's payouts and bank account (WEB-CONTRACTOR-003 fixtures). */
+export function mockPayouts(): {
+  items: { reference: string; amountMinor: number; reason: string; completedAt: string }[];
+  bankName: string;
+  accountMasked: string;
+} {
+  return {
+    items: [
+      {
+        reference: "P-0912",
+        amountMinor: 1_326_000_000,
+        reason: "Roofing release",
+        completedAt: "2026-12-12T09:31:00Z",
+      },
+      {
+        reference: "P-0874",
+        amountMinor: 507_000_000,
+        reason: "Blockwork to Lintel release",
+        completedAt: "2026-11-27T09:14:00Z",
+      },
+    ],
+    bankName: "First Bank of Nigeria",
+    accountMasked: "******6789",
   };
 }

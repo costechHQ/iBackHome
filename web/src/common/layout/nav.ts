@@ -33,6 +33,14 @@ export const CONTRACTOR_NAV: readonly NavItem[] = [
   { label: "Profile", href: "/c/profile", ready: false }, // WEB-CONTRACTOR-009
 ];
 
+/** Contractor project tabs (ConTop project row), relative to /c/projects/:id. */
+export const CONTRACTOR_PROJECT_TABS = [
+  { label: "Milestones", path: "/milestones", ready: true }, // WEB-CONTRACTOR-005 (W3)
+  { label: "BoQ", path: "/boq", ready: false }, // WEB-CONTRACTOR-004
+  { label: "Evidence", path: "/evidence", ready: false },
+  { label: "Orders", path: "/orders", ready: false }, // WEB-CONTRACTOR-007
+] as const;
+
 export type OpsSection = {
   heading: string | null;
   items: readonly (NavItem & { queue?: "vetting" | "flagged_evidence" | "disputes" })[];
@@ -46,7 +54,7 @@ export const OPS_NAV: readonly OpsSection[] = [
     items: [
       { label: "Vetting", href: "/ops/vetting", ready: false, queue: "vetting" }, // WEB-OPS-003
       { label: "Flagged evidence", href: "/ops/evidence", ready: false, queue: "flagged_evidence" }, // WEB-OPS-005
-      { label: "Disputes", href: "/ops/disputes", ready: false, queue: "disputes" }, // WEB-OPS-006 (W3)
+      { label: "Disputes", href: "/ops/disputes", ready: true, queue: "disputes" }, // WEB-OPS-006 (W3)
     ],
   },
   {

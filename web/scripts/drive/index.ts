@@ -19,7 +19,15 @@ import { apiAs, ok, PEOPLE, type Person } from "./session";
 
 const ORDER = ["pending", "funded", "claimed", "verified", "approved", "released"] as const;
 type Target = (typeof ORDER)[number] | "disputed" | "sent-back";
-const TARGETS: readonly Target[] = ["funded", "claimed", "verified", "approved", "released", "disputed", "sent-back"];
+const TARGETS: readonly Target[] = [
+  "funded",
+  "claimed",
+  "verified",
+  "approved",
+  "released",
+  "disputed",
+  "sent-back",
+];
 
 const { values } = parseArgs({
   options: {
