@@ -18,6 +18,10 @@ class OpenDispute:
     milestone_id: uuid.UUID
     reason: str
     created_at: datetime
+    # The first ops approval, if one was made: a second, different ops user confirms the same outcome.
+    proposed_outcome: str | None = None
+    proposed_by: uuid.UUID | None = None
+    proposed_at: datetime | None = None
 
 
 async def list_open(session: AsyncSession, limit: int) -> list[OpenDispute]:
@@ -31,6 +35,9 @@ async def list_open(session: AsyncSession, limit: int) -> list[OpenDispute]:
             milestone_id=d.milestone_id,
             reason=d.reason,
             created_at=d.created_at,
+            proposed_outcome=d.proposed_outcome,
+            proposed_by=d.proposed_by,
+            proposed_at=d.proposed_at,
         )
         for d in await escrow.list_open_disputes(session, limit)
     ]

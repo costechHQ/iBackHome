@@ -10,6 +10,8 @@ v4 (backend gate):  a verified supplier owned by the seeded supplier user, and P
                     supplier payments can run. With PAYSTACK_SECRET_KEY set (test mode) they are
                     registered with Paystack; on ENVIRONMENT=local without a key a stand-in recipient
                     code is used; elsewhere without a key they are skipped (and said so).
+v5 (web W3):        a second human ops user, because resolving a dispute needs two different ops users
+                    (escrow.resolve_dispute); the agent ops users can't sign in with a code.
 
 Refuses to run when ENVIRONMENT=production.
 
@@ -77,6 +79,8 @@ USERS = [
         "supplier", Role.SUPPLIER, "Obinna Building Materials", "+2348030000003", None, "NG", "Africa/Lagos"
     ),
     SeedUser("ops", Role.OPS, "Chiamaka Ops", "+2348030000004", "ops@example.com", "NG", "Africa/Lagos"),
+    # A dispute is resolved by two different ops users: one proposes, the other confirms.
+    SeedUser("ops_2", Role.OPS, "Obiora Ops", "+2348030000006", "ops2@example.com", "NG", "Africa/Lagos"),
 ]
 
 

@@ -154,3 +154,32 @@ async def test_a_real_open_dispute_shows_in_the_queue(
     assert [d["dispute_id"] for d in disputes] == [str(open_one.id)]
     assert disputes[0]["reason"] == "Foundation is cracked"
     assert disputes[0]["milestone_id"] == str(world.milestone.id)
+    # No ops user has proposed an outcome yet.
+    assert disputes[0]["proposed_outcome"] is None
+    assert disputes[0]["proposed_by"] is None
+    assert disputes[0]["proposed_at"] is None
+
+
+async def test_an_open_dispute_shows_the_first_ops_proposal(
+    client: AsyncClient, db_session: AsyncSession, world: World
+) -> None:
+    """The second ops user must see what the first proposed, to confirm the same outcome."""
+    proposed_at = datetime(2026, 10, 22, 9, 10, tzinfo=UTC)
+    dispute = Dispute(
+        project_id=world.project.id,
+        milestone_id=world.milestone.id,
+        raised_by=world.client.id,
+        reason="Wall is at lintel level",
+        status="open",
+        proposed_outcome="release",
+        proposed_by=world.ops.id,
+        proposed_at=proposed_at,
+    )
+    db_session.add(dispute)
+    await db_session.flush()
+
+    disputes = (await client.get(URL, headers=bearer(world.ops))).json()["disputes"]
+    assert [d["dispute_id"] for d in disputes] == [str(dispute.id)]
+    assert disputes[0]["proposed_outcome"] == "release"
+    assert disputes[0]["proposed_by"] == str(world.ops.id)
+    assert datetime.fromisoformat(disputes[0]["proposed_at"]) == proposed_at
