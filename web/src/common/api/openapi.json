@@ -446,6 +446,11 @@
         ],
         "summary": "Me",
         "operationId": "me_api_v1_me_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -457,12 +462,162 @@
               }
             }
           }
-        },
+        }
+      },
+      "patch": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Update Me",
+        "description": "The signed-in person changes their own name, country or time zone (only the fields sent).",
+        "operationId": "update_me_api_v1_me_patch",
         "security": [
           {
             "HTTPBearer": []
           }
-        ]
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/consent": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Consent",
+        "description": "The terms of use and privacy policy versions to agree to (NDPA 2023), and whether this person has.",
+        "operationId": "consent_api_v1_me_consent_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Give Consent",
+        "description": "The person agrees to the current versions; older ones get 409 consent_version_outdated.",
+        "operationId": "give_consent_api_v1_me_consent_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/projects/{project_id}/funding": {
@@ -3372,6 +3527,69 @@
         "title": "ChecklistItem",
         "description": "One thing the supervisor checked on site, and the photos that show it."
       },
+      "ConsentIn": {
+        "properties": {
+          "terms_version": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Terms Version"
+          },
+          "privacy_version": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Privacy Version"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "terms_version",
+          "privacy_version"
+        ],
+        "title": "ConsentIn",
+        "description": "The versions the person saw and agreed to; they must be the current ones."
+      },
+      "ConsentOut": {
+        "properties": {
+          "terms_version": {
+            "type": "string",
+            "title": "Terms Version",
+            "description": "The current terms of use version"
+          },
+          "privacy_version": {
+            "type": "string",
+            "title": "Privacy Version",
+            "description": "The current privacy policy version"
+          },
+          "consented_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consented At"
+          },
+          "consent_required": {
+            "type": "boolean",
+            "title": "Consent Required"
+          }
+        },
+        "type": "object",
+        "required": [
+          "terms_version",
+          "privacy_version",
+          "consented_at",
+          "consent_required"
+        ],
+        "title": "ConsentOut",
+        "description": "The current documents to agree to, and what this person agreed to."
+      },
       "CurrentPrice": {
         "properties": {
           "item_key": {
@@ -4611,6 +4829,24 @@
               }
             ],
             "title": "Country"
+          },
+          "consented_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consented At"
+          },
+          "consent_required": {
+            "type": "boolean",
+            "title": "Consent Required",
+            "description": "True until the person agrees to the current terms of use and privacy policy.",
+            "default": false
           }
         },
         "type": "object",
@@ -4625,6 +4861,54 @@
           "country"
         ],
         "title": "MeOut"
+      },
+      "MeUpdate": {
+        "properties": {
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country",
+            "description": "ISO 3166-1 alpha-2"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone",
+            "description": "IANA, e.g. Europe/London"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MeUpdate",
+        "description": "PATCH /me: only the fields sent change. Phone and email are sign-in identifiers, not changed here."
       },
       "MilestoneOut": {
         "properties": {
