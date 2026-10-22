@@ -1,4 +1,4 @@
-# ADR 0003: The web app is Next.js with a same-origin auth proxy
+# ADR 0004: The web app is Next.js with a same-origin auth proxy
 
 - **Status:** Accepted
 - **Date:** 2026-10-21

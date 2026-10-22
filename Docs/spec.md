@@ -725,6 +725,6 @@ Each becomes an architecture decision record (ADR) in `docs/adr/` once decided.
 | 6 | LLM provider and model | Any with tool calling and vision | Pick one with strong tool calling and image input | Day 12 |
 | 7 | Mobile local database | Drift, Isar, Hive | Drift (SQL, good for queues) | Day 5 |
 | 8 | Payout rail for contractors | Paystack transfers vs escrow partner's own payouts | Depends on decision 2 | Day 12 |
-| 9 | Web framework | React + Vite SPA; Next.js (App Router) | Decided 2026-10-21: Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (BFF); ADR 0003 | Done |
+| 9 | Web framework | React + Vite SPA; Next.js (App Router) | Decided 2026-10-21: Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (BFF); ADR 0004 | Done |
 
 Check current pricing and availability in Nigeria for the paid services before deciding.

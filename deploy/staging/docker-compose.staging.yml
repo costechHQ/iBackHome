@@ -79,7 +79,7 @@ services:
       timeout: 5s
       retries: 10
 
-  # The Next.js web app (ADR 0003), served by Caddy on STAGING_WEB_DOMAIN. Its server calls the API on the
+  # The Next.js web app (ADR 0004), served by Caddy on STAGING_WEB_DOMAIN. Its server calls the API on the
   # internal network; it is inside 172.31.250.0/24, so the API trusts the caller IP it forwards.
   web:
     build: ../../web

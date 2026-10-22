@@ -1,0 +1,94 @@
+name: web-stack
+
+# The web gate in CI (ADR 0004): the web app's stack tests against the real backend, run with Docker Compose
+# like a developer's machine. It seeds the database, puts milestones into each state with the dev seed driver,
+# then runs web/e2e/stack: the client, contractor and ops screens, the gate journey (fund → capture → claim →
+# verify → approve → release, and the dispute path with two ops approvers) and the dual-approval guards.
+# Outside services are local or simulated: SeaweedFS for storage, a locally signed Stripe webhook, the
+# simulated escrow partner, login codes read from the API log (ENVIRONMENT=local). Owner of web/: Gabriel.
+# Runs when the web app or the backend changes, since either can break the journey.
+
+on:
+  pull_request:
+    paths: ["web/**", "backend/**", "docker-compose.yml", ".github/workflows/web-stack.yml"]
+  push:
+    branches: [main]
+    paths: ["web/**", "backend/**", "docker-compose.yml", ".github/workflows/web-stack.yml"]
+
+jobs:
+  stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # CI only, no real secrets. Every sign-in comes from one IP here (the driver and the browsers), more than
+      # the 10 login codes per IP per 15 minutes a real network gets, so the per-IP limit is raised.
+      - name: Local settings
+        run: printf 'ENVIRONMENT=local\nSTRIPE_WEBHOOK_SECRET=whsec_ci_only\nOTP_LIMIT_PER_IP=100\n' > .env
+
+      - name: Start the backend (api, worker, beat, PostGIS, Redis, SeaweedFS)
+        run: docker compose up -d --build --wait api worker beat db redis storage
+
+      - name: Wait for the API
+        run: |
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:8000/healthz && exit 0
+            sleep 2
+          done
+          docker compose logs api
+          exit 1
+
+      - name: Seed people, projects and photos
+        run: |
+          docker compose exec -T api python scripts/seed.py
+          docker compose exec -T api python scripts/simulator.py --photos 2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - name: Install dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+
+      # Every milestone state the client, contractor and ops tests read (web/README.md, "Seed driver").
+      - name: Put milestones into each state
+        working-directory: web
+        run: |
+          bun scripts/drive/index.ts --to released --milestone 1 --project "3-bedroom bungalow, Trans-Ekulu"
+          bun scripts/drive/index.ts --to verified --milestone 2 --project "3-bedroom bungalow, Trans-Ekulu"
+          bun scripts/drive/index.ts --to sent-back --milestone 3 --project "3-bedroom bungalow, Trans-Ekulu"
+          bun scripts/drive/index.ts --to disputed --milestone 1 --project "4-bedroom duplex, Independence Layout"
+          bun scripts/drive/index.ts --to claimed --milestone 2 --project "4-bedroom duplex, Independence Layout"
+
+      - name: Build
+        working-directory: web
+        run: bun run build
+      - name: Install Playwright's Chromium
+        working-directory: web
+        run: bun x playwright install --with-deps chromium
+      - name: Stack tests and the web gate
+        working-directory: web
+        env:
+          IBH_STACK: "1"
+          IBH_STACK_SEEDED: "1"
+        run: bun run e2e e2e/stack
+
+      - name: Keep the Playwright report and the API log
+        if: failure()
+        run: docker compose logs api worker > web/playwright-report-api.log 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: web-stack-report
+          path: |
+            web/playwright-report
+            web/test-results
+            web/playwright-report-api.log
+          retention-days: 7

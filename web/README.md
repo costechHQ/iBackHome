@@ -2,7 +2,7 @@
 
 The web app: client dashboard, contractor and supplier portals, ops console. Owner: Gabriel.
 
-Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (ADR 0003, `Docs/adr/0003-web-nextjs-bff.md`). The designs are in `Docs/design/` (screens `WEB-*`).
+Next.js (App Router) + TypeScript + Tailwind CSS, with a same-origin auth proxy (ADR 0004, `Docs/adr/0004-web-nextjs-bff.md`). The designs are in `Docs/design/` (screens `WEB-*`).
 
 ## Folders
 
@@ -41,6 +41,10 @@ The web server calls the API at `API_INTERNAL_URL` (default `http://127.0.0.1:80
 **UI rules in code:** colours, radii, shadows and type come only from the tokens (`bg-primary`, `rounded-card`, `type-h2`, ...). A test fails on any hex or rgb colour or Tailwind arbitrary value (`bg-[#...]`, `text-[13px]`) in `src/`. Shared components are in `src/common/ui/`, the portal shells in `src/common/layout/`; nav items appear once their screen is built (`nav.ts`, `ready`).
 
 With Docker: `docker compose up --build` from the repo root also starts `web` on http://localhost:3000.
+
+## Web gate
+
+`e2e/stack/gate.spec.ts` walks the milestone release journey through the screens on a new project each run (the driver's `--new-project`), and `e2e/stack/gate-guards.spec.ts` checks that no screen gets around dual approval, that each portal refuses the other roles, approving by keyboard, and that a server without `IBH_MOCKS` shows nothing mocked (Playwright starts that second server on port 3011). Both repeat with no reset. In CI, `.github/workflows/web-stack.yml` runs every stack test from an empty database, with the same driver steps as below.
 
 ## Seed driver (local data in every milestone state)
 

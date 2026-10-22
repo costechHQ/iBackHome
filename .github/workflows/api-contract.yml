@@ -1,6 +1,6 @@
 name: api-contract
 
-# The web app's API client is generated from the backend's OpenAPI document (ADR 0003).
+# The web app's API client is generated from the backend's OpenAPI document (ADR 0004).
 # This regenerates it and fails if the committed files differ, so a backend change to a route or
 # schema must come with `bun run gen:api` (from web/) in the same pull request.
 

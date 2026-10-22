@@ -1,4 +1,4 @@
-# The web app image (ADR 0003). Bun installs and runs the build scripts; Next itself runs on Node.
+# The web app image (ADR 0004). Bun installs and runs the build scripts; Next itself runs on Node.
 # Build from the repo root: docker build --tag ibackhome-web web
 
 FROM oven/bun:1.3.14 AS bun

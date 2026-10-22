@@ -45,7 +45,7 @@ export function signInMessage(state: UiState, channel: Channel): Message {
         detail:
           channel === "email"
             ? "Try again, or use your phone number."
-            : "Try again, or choose another way to get it.",
+            : `Try again, or choose ${channel === "sms" ? "WhatsApp" : "SMS"} or email.`,
       };
     case "forbidden":
       return { title: "This account is suspended.", detail: "Contact us if you think this is a mistake." };

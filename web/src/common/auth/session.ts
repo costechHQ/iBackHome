@@ -12,7 +12,7 @@ import {
   type TokenPair,
 } from "./cookies";
 import { refreshSession } from "./refresh";
-import { homeFor, safeNext } from "./roles";
+import { homeFor, safeNext, signInPathFor } from "./roles";
 
 // Route handler logic for /api/session/* (the route files in app/api/session/ only call these).
 
@@ -74,7 +74,7 @@ export async function verifyOtp(req: NextRequest): Promise<NextResponse> {
 export async function refreshAndReturn(req: NextRequest): Promise<NextResponse> {
   const next = safeNext(req.nextUrl.searchParams.get("next"));
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
-  const signIn = new URL(`/sign-in?next=${encodeURIComponent(next)}&expired=1`, req.nextUrl);
+  const signIn = new URL(signInPathFor(next, true), req.nextUrl);
 
   if (refreshToken) {
     try {

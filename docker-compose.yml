@@ -40,7 +40,7 @@ services:
     <<: *backend
     command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
 
-  # The Next.js web app (ADR 0003). The browser talks only to it; its server calls the API inside Docker.
+  # The Next.js web app (ADR 0004). The browser talks only to it; its server calls the API inside Docker.
   web:
     build: ./web
     environment:

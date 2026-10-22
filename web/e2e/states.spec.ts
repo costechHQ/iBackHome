@@ -62,7 +62,8 @@ test("the session-expired dialog can't be dismissed and signs in back to the sam
   await page.keyboard.press("Escape");
   const dialog = page.getByRole("alertdialog", { name: "Please sign in again" });
   await expect(dialog).toBeVisible();
-  await dialog.getByRole("button", { name: "Sign in" }).click();
+  // The gallery has no signed-in person to send a code to, so it falls back to the sign-in page.
+  await dialog.getByRole("button", { name: "Send me a code" }).click();
   await expect(page).toHaveURL(/\/sign-in\?next=%2Fdev%2Fstates%3Fframe%3Dsession&expired=1$/);
 });
 
