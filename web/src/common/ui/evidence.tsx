@@ -152,7 +152,7 @@ export function EvidenceCard({
     >
       <div className="relative aspect-video bg-placeholder">
         {item.kind === "photo" ? (
-          // eslint-disable-next-line @next/next/no-img-element -- signed, expiring, private URL (ADR 0003)
+          // eslint-disable-next-line @next/next/no-img-element -- signed, expiring, private URL (ADR 0004)
           <img
             src={item.read_url}
             alt={`Evidence ${reference}`}

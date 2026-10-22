@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 
 import { proxyToApi } from "@/common/api/proxy";
 
-// The same-origin API proxy (ADR 0003). All logic is in common/api/proxy.ts.
+// The same-origin API proxy (ADR 0004). All logic is in common/api/proxy.ts.
 export const dynamic = "force-dynamic";
 
 type Context = { params: Promise<{ path: string[] }> };

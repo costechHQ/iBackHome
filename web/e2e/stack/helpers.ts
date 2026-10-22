@@ -10,6 +10,21 @@ import { expect, type Browser, type Page } from "@playwright/test";
 // API log (ENVIRONMENT=local only).
 
 const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+const webRoot = fileURLToPath(new URL("../..", import.meta.url));
+
+/** Runs the seed driver (scripts/drive) and returns the project and milestone it drove. */
+export function drive(...args: string[]): { projectId: string; milestoneId: string } {
+  const out = execFileSync("bun", ["scripts/drive/index.ts", ...args], {
+    cwd: webRoot,
+    encoding: "utf8",
+    timeout: 240_000,
+    // On Windows, bun on PATH may be a shim that only a shell can start.
+    shell: process.platform === "win32",
+  });
+  const match = /client\s+\/projects\/([0-9a-f-]{36})\/milestones\/([0-9a-f-]{36})/.exec(out);
+  if (!match) throw new Error(`drive ${args.join(" ")}: no milestone in the output\n${out}`);
+  return { projectId: match[1]!, milestoneId: match[2]! };
+}
 
 export function latestCode(identifier: string): string {
   const logs = execFileSync("docker", ["compose", "logs", "api", "--since", "2m"], {

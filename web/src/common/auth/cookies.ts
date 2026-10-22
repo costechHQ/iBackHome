@@ -1,4 +1,4 @@
-// Session cookies (ADR 0003). All httpOnly, so browser JavaScript never sees a token.
+// Session cookies (ADR 0004). All httpOnly, so browser JavaScript never sees a token.
 //   ibh_at  access token, sent to pages and the API proxy, lives as long as the token (15 min)
 //   ibh_rt  refresh token, sent only to /api (the API proxy and /api/session/*), never with a page
 //   ibh_s   "a session exists" flag with no secret, so src/proxy.ts can tell "signed out" from "token expired"

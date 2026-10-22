@@ -87,7 +87,8 @@ test("an ops user signs in by phone and lands in the ops console shell", async (
   await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
   await page.getByLabel("6-digit code").fill(latestCode(phone));
   await page.getByRole("button", { name: "Verify" }).click();
-  await expect(page).toHaveURL(/\/ops$/);
+  // /ops opens on the dispute queue until the ops overview (WEB-OPS-002) exists.
+  await expect(page).toHaveURL(/\/ops\/disputes$/);
   await expect(page.getByRole("navigation", { name: "Ops console" })).toBeAttached();
   await expect(page.getByText("Operations", { exact: true })).toBeVisible();
 });

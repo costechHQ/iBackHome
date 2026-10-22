@@ -2,7 +2,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
-// Folder rules from the Spec and ADR 0003: app/ holds routes only and may import anything;
+// Folder rules from the Spec and ADR 0004: app/ holds routes only and may import anything;
 // features/ and common/ never import from app/; common/ never imports from features/.
 const fromApp = {
   group: ["@/app", "@/app/*", "**/app/*"],
