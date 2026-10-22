@@ -23,10 +23,17 @@ import { EmptyState } from "@/common/ui/surfaces";
 type By = "all" | "supervisor" | "contractor";
 type Kind = "all" | "photo" | "video";
 
-export function EvidenceGallery({ projectId }: { projectId: string }) {
+/** `initialMilestone`: open already filtered to one milestone (from "See the evidence"). */
+export function EvidenceGallery({
+  projectId,
+  initialMilestone = "",
+}: {
+  projectId: string;
+  initialMilestone?: string;
+}) {
   const timeZone = useViewerTimeZone();
   const search = useSearchParams();
-  const [milestoneId, setMilestoneId] = useState("");
+  const [milestoneId, setMilestoneId] = useState(initialMilestone);
   const [by, setBy] = useState<By>(search.get("by") === "contractor" ? "contractor" : "all");
   const [kind, setKind] = useState<Kind>("all");
 

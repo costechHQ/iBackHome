@@ -49,7 +49,8 @@ test.afterAll(async () => {
 
 test("create a project and invite the contractor", async () => {
   await client.goto("/projects");
-  await expect(client.getByRole("heading", { name: "Projects", level: 1 })).toBeVisible();
+  // The client home (WEB-CLIENT-008) lists the projects under "Your projects".
+  await expect(client.getByRole("heading", { name: "Your projects" })).toBeVisible();
   await shoot(client, "projects");
 
   await client.getByRole("link", { name: "New project" }).click();

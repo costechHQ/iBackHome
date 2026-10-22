@@ -11,6 +11,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import JSONResponse
 
+from app.base.payments.fx import FundingCurrency
 from app.base.payments.stripe_checkout import CheckoutGateway, get_checkout_gateway
 from app.base.users import service as users
 from app.base.users.models import User
@@ -25,6 +26,7 @@ from app.features.escrow.schemas import (
     DisputeResolve,
     FundingCheckoutOut,
     FundingCreate,
+    FundingQuoteOut,
     LedgerEntryOut,
     LedgerPage,
 )
@@ -34,6 +36,32 @@ router = APIRouter(tags=["escrow"])
 ClientUser = Annotated[User, Depends(users.require_role("client"))]
 OpsUser = Annotated[User, Depends(users.require_role("ops"))]
 GatewayDep = Annotated[CheckoutGateway, Depends(get_checkout_gateway)]
+
+
+@router.get("/projects/{project_id}/funding/quote", response_model=FundingQuoteOut)
+async def funding_quote(
+    project_id: uuid.UUID,
+    session: SessionDep,
+    user: ClientUser,
+    milestone_id: Annotated[uuid.UUID, Query()],
+    currency: Annotated[FundingCurrency, Query(description="GBP, USD or EUR")],
+) -> FundingQuoteOut:
+    """Client: what funding this pending milestone would cost today (amount, fee, rate), before Stripe.
+
+    Read-only: no checkout, no audit entry. Same checks and errors as POST /funding.
+    """
+    quote = await service.quote_milestone_funding(session, user, project_id, milestone_id, currency)
+    return FundingQuoteOut(
+        milestone_id=milestone_id,
+        currency=quote.currency,
+        amount_ngn_minor=quote.amount_ngn_minor,
+        net_minor=quote.net_minor,
+        fee_minor=quote.fee_minor,
+        fee_bps=quote.fee_bps,
+        total_minor=quote.total_minor,
+        fx_rate=quote.fx_rate,
+        fx_as_of=quote.fx_as_of,
+    )
 
 
 @router.post("/projects/{project_id}/funding", response_model=FundingCheckoutOut, status_code=201)

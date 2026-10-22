@@ -486,3 +486,76 @@ async def test_checkout_that_is_not_a_milestone_funding_is_ignored(
     assert response.status_code == 200
     stored = await payment_event(db_session, str(event["id"]))
     assert stored is not None and await entries_for(db_session, stored.id) == []
+
+
+# --- GET /projects/{id}/funding/quote --------------------------------------------------------
+
+
+def quote_url(world: Funded, milestone: Milestone | None = None, currency: str = "GBP") -> str:
+    milestone_id = (milestone or world.foundation).id
+    return (
+        f"/api/v1/projects/{world.project.id}/funding/quote?milestone_id={milestone_id}&currency={currency}"
+    )
+
+
+async def test_quote_shows_what_the_checkout_would_charge_and_records_nothing(
+    client: AsyncClient, db_session: AsyncSession, gateway: FakeCheckout, world: Funded
+) -> None:
+    response = await client.get(quote_url(world), headers=bearer(world.client))
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["milestone_id"] == str(world.foundation.id)
+    assert body["amount_ngn_minor"] == FOUNDATION_NGN
+    assert (body["net_minor"], body["fee_minor"], body["total_minor"]) == (NET_GBP, FEE_GBP, TOTAL_GBP)
+    assert (body["currency"], body["fx_rate"], body["fee_bps"]) == ("GBP", "2000", 250)
+
+    # No Stripe session, no audit entry, nothing in the ledger, still pending.
+    assert gateway.requests == []
+    assert [
+        e for e in await audit_entries(db_session, world.foundation.id) if e.action.startswith("funding")
+    ] == []
+    assert await project_entries(db_session, world.project.id) == []
+    assert await status_of(db_session, world.foundation) == MilestoneStatus.PENDING
+
+    # The checkout then charges exactly the quoted amounts.
+    checkout = await start_funding(client, world)
+    assert (checkout["net_minor"], checkout["fee_minor"], checkout["total_minor"]) == (
+        NET_GBP,
+        FEE_GBP,
+        TOTAL_GBP,
+    )
+
+
+async def test_quote_is_refused_like_the_checkout(
+    client: AsyncClient, db_session: AsyncSession, gateway: FakeCheckout, world: Funded
+) -> None:
+    contractor = await client.get(quote_url(world), headers=bearer(world.contractor))
+    assert contractor.status_code == 403
+    assert (
+        await client.get(quote_url(world, currency="JPY"), headers=bearer(world.client))
+    ).status_code == 422
+    assert (await client.get(quote_url(world))).status_code == 401
+
+    world.foundation.status = MilestoneStatus.FUNDED
+    await db_session.flush()
+    funded = await client.get(quote_url(world), headers=bearer(world.client))
+    assert (funded.status_code, funded.json()["error"]["code"]) == (409, "milestone_not_pending")
+
+    world.project.status = "paused"
+    await db_session.flush()
+    paused = await client.get(quote_url(world, world.blockwork), headers=bearer(world.client))
+    assert (paused.status_code, paused.json()["error"]["code"]) == (409, "project_not_active")
+
+
+async def test_stripe_sends_the_client_back_to_the_web_funding_page(
+    client: AsyncClient, gateway: FakeCheckout, world: Funded
+) -> None:
+    await start_funding(client, world)
+
+    [sent] = gateway.requests
+    assert (
+        f"/projects/{world.project.id}/fund/{world.foundation.id}?session_id={{CHECKOUT_SESSION_ID}}"
+        in sent.success_url
+    )
+    assert sent.cancel_url.endswith(f"/projects/{world.project.id}/fund/{world.foundation.id}?cancelled=1")
