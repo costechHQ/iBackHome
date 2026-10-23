@@ -460,9 +460,11 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | GET | `/ops/queue` | ops | Vetting, flagged evidence, disputes |
 | PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting; view own profile |
 | POST | `/supervisors/{id}/vetting` | ops | Approve or reject vetting |
+| GET | `/supervisors/{id}/application` | ops | One application in full (contacts, guarantors, declared relatives) to check before vetting |
+| GET | `/supervisors` | ops | Supervisors by `vetting_status` (approved by default) with their load; with `project_id`, whether each is assigned there or related to its contractor |
 | GET | `/supervisors/me/spot-checks` | supervisor | Visits this supervisor still has to make |
 | POST | `/spot-checks/{id}/complete` | supervisor (the visitor) | Record findings |
-| POST | `/projects/{id}/spot-checks` | ops | Schedule an unannounced visit |
+| POST, GET | `/projects/{id}/spot-checks` | ops | Schedule an unannounced visit; list a project's spot checks (never shown to the contractor) |
 | GET | `/ops/audit` | ops | Search audit log |
 | POST | `/webhooks/stripe`, `/webhooks/paystack`, `/webhooks/escrow` | providers | Signature-verified webhooks |
 | POST | `/webhooks/whatsapp` | Meta | Incoming WhatsApp messages to the assistant |

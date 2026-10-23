@@ -59,6 +59,47 @@ class SupervisorProfileOut(BaseModel):
     rating: Decimal | None
 
 
+# Ops reads (the ops console's vetting, assignment and spot-check screens). Never shown to anyone but ops:
+# they carry guarantors' and applicants' contact details.
+
+
+class DeclaredRelationOut(BaseModel):
+    contractor_phone: str
+    relationship: str
+
+
+class SupervisorApplicationOut(SupervisorProfileOut):
+    """One application in full, for ops to check before deciding (GET /supervisors/{id}/application)."""
+
+    full_name: str | None
+    phone: str | None
+    email: str | None
+    account_status: str  # active or suspended
+    guarantor_1: str
+    guarantor_2: str
+    related_contractors: list[DeclaredRelationOut]
+    submitted_at: datetime  # when the application was first sent, as in the ops queue
+    updated_at: datetime
+
+
+class SupervisorListItem(BaseModel):
+    """One supervisor in GET /supervisors, with what ops need to choose one for a project."""
+
+    user_id: uuid.UUID
+    full_name: str | None
+    phone: str | None
+    account_status: str
+    registration_body: str
+    vetting_status: VettingStatus
+    vetted_at: datetime | None
+    rating: Decimal | None
+    active_projects: int = Field(description="Projects not yet completed that this supervisor is assigned to")
+    related_contractors: int = Field(description="How many contractors this supervisor declared as related")
+    # Only with ?project_id=: whether this supervisor may take that project.
+    assigned_here: bool | None = None
+    related_to_contractor: bool | None = None
+
+
 class AssignSupervisor(BaseModel):
     supervisor_id: uuid.UUID
 

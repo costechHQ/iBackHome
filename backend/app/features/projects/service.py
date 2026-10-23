@@ -10,7 +10,7 @@ through it, and other features use it for their project-scoped routes.
 Used by:
 - every feature with project routes:  require_project_member(), get_project()
 - Abigail (evidence checks):          get_project_geofence(), get_geofence(session, site_id)
-- James (supervisor assignment):      set_supervisor(), get_contractor_phone()
+- James (supervisor assignment):      set_supervisor(), get_contractor_phone(), supervisor_loads()
 - Lilian (milestone claims):          get_project() (status, contractor_id)
 - escrow (last milestone released):   transition()
 
@@ -294,6 +294,16 @@ async def get_contractor_phone(session: AsyncSession, project_id: uuid.UUID) -> 
         return None
     contractor = await users.get_user(session, project.contractor_id)
     return contractor.phone if contractor else None
+
+
+async def supervisor_loads(session: AsyncSession) -> dict[uuid.UUID, int]:
+    """How many unfinished projects (not completed) each supervisor is assigned to. Read-only."""
+    rows = await session.execute(
+        select(Project.supervisor_id, func.count())
+        .where(Project.supervisor_id.is_not(None), Project.status != S.COMPLETED.value)
+        .group_by(Project.supervisor_id)
+    )
+    return {supervisor_id: count for supervisor_id, count in rows.tuples() if supervisor_id is not None}
 
 
 async def set_supervisor(

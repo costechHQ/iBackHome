@@ -1,4 +1,5 @@
-"""Supervision rules that need a project: project spot checks and supervisor rotation. Owner: James.
+"""Supervision rules that need a project: project spot checks, supervisor rotation, and the ops list of
+supervisors with their load and whether they may take a project. Owner: James.
 
 Kept apart from service.py because projects.service imports supervision.service (for
 ensure_assignable), so service.py can't import projects back.
@@ -21,7 +22,8 @@ from app.base.users.models import Role, UserStatus
 from app.core.errors import AppError
 from app.features.projects import service as projects
 from app.features.supervision import service
-from app.features.supervision.models import SpotCheck
+from app.features.supervision.models import SpotCheck, VettingStatus
+from app.features.supervision.schemas import SupervisorListItem
 
 ROTATE_AFTER_MILESTONES = 2
 
@@ -69,6 +71,55 @@ async def schedule_project_spot_check(
         contractor_phone=await projects.get_contractor_phone(session, project_id),
         request=request,
     )
+
+
+async def project_spot_checks(
+    session: AsyncSession, project_id: uuid.UUID, viewer_role: str
+) -> list[SpotCheck]:
+    """A project's spot checks for ops, soonest first. 404 project_not_found, 403 spot_checks_hidden."""
+    await projects.get_project(session, project_id)
+    return await service.list_project_spot_checks(session, project_id, viewer_role)
+
+
+async def list_for_ops(
+    session: AsyncSession, status: VettingStatus, project_id: uuid.UUID | None = None
+) -> list[SupervisorListItem]:
+    """Supervisors with this vetting status, with their load (unfinished projects). With a project, also
+    whether each is its current supervisor and whether they declared its contractor as a relative (then
+    they can't be assigned or spot-check it). Read-only. 404 project_not_found."""
+    current: uuid.UUID | None = None
+    contractor_phone: str | None = None
+    if project_id is not None:
+        current = (await projects.get_project(session, project_id)).supervisor_id
+        contractor_phone = await projects.get_contractor_phone(session, project_id)
+    loads = await projects.supervisor_loads(session)
+    items: list[SupervisorListItem] = []
+    for profile in await service.list_profiles(session, status):
+        user = await users.get_user(session, profile.user_id)
+        if user is None:
+            continue
+        related: bool | None = None
+        if project_id is not None:
+            related = bool(contractor_phone) and await service.is_related(
+                session, profile.user_id, contractor_phone or ""
+            )
+        items.append(
+            SupervisorListItem(
+                user_id=profile.user_id,
+                full_name=user.full_name,
+                phone=user.phone,
+                account_status=user.status,
+                registration_body=profile.registration_body,
+                vetting_status=profile.vetting_status,
+                vetted_at=profile.vetted_at,
+                rating=profile.rating,
+                active_projects=loads.get(profile.user_id, 0),
+                related_contractors=len(await service.list_relations(session, profile.user_id)),
+                assigned_here=None if project_id is None else profile.user_id == current,
+                related_to_contractor=related,
+            )
+        )
+    return items
 
 
 def rotation_due(current_supervisor_id: uuid.UUID | None, verifiers: Sequence[uuid.UUID]) -> bool:
