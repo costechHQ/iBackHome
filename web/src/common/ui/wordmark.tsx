@@ -1,34 +1,54 @@
+import Image from "next/image";
+
 import { cn } from "./cn";
 
-// The wordmark (Docs/design/05-assets/logo): a house outline with an eye inside, in a rounded square, plus
-// "iBackHome" in Inter 700. Same geometry as the handoff SVGs, coloured with tokens: navy square on light
-// surfaces, white square on navy. Only navy and white, never recoloured.
+// The brand logo (Docs/design/05-assets/logo, updated 2026-10-23): the house with an eye above the waves, and
+// "iBackHome" beneath. Two artworks, never recoloured: blue on light surfaces, white on the primary navy.
+// They are PNGs (no vector files yet), shown at most at their natural size. `Mark` is the house and eye alone,
+// for tight spaces (the client's phone top bar).
+
+const LOGO = {
+  light: { src: "/brand/ibackhome-logo-on-light.png", width: 485, height: 263 },
+  dark: { src: "/brand/ibackhome-logo-on-dark.png", width: 499, height: 271 },
+} as const;
+
+const MARK = {
+  light: "/brand/ibackhome-mark-on-light.png",
+  dark: "/brand/ibackhome-mark-on-dark.png",
+} as const;
+
+const HEIGHT = { md: "h-11", lg: "h-16" } as const;
 
 export function Mark({ onDark, className }: { onDark?: boolean; className?: string }) {
   return (
-    <svg viewBox="0 0 40 40" aria-hidden className={cn("size-8 flex-none", className)}>
-      <rect width="40" height="40" rx="10" className={onDark ? "fill-white" : "fill-navy-900"} />
-      <g
-        transform="translate(8 8)"
-        fill="none"
-        strokeWidth="1.9"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={onDark ? "stroke-navy-900" : "stroke-white"}
-      >
-        <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z" />
-        <path d="M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z" />
-        <circle cx="12" cy="15" r="1.3" stroke="none" className={onDark ? "fill-navy-900" : "fill-white"} />
-      </g>
-    </svg>
+    <Image
+      src={onDark ? MARK.dark : MARK.light}
+      alt="iBackHome"
+      width={512}
+      height={512}
+      className={cn("size-10 flex-none", className)}
+    />
   );
 }
 
-export function Wordmark({ onDark, className }: { onDark?: boolean; className?: string }) {
+export function Wordmark({
+  onDark,
+  size = "md",
+  className,
+}: {
+  onDark?: boolean;
+  size?: keyof typeof HEIGHT;
+  className?: string;
+}) {
+  const logo = onDark ? LOGO.dark : LOGO.light;
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <Mark onDark={onDark} />
-      <span className={cn("type-h3 font-bold", onDark ? "text-white" : "text-ink")}>iBackHome</span>
-    </span>
+    <Image
+      src={logo.src}
+      alt="iBackHome"
+      width={logo.width}
+      height={logo.height}
+      priority
+      className={cn("w-auto flex-none", HEIGHT[size], className)}
+    />
   );
 }

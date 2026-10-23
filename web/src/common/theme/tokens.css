@@ -1,9 +1,9 @@
 /* Copied from Docs/design/01-design-system/tokens.css by scripts/sync-tokens.sh; do not edit by hand.
    @font-face rules are dropped: fonts load through next/font/local (fonts.ts). */
 :root {
-  --ibh-navy-900: #131F39; /* Primary: buttons, header and price blocks, active states */
-  --ibh-navy-800: #1E2B4A; /* Primary hover / pressed */
-  --ibh-navy-700: #2A3753; /* Raised surface on navy (inputs and chips on navy blocks) */
+  --ibh-navy-900: #00022E; /* Primary: buttons, header and price blocks, active states */
+  --ibh-navy-800: #10144A; /* Primary hover / pressed */
+  --ibh-navy-700: #1E2260; /* Raised surface on navy (inputs and chips on navy blocks) */
   --ibh-navy-200: #C9D3E3; /* Text and lines on navy */
   --ibh-ink: #0B1324; /* Headings and strong text */
   --ibh-slate: #3A4354; /* Body text */

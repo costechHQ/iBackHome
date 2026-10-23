@@ -285,7 +285,7 @@ export function BoqReview({ projectId }: { projectId: string }) {
             AI quote check
           </CardLabel>
           <p className="type-small text-slate">
-            Compare these prices with what partner suppliers in Enugu charge this month. Advisory only.
+            Compare these prices with what our partner suppliers charge this month. Advisory only.
           </p>
           <Link
             href={`/projects/${p.id}/boq/check`}

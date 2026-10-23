@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 
 class IbhColors {
   IbhColors._();
-  static const navy900 = Color(0xFF131F39); // Primary: buttons, header and price blocks, active states
-  static const navy800 = Color(0xFF1E2B4A); // Primary hover / pressed
-  static const navy700 = Color(0xFF2A3753); // Raised surface on navy (inputs and chips on navy blocks)
+  static const navy900 = Color(0xFF00022E); // Primary: buttons, header and price blocks, active states
+  static const navy800 = Color(0xFF10144A); // Primary hover / pressed
+  static const navy700 = Color(0xFF1E2260); // Raised surface on navy (inputs and chips on navy blocks)
   static const navy200 = Color(0xFFC9D3E3); // Text and lines on navy
   static const ink = Color(0xFF0B1324); // Headings and strong text
   static const slate = Color(0xFF3A4354); // Body text

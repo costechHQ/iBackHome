@@ -384,7 +384,7 @@ const FRAMES: Record<string, { label: string; render: (slots: GallerySlots) => R
             id="p1"
             title="Sample bungalow"
             status="active"
-            address="Sample address, Enugu"
+            address="Sample address, Lagos State"
             badges={{ Milestones: 1 }}
             showAll
           />

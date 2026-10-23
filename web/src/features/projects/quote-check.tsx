@@ -20,7 +20,7 @@ import { useBoq, usePriceIndex, useQuoteCheck, type QuoteCheck } from "./api";
 import { boqAsQuoteText, counts, flaggedFirst, overIndexTotal } from "./quote";
 
 // WEB-CLIENT-006 Quote checker at /projects/:id/boq/check: the submitted BoQ (sent as text) or a quote PDF,
-// checked against the Enugu price index. The model only reads the lines; plain code flags prices more than the
+// checked against the price index. The model only reads the lines; plain code flags prices more than the
 // threshold above the index, and every figure comes from the quote or the index. The design's quantity range
 // check and step-by-step progress aren't in the backend, so a check shows one "Checking" state (W-31). Results
 // aren't kept: they show until the page is left. Advisory only, labelled AI.
@@ -169,7 +169,7 @@ function PriceIndex() {
       ) : !items.length ? (
         <p className="text-slate">No material matches that search.</p>
       ) : (
-        <Table caption="Enugu price index">
+        <Table caption="Price index">
           <thead>
             <tr>
               <Th>Item</Th>
@@ -237,7 +237,7 @@ export function QuoteChecker({ projectId }: { projectId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="type-h1 flex items-center gap-2 text-ink">
           <Sparkles aria-hidden strokeWidth={1.75} className="size-6" />
-          Check a quote against Enugu prices
+          Check a quote against current prices
         </h2>
         <SegmentedControl
           label="View"
@@ -266,7 +266,7 @@ export function QuoteChecker({ projectId }: { projectId: string }) {
       ) : (
         <Card className="flex max-w-3xl flex-col gap-4 p-6">
           <p className="text-slate">
-            We compare each unit price with what partner suppliers in Enugu charge this month.
+            We compare each unit price with what our partner suppliers charge this month.
           </p>
           <fieldset className="flex flex-col gap-3">
             <legend className="sr-only">What to check</legend>

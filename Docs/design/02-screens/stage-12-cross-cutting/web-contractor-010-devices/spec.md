@@ -70,7 +70,7 @@ Designer note on the board (`X-Settings.dc.html`), **Settings, the same everywhe
 
 > Each role gets the same five sections, keeping only what applies: profile, time zone and currency, notifications, devices and sessions, data and privacy.
 > Some messages can't be fully switched off: approvals and disputes for clients, spot-check SMS for supervisors, money alerts for ops.
-> Time zone: clients pick theirs. Contractors, suppliers, supervisors and ops are fixed to Enugu (WAT).
+> Time zone: clients pick theirs. Contractors, suppliers, supervisors and ops are fixed to Nigerian time (WAT).
 > Currency: only clients choose (GBP, USD or EUR). Everyone else sees naira.
 
 ## 7. Responsive and accessibility notes

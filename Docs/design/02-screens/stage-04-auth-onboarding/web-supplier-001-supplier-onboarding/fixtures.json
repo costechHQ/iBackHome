@@ -5,7 +5,7 @@
     "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
     "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
     "screen": "WEB-SUPPLIER-001",
-    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+    "scenario": "Chioma's bungalow, Lagos. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
   },
   "endpoints": {
     "GET /me": {
@@ -46,7 +46,7 @@
       "supplier": {
         "id": "dad34148-28cb-5789-b8af-e404357113d2",
         "name": "Ugwu Building Materials",
-        "address": "Ogbete Main Market, Enugu",
+        "address": "Trade Fair Complex, Lagos",
         "location": {
           "type": "Point",
           "coordinates": [

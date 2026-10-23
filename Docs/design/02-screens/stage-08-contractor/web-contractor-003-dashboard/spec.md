@@ -22,7 +22,7 @@ source_boards: ["Con-Dashboard.dc.html"]
 
 Contractor projects with what is next on each (BoQ, claim, rework) and money held for them in NGN.
 
-From the approved board (`Con-Dashboard.dc.html`): "Engr. Obi's home on the web portal. Whatever is blocking his next payout comes first. Every amount is in naira, the currency he's paid in. Wed 6 Jan 2027, 17:00 in Enugu (WAT)."
+From the approved board (`Con-Dashboard.dc.html`): "Engr. Obi's home on the web portal. Whatever is blocking his next payout comes first. Every amount is in naira, the currency he's paid in. Wed 6 Jan 2027, 17:00 Nigerian time (WAT)."
 
 Stage 1 inventory: CO-01, CO-02. Priority P0 · FRs FR-03, FR-12.
 

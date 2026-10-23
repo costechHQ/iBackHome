@@ -15,9 +15,9 @@
 @font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 500; font-display: swap; src: url('../05-assets/fonts/jetbrains-mono-latin-ext-500-normal.woff2') format('woff2'); unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
 
 :root {
-  --ibh-navy-900: #131F39; /* Primary: buttons, header and price blocks, active states */
-  --ibh-navy-800: #1E2B4A; /* Primary hover / pressed */
-  --ibh-navy-700: #2A3753; /* Raised surface on navy (inputs and chips on navy blocks) */
+  --ibh-navy-900: #00022E; /* Primary: buttons, header and price blocks, active states */
+  --ibh-navy-800: #10144A; /* Primary hover / pressed */
+  --ibh-navy-700: #1E2260; /* Raised surface on navy (inputs and chips on navy blocks) */
   --ibh-navy-200: #C9D3E3; /* Text and lines on navy */
   --ibh-ink: #0B1324; /* Headings and strong text */
   --ibh-slate: #3A4354; /* Body text */
