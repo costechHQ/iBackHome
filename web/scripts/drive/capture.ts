@@ -57,7 +57,7 @@ const utcMs = (d: Date) => d.toISOString(); // already "YYYY-MM-DDTHH:mm:ss.sssZ
 const fixed = (n: number, digits: number) => n.toFixed(digits).replace(/^-0\.0+$/, (z) => z.slice(1));
 
 /** A made-up site photo, different every time (simulator.site_photo), made by Pillow in the api container. */
-function sitePhoto(): Buffer {
+export function sitePhoto(): Buffer {
   const code =
     "import base64,random,sys; sys.path.insert(0,'scripts'); import simulator; " +
     "sys.stdout.write(base64.b64encode(simulator.site_photo(random.Random())).decode())";
@@ -97,11 +97,11 @@ export async function capture(
   person: Person,
   project: { id: string; site: { location: { lat: number; lon: number } } | null },
   milestoneId: string,
+  photo: Buffer = sitePhoto(),
 ): Promise<string> {
   if (!project.site) throw new DriveError("the project has no site");
   const device = await phone(person);
   const api = await apiAs(person);
-  const photo = sitePhoto();
   const sha256 = createHash("sha256").update(photo).digest("hex");
   const lat = Number(fixed(project.site.location.lat + (Math.random() - 0.5) * 0.0001, 6));
   const lon = Number(fixed(project.site.location.lon + (Math.random() - 0.5) * 0.0001, 6));
@@ -160,6 +160,24 @@ export async function capture(
 }
 
 /** Waits for the worker's checks (evidence.run_checks) to accept the captures. */
+/** Waits until the worker has checked one capture, and returns its status (accepted, flagged or rejected). */
+export async function waitChecked(person: Person, projectId: string, id: string, timeoutMs = 60_000) {
+  const api = await apiAs(person);
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const page = ok(
+      "gallery",
+      await api.GET("/api/v1/projects/{project_id}/evidence", {
+        params: { path: { project_id: projectId }, query: { limit: 200 } },
+      }),
+    );
+    const status = page.items.find((e) => e.id === id)?.status;
+    if (status && status !== "pending_checks") return status;
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+  throw new DriveError("the evidence checks didn't finish in time (is the worker running?)");
+}
+
 export async function waitAccepted(person: Person, projectId: string, ids: string[], timeoutMs = 60_000) {
   const api = await apiAs(person);
   const deadline = Date.now() + timeoutMs;

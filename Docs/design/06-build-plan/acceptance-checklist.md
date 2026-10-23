@@ -116,6 +116,28 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Unit tests (money summary, report Markdown); stack test of the whole W6b flow; axe clean at 1280 and 390 px
 - [x] Gaps logged: B-7 (drafts listed to clients), W-33 to W-36, MX-13 note
 
+### W7 · Contractor work
+
+- [x] WEB-CONTRACTOR-004 BoQ editor at `/c/projects/:id/boq` (BoQ tab): milestones list, lines with unit, quantity (3 dp) and unit price, totals worked out as the server does, errors listed and linked to each field, price-index hint (never blocks), "Move to" between milestones, lines total against the budget; submit saves and approves; in review with approvals and "Revise BoQ" (clears approvals, warned); locked once active; unsent changes kept in the browser
+- [x] Home: "Price the BoQ" under Needs you for a draft project; a setting-up project opens on its BoQ
+- [x] WEB-CONTRACTOR-008 payouts: released, held and not funded (from milestones), the payout account with change, one row per milestone; NGN, WAT; escrow line
+- [x] WEB-CONTRACTOR-009 profile: name (editable), payout account check, project counts, track record counted from milestones
+- [x] Contractor top bar: Payouts and Profile on; on phones the items sit in their own row
+- [x] Unit tests (BoQ draft maths, checks and index matching; payout summary; track record); stack test of the whole W7 flow; axe clean at 1280 and 390 px
+- [x] Gaps logged: W-38 to W-41, MX-06 proposal. WEB-CONTRACTOR-007 moved to the materials stage
+
+### W8a · Ops console
+
+- [x] WEB-OPS-002 overview at `/ops` (the console now opens here): queue tiles with the oldest wait, projects by status, projects that need ops
+- [x] WEB-OPS-004 projects at `/ops/projects`: status tabs with counts, search, now, needs; detail with milestones and money held, BoQ approvals and "Approve BoQ as ops" (confirm; the last approval makes the project live, 409 site_not_set handled), the site map and "Change site" (the client's editor, never locked for ops)
+- [x] WEB-OPS-005 flagged evidence at `/ops/evidence`: queue oldest first, the capture with the reason and its details, accept or reject with notes, next in the queue
+- [x] WEB-OPS-010 weekly reports: drafts first across projects, the report (AI-generated, evidence ids, money from the ledger), "Mark reviewed and send" with a confirmation
+- [x] WEB-OPS-009 price index, read-only, with stale items; WEB-OPS-011 audit log with filters, paging and before/after; WEB-OPS-003 the vetting queue
+- [x] Sidebar: Overview, Vetting, Flagged evidence, Projects, Price index, Weekly reports, Audit log on
+- [x] Seed driver: `--flagged` sends one photo twice so the reuse check flags the second
+- [x] Unit tests (queue ages, project flags and now); stack test of W8a; axe clean at 1440 px
+- [x] Gaps logged: W-42 to W-48. W8b (vetting decision, supervisor assignment, spot checks) waits for the MX-15/MX-14 read routes
+
 ### W9 · Public site
 
 - [x] WEB-PUBLIC-001 to 009 built at `web/src/features/public/`, routes `/`, `/how-it-works`, `/pricing`, `/contractors`, `/supervisors`, `/trust`, `/contact`, `/privacy`, `/terms`, all static, with the public header (phone menu) and footer

@@ -133,6 +133,13 @@
 
 /* Geofence map (common/map/geofence-map.tsx): Leaflet's own icons, in the tokens. */
 @layer components {
+  /* BoQ editor lines (WEB-CONTRACTOR-004): number, description, unit, quantity, unit price, line total and the
+     price-index hint in one row on wide screens; stacked, with visible labels, below lg. */
+  @media (min-width: 64rem) {
+    .ibh-boq-line {
+      grid-template-columns: 2.5rem minmax(0, 1fr) 6.5rem 6rem 8rem 8rem 11rem;
+    }
+  }
   .ibh-map-corner {
     background: var(--ibh-white);
     border: 2px solid var(--ibh-accent);

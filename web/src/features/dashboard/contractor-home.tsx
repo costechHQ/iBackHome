@@ -1,11 +1,10 @@
 "use client";
 
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { Check, Circle, House, RotateCcw } from "lucide-react";
+import { useQueries } from "@tanstack/react-query";
+import { Check, Circle, ClipboardList, House, RotateCcw } from "lucide-react";
 import Link from "next/link";
 
 import { api, call } from "@/common/api/client";
-import { ApiError } from "@/common/api/errors";
 import { mockPayouts } from "@/common/api/mocks";
 import { useMock } from "@/common/api/mocks/context";
 import { keys, useProjects, type Milestone } from "@/common/api/queries";
@@ -26,10 +25,11 @@ import {
   notReady,
   releasedMinor,
 } from "@/features/milestones/contractor";
+import { usePayoutRecipient } from "@/features/payouts/account";
 
 // WEB-CONTRACTOR-003 Projects dashboard. NGN only, WAT. What needs the contractor (milestones sent back for
-// rework), then one card per project. "Paid to you" needs payout history (MX-06): the mock where it's on, else
-// hidden. Names (MX-26), the BoQ item (a later stage) and the track record (MX-23) aren't shown yet.
+// rework, a BoQ to price), then one card per project. "Paid to you" needs payout history (MX-06): the mock where
+// it's on, else hidden. Names (MX-26) and the track record (MX-23) aren't shown yet.
 
 function greeting(timeZone: string, name: string | null) {
   const hour = Number(
@@ -51,7 +51,7 @@ const WORK: Record<string, string> = {
 const SETTING_UP = new Set(["draft", "boq_review"]);
 
 /** WEB-CONTRACTOR-002 "Home — waiting for your BoQ": what is done before the work can be priced and funded.
- *  "Start the BoQ" comes with the BoQ editor (WEB-CONTRACTOR-004); there are no invitations to accept (MX-02). */
+ *  There are no invitations to accept (MX-02). */
 function GettingReady({
   status,
   hasPayout,
@@ -112,17 +112,9 @@ export function ContractorHome() {
   const viewer = useViewer();
   const timeZone = useViewerTimeZone();
   const projects = useProjects();
-  const payout = useQuery({
-    queryKey: ["me", "payout-recipient"],
-    retry: false,
-    queryFn: () => call(api().GET("/api/v1/me/payout/recipient")),
-  });
-  // No account is a 404; any other failure means it couldn't be checked.
-  const hasPayout = payout.data
-    ? true
-    : payout.error instanceof ApiError && payout.error.status === 404
-      ? false
-      : null;
+  const payout = usePayoutRecipient();
+  // No account is null (a 404); undefined means it couldn't be checked.
+  const hasPayout = payout.recipient === undefined ? null : payout.recipient !== null;
   const milestoneQueries = useQueries({
     queries: (projects.data?.items ?? []).map((p) => ({
       queryKey: keys.milestones(p.id),
@@ -152,18 +144,37 @@ export function ContractorHome() {
   const needs = items.flatMap(({ project, milestones }) =>
     needsContractor(milestones).map((m) => ({ project, milestone: m })),
   );
+  const toPrice = items.filter(({ project }) => project.status === "draft").map(({ project }) => project);
+  const needCount = needs.length + toPrice.length;
 
   return (
     <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-8 sm:px-10 lg:grid-cols-3">
       <div className="flex flex-col gap-6 lg:col-span-2">
         <h1 className="type-h1 text-ink">{greeting(timeZone, viewer.fullName)}</h1>
 
-        {needs.length ? (
+        {needCount ? (
           <Card className="overflow-hidden">
-            <h2 className="border-b border-line px-5 py-4 font-semibold text-ink">
-              Needs you · {needs.length}
-            </h2>
+            <h2 className="border-b border-line px-5 py-4 font-semibold text-ink">Needs you · {needCount}</h2>
             <ul>
+              {toPrice.map((project) => (
+                <li
+                  key={project.id}
+                  className="flex flex-wrap items-center gap-4 border-b border-line px-5 py-4 last:border-b-0"
+                >
+                  <span className="flex size-10 flex-none items-center justify-center rounded-control bg-mist">
+                    <ClipboardList aria-hidden strokeWidth={1.75} className="size-5 text-navy-900" />
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <p className="font-semibold text-ink">Price the work for {project.title}</p>
+                    <p className="type-small text-slate">
+                      Your client is waiting for your bill of quantities, grouped into milestones.
+                    </p>
+                  </div>
+                  <Button asChild>
+                    <Link href={`/c/projects/${project.id}/boq`}>Price the BoQ</Link>
+                  </Button>
+                </li>
+              ))}
               {needs.map(({ project, milestone }) => {
                 const count = notReady(milestone);
                 return (
@@ -211,7 +222,7 @@ export function ContractorHome() {
             return (
               <li key={project.id}>
                 <Link
-                  href={`/c/projects/${project.id}/milestones`}
+                  href={`/c/projects/${project.id}/${SETTING_UP.has(project.status) ? "boq" : "milestones"}`}
                   className="block h-full rounded-card hover:shadow-raised"
                 >
                   <Card className="flex h-full flex-col gap-3 p-5">

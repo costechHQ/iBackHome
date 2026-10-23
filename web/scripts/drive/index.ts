@@ -6,6 +6,7 @@
 //   bun scripts/drive/index.ts --to claimed --milestone 2     # a milestone by its sequence number
 //   bun scripts/drive/index.ts --to funded --currency USD     # the client pays in USD (default GBP)
 //   bun scripts/drive/index.ts --new-project --to funded      # a fresh active project (the gate test uses this)
+//   bun scripts/drive/index.ts --new-project --to funded --flagged  # and the same photo twice: the second is flagged
 //
 // States: funded, claimed, verified, approved (release requested), released (waits for escrow), disputed,
 // sent-back (the supervisor rejects the claim with reasons: back to funded, rework needed).
@@ -13,7 +14,7 @@
 import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 
-import { capture, waitAccepted } from "./capture";
+import { capture, sitePhoto, waitAccepted, waitChecked } from "./capture";
 import { DriveError } from "./env";
 import { fundMilestone } from "./funding";
 import { newProject } from "./project";
@@ -40,6 +41,8 @@ const { values } = parseArgs({
     photos: { type: "string", default: "2" },
     // The client picks the payment currency at checkout (GBP, USD or EUR); the BoQ itself is priced in NGN.
     currency: { type: "string", default: "GBP" },
+    // After funding: the supervisor sends one photo twice, so the reuse check flags the second (ops review it).
+    flagged: { type: "boolean", default: false },
   },
 });
 
@@ -110,6 +113,16 @@ async function main() {
     });
     milestone.status = "funded";
     step("funded (signed Stripe webhook)");
+  }
+
+  if (values.flagged && milestone.status === "funded") {
+    const photo = sitePhoto();
+    const first = await capture(supervisor, project, milestone.id, photo);
+    await waitAccepted(supervisor, project.id, [first]);
+    const second = await capture(supervisor, project, milestone.id, photo);
+    const status = await waitChecked(supervisor, project.id, second);
+    if (status !== "flagged") throw new DriveError(`the repeated photo was ${status}, not flagged`);
+    step(`one photo sent twice: the second (${second}) is flagged for ops`);
   }
 
   let evidenceIds: string[] = [];

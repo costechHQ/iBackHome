@@ -42,14 +42,14 @@ export const CLIENT_MOBILE_NAV = [
 export const CONTRACTOR_NAV: readonly NavItem[] = [
   { label: "Projects", href: "/c", ready: true }, // WEB-CONTRACTOR-003
   { label: "Orders", href: "/c/orders", ready: false }, // WEB-CONTRACTOR-007
-  { label: "Payouts", href: "/c/payouts", ready: false }, // WEB-CONTRACTOR-008
-  { label: "Profile", href: "/c/profile", ready: false }, // WEB-CONTRACTOR-009
+  { label: "Payouts", href: "/c/payouts", ready: true }, // WEB-CONTRACTOR-008 (W7)
+  { label: "Profile", href: "/c/profile", ready: true }, // WEB-CONTRACTOR-009 (W7)
 ];
 
 /** Contractor project tabs (ConTop project row), relative to /c/projects/:id. */
 export const CONTRACTOR_PROJECT_TABS = [
   { label: "Milestones", path: "/milestones", ready: true }, // WEB-CONTRACTOR-005 (W3)
-  { label: "BoQ", path: "/boq", ready: false }, // WEB-CONTRACTOR-004
+  { label: "BoQ", path: "/boq", ready: true }, // WEB-CONTRACTOR-004 (W7)
   { label: "Evidence", path: "/evidence", ready: false },
   { label: "Orders", path: "/orders", ready: false }, // WEB-CONTRACTOR-007
 ] as const;
@@ -61,29 +61,29 @@ export type OpsSection = {
 
 /** Ops sidebar. Queue counts come from GET /ops/queue. */
 export const OPS_NAV: readonly OpsSection[] = [
-  { heading: null, items: [{ label: "Overview", href: "/ops", ready: false }] }, // WEB-OPS-002
+  { heading: null, items: [{ label: "Overview", href: "/ops", ready: true }] }, // WEB-OPS-002 (W8a)
   {
     heading: "Queues",
     items: [
-      { label: "Vetting", href: "/ops/vetting", ready: false, queue: "vetting" }, // WEB-OPS-003
-      { label: "Flagged evidence", href: "/ops/evidence", ready: false, queue: "flagged_evidence" }, // WEB-OPS-005
+      { label: "Vetting", href: "/ops/vetting", ready: true, queue: "vetting" }, // WEB-OPS-003 (W8a: queue)
+      { label: "Flagged evidence", href: "/ops/evidence", ready: true, queue: "flagged_evidence" }, // WEB-OPS-005 (W8a)
       { label: "Disputes", href: "/ops/disputes", ready: true, queue: "disputes" }, // WEB-OPS-006 (W3)
     ],
   },
   {
     heading: "Operations",
     items: [
-      { label: "Projects", href: "/ops/projects", ready: false }, // WEB-OPS-004
+      { label: "Projects", href: "/ops/projects", ready: true }, // WEB-OPS-004 (W8a)
       { label: "Spot checks", href: "/ops/spot-checks", ready: false }, // WEB-OPS-007
       { label: "Suppliers", href: "/ops/suppliers", ready: false }, // WEB-OPS-008
-      { label: "Price index", href: "/ops/price-index", ready: false }, // WEB-OPS-009
-      { label: "Weekly reports", href: "/ops/reports", ready: false }, // WEB-OPS-010
+      { label: "Price index", href: "/ops/price-index", ready: true }, // WEB-OPS-009 (W8a, read-only)
+      { label: "Weekly reports", href: "/ops/reports", ready: true }, // WEB-OPS-010 (W8a)
     ],
   },
   {
     heading: "Records",
     items: [
-      { label: "Audit log", href: "/ops/audit", ready: false }, // WEB-OPS-011
+      { label: "Audit log", href: "/ops/audit", ready: true }, // WEB-OPS-011 (W8a)
       { label: "Agent runs", href: "/ops/agent-runs", ready: false }, // WEB-OPS-011
       { label: "Users", href: "/ops/users", ready: false }, // WEB-OPS-012
     ],
