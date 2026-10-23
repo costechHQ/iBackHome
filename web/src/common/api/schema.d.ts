@@ -855,13 +855,58 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Project Spot Checks
+         * @description Ops: every spot check on a project, planned and done, soonest first.
+         */
+        get: operations["project_spot_checks_api_v1_projects__project_id__spot_checks_get"];
         put?: never;
         /**
          * Schedule Spot Check
          * @description Ops: schedule an unannounced visit. Never shown to the contractor.
          */
         post: operations["schedule_spot_check_api_v1_projects__project_id__spot_checks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/supervisors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Supervisors
+         * @description Ops: supervisors by vetting status (approved by default) with their load. With `project_id`, also
+         *     whether each may take that project (not related to its contractor).
+         */
+        get: operations["list_supervisors_api_v1_supervisors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/supervisors/{supervisor_id}/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Supervisor Application
+         * @description Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting.
+         */
+        get: operations["supervisor_application_api_v1_supervisors__supervisor_id__application_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1267,6 +1312,13 @@ export interface components {
              * Relationship
              * @example brother-in-law
              */
+            relationship: string;
+        };
+        /** DeclaredRelationOut */
+        DeclaredRelationOut: {
+            /** Contractor Phone */
+            contractor_phone: string;
+            /** Relationship */
             relationship: string;
         };
         /** DeliveryIn */
@@ -2476,6 +2528,98 @@ export interface components {
             guarantor_2: string;
             /** Related Contractors */
             related_contractors?: components["schemas"]["DeclaredRelation"][];
+        };
+        /**
+         * SupervisorApplicationOut
+         * @description One application in full, for ops to check before deciding (GET /supervisors/{id}/application).
+         */
+        SupervisorApplicationOut: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Registration Body */
+            registration_body: string;
+            /** Registration No */
+            registration_no: string;
+            /** Registration Verified */
+            registration_verified: boolean;
+            /** Nin Verified */
+            nin_verified: boolean;
+            /** Guarantor 1 Verified */
+            guarantor_1_verified: boolean;
+            /** Guarantor 2 Verified */
+            guarantor_2_verified: boolean;
+            vetting_status: components["schemas"]["VettingStatus"];
+            /** Vetted At */
+            vetted_at: string | null;
+            /** Rejection Reason */
+            rejection_reason: string | null;
+            /** Rating */
+            rating: string | null;
+            /** Full Name */
+            full_name: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Email */
+            email: string | null;
+            /** Account Status */
+            account_status: string;
+            /** Guarantor 1 */
+            guarantor_1: string;
+            /** Guarantor 2 */
+            guarantor_2: string;
+            /** Related Contractors */
+            related_contractors: components["schemas"]["DeclaredRelationOut"][];
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * SupervisorListItem
+         * @description One supervisor in GET /supervisors, with what ops need to choose one for a project.
+         */
+        SupervisorListItem: {
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Full Name */
+            full_name: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Account Status */
+            account_status: string;
+            /** Registration Body */
+            registration_body: string;
+            vetting_status: components["schemas"]["VettingStatus"];
+            /** Vetted At */
+            vetted_at: string | null;
+            /** Rating */
+            rating: string | null;
+            /**
+             * Active Projects
+             * @description Projects not yet completed that this supervisor is assigned to
+             */
+            active_projects: number;
+            /**
+             * Related Contractors
+             * @description How many contractors this supervisor declared as related
+             */
+            related_contractors: number;
+            /** Assigned Here */
+            assigned_here?: boolean | null;
+            /** Related To Contractor */
+            related_to_contractor?: boolean | null;
         };
         /** SupervisorProfileOut */
         SupervisorProfileOut: {
@@ -4188,6 +4332,37 @@ export interface operations {
             };
         };
     };
+    project_spot_checks_api_v1_projects__project_id__spot_checks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpotCheckOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     schedule_spot_check_api_v1_projects__project_id__spot_checks_post: {
         parameters: {
             query?: never;
@@ -4212,6 +4387,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SpotCheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_supervisors_api_v1_supervisors_get: {
+        parameters: {
+            query?: {
+                vetting_status?: components["schemas"]["VettingStatus"];
+                project_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupervisorListItem"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    supervisor_application_api_v1_supervisors__supervisor_id__application_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                supervisor_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SupervisorApplicationOut"];
                 };
             };
             /** @description Validation Error */

@@ -17,7 +17,7 @@ from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.projects import service as projects
 from app.features.supervision import rotation, service
-from app.features.supervision.models import SpotCheck, SupervisorProfile
+from app.features.supervision.models import SpotCheck, SupervisorProfile, VettingStatus
 from app.features.supervision.schemas import (
     AssignSupervisor,
     ProjectSupervisorOut,
@@ -25,6 +25,8 @@ from app.features.supervision.schemas import (
     SpotCheckCreate,
     SpotCheckOut,
     SupervisorApplication,
+    SupervisorApplicationOut,
+    SupervisorListItem,
     SupervisorProfileOut,
     VettingDecision,
 )
@@ -123,6 +125,32 @@ async def schedule_spot_check(
     await remember(session, key, scope, 201, out)
     await session.commit()
     return JSONResponse(status_code=201, content=out)
+
+
+@router.get("/projects/{project_id}/spot-checks", response_model=list[SpotCheckOut])
+async def project_spot_checks(project_id: uuid.UUID, session: SessionDep, actor: OpsUser) -> list[SpotCheck]:
+    """Ops: every spot check on a project, planned and done, soonest first."""
+    return await rotation.project_spot_checks(session, project_id, actor.role)
+
+
+@router.get("/supervisors", response_model=list[SupervisorListItem])
+async def list_supervisors(
+    session: SessionDep,
+    actor: OpsUser,
+    vetting_status: VettingStatus = VettingStatus.APPROVED,
+    project_id: uuid.UUID | None = None,
+) -> list[SupervisorListItem]:
+    """Ops: supervisors by vetting status (approved by default) with their load. With `project_id`, also
+    whether each may take that project (not related to its contractor)."""
+    return await rotation.list_for_ops(session, vetting_status, project_id)
+
+
+@router.get("/supervisors/{supervisor_id}/application", response_model=SupervisorApplicationOut)
+async def supervisor_application(
+    supervisor_id: uuid.UUID, session: SessionDep, actor: OpsUser
+) -> SupervisorApplicationOut:
+    """Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting."""
+    return await service.get_application(session, supervisor_id)
 
 
 @router.get("/supervisors/me/spot-checks", response_model=list[SpotCheckOut])
