@@ -36,8 +36,8 @@ type Shapes = {
 
 const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
-/** Enugu, where the sites are, when there is no pin yet. */
-export const ENUGU: LatLon = { lat: 6.4584, lon: 7.5464 };
+/** The middle of Nigeria, zoomed out to show the whole country, when there is no pin yet: sites can be anywhere. */
+export const NIGERIA: LatLon = { lat: 9.082, lon: 8.6753 };
 
 function token(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(`--ibh-${name}`).trim();
@@ -164,10 +164,10 @@ export function GeofenceMap({
     void import("leaflet").then((L) => {
       if (cancelled || !box.current || map.current) return;
       leaflet.current = L;
-      const at = start.current ?? ENUGU;
+      const at = start.current ?? NIGERIA;
       const m = L.map(box.current, { zoomControl: true, attributionControl: true }).setView(
         [at.lat, at.lon],
-        start.current ? 18 : 14,
+        start.current ? 18 : 6,
       );
       L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(m);
       m.on("click", (e) => {

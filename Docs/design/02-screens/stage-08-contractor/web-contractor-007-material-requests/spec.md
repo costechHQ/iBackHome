@@ -22,7 +22,7 @@ source_boards: ["Con-Orders.dc.html"]
 
 Request materials from verified suppliers using index items, and follow order statuses.
 
-From the approved board (`Con-Orders.dc.html`): "The contractor asks a verified supplier for materials, against a funded milestone. While he types, each line shows the Enugu price index, so he knows before sending what the client will see flagged. The server works out the total. The client approves, the supervisor confirms delivery, then the supplier is paid from that milestone's escrow."
+From the approved board (`Con-Orders.dc.html`): "The contractor asks a verified supplier for materials, against a funded milestone. While he types, each line shows the price index, so he knows before sending what the client will see flagged. The server works out the total. The client approves, the supervisor confirms delivery, then the supplier is paid from that milestone's escrow."
 
 Stage 1 inventory: CO-09, CO-10, CO-11. Priority P1 · FRs FR-16, FR-17.
 

@@ -5,7 +5,7 @@
     "list_envelope": "ASSUMPTION: the Spec says lists are paginated with ?cursor=&limit= but does not define the envelope; these fixtures use {\"items\": [...], \"next_cursor\": null}.",
     "non_spec_fields": "Fields named display_ref, _mock or _derived are not in the Spec data model. See 04-api-mapping/missing-endpoints.md.",
     "screen": "WEB-CONTRACTOR-009",
-    "scenario": "Chioma's bungalow, Enugu. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
+    "scenario": "Chioma's bungalow, Lagos. Stage 6-7 boards are set in Dec 2026 (Roofing verified); Stage 8-12 boards in Jan 2027."
   },
   "endpoints": {
     "GET /me": {
@@ -36,7 +36,7 @@
     },
     "MX-23": {
       "contractor_profile": {
-        "about": "Residential builds in Enugu since 2014.",
+        "about": "Residential builds in Lagos since 2014.",
         "track_record": {
           "claims_verified_first_time": "3 of 4",
           "milestones_released": 3

@@ -22,7 +22,7 @@ source_boards: ["Sup-Projects.dc.html"]
 
 Assigned sites with sync status, project detail, and the milestone checklist (from ops templates).
 
-From the approved board (`Sup-Projects.dc.html`): "Chidi Nnaji's home in the supervisor app: what to visit today, every project he's assigned, and the exact checklist he must capture. Plain lists, 48dp rows, one primary action per screen. Times are in Enugu (WAT)."
+From the approved board (`Sup-Projects.dc.html`): "Chidi Nnaji's home in the supervisor app: what to visit today, every project he's assigned, and the exact checklist he must capture. Plain lists, 48dp rows, one primary action per screen. Times are in Nigerian time (WAT)."
 
 Stage 1 inventory: SV-01, SV-02. Priority P0 · FRs FR-03, FR-12.
 

@@ -22,7 +22,7 @@ source_boards: ["SiteMobile.dc.html", "SiteSupervisors.dc.html"]
 
 Explain supervisor requirements (COREN or NIOB registration, NIN, two guarantors, declared relatives) and send applicants to the Android app.
 
-From the approved board (`SiteSupervisors.dc.html`): "We're looking for registered builders and engineers in Enugu to visit sites, capture evidence in our app and verify each stage of work. Paid per visit."
+From the approved board (`SiteSupervisors.dc.html`): "We're looking for registered builders and engineers across Nigeria to visit sites, capture evidence in our app and verify each stage of work. Paid per visit."
 
 From the approved board (`SiteMobile.dc.html`): "Verified supervisors capture site evidence that can't be faked. Your money waits with a licensed escrow partner and is released milestone by milestone — only when the work is confirmed and you approve."
 

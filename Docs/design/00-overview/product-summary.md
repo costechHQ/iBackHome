@@ -2,7 +2,7 @@
 
 Condensed from the PRD (Draft v0.1, 7 Oct 2026). The PRD and the Spec stay the source of truth; this page only orients a reader.
 
-**iBackHome** (said "eyes back home") lets Nigerians abroad build homes in Enugu with confidence. Verified supervisors capture site evidence that can't be faked, and money is released milestone by milestone through a licensed escrow partner only after a supervisor verifies the work and the client approves it. iBackHome is not a construction company and never holds client funds.
+**iBackHome** (said "eyes back home") lets Nigerians abroad build homes in Nigeria with confidence. Verified supervisors capture site evidence that can't be faked, and money is released milestone by milestone through a licensed escrow partner only after a supervisor verifies the work and the client approves it. iBackHome is not a construction company and never holds client funds.
 
 - Tagline: **Far from home, never out of sight.**
 - Supporting line: **Proof, not promises.**
@@ -11,7 +11,7 @@ Condensed from the PRD (Draft v0.1, 7 Oct 2026). The PRD and the Spec stay the s
 
 | Role | Who | What they do | Surface (package ID prefix) |
 |---|---|---|---|
-| Client abroad | Nigerian in the UK, US, Canada or Europe building in Enugu; the payer and primary user | Sets up the project, funds milestones, approves releases, reads reports | React web, mobile-web first for approvals (WEB-CLIENT), WhatsApp and email (WA-CLIENT, EMAIL-CLIENT) |
+| Client abroad | Nigerian in the UK, US, Canada or Europe building at home in Nigeria; the payer and primary user | Sets up the project, funds milestones, approves releases, reads reports | React web, mobile-web first for approvals (WEB-CLIENT), WhatsApp and email (WA-CLIENT, EMAIL-CLIENT) |
 | Contractor | Builder hired by the client | Submits the BoQ, claims milestones, requests materials | React web portal (WEB-CONTRACTOR), Flutter Android (AND-CONTRACTOR) |
 | Supervisor | Registered builder or engineer (COREN or NIOB) vetted by iBackHome | Visits, captures evidence, verifies milestones, confirms deliveries, spot checks | Flutter Android only, offline-first, Android 8+, 2 GB RAM (AND-SUPERVISOR) |
 | Supplier | Verified seller of materials | Receives orders, delivers, gets paid directly | React web portal (WEB-SUPPLIER), WhatsApp (WA-SUPPLIER) |

@@ -48,7 +48,7 @@ export function contactChannels(content: SiteContent = SITE): Channel[] {
       ? {
           icon: MapPin,
           label: "Office",
-          value: `${company.officeAddress}, Enugu`,
+          value: company.officeAddress,
           note: "Visits by appointment",
         }
       : null,

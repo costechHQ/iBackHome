@@ -107,7 +107,7 @@ export function ForContractors() {
               items={[
                 "Let supervisors visit, including unannounced spot checks.",
                 "Take any photos you share in the iBackHome app — there's no upload from your gallery.",
-                "Expect your quote to be compared with current Enugu prices. Fair prices pass quietly.",
+                "Expect your quote to be compared with current market prices. Fair prices pass quietly.",
                 "If you disagree with a rejection, raise it with our team rather than with the client directly.",
               ]}
             />
@@ -161,7 +161,7 @@ export function BecomeASupervisor() {
       <PageHero
         eyebrow="Become a supervisor"
         title="Be the eyes on site for families abroad"
-        lead="We're looking for registered builders and engineers in Enugu to visit sites, capture evidence in our app and verify each stage of work. Paid per visit."
+        lead="We're looking for registered builders and engineers across Nigeria to visit sites, capture evidence in our app and verify each stage of work. Paid per visit."
       >
         <dl className="type-small flex flex-wrap gap-x-8 gap-y-2 text-slate">
           {s.ratePerVisit ? (
@@ -172,7 +172,7 @@ export function BecomeASupervisor() {
           ) : null}
           <div>
             <dt className="inline font-semibold text-ink">Where </dt>
-            <dd className="inline">Enugu</dd>
+            <dd className="inline">Across Nigeria, near where you live</dd>
           </div>
           <div>
             <dt className="inline font-semibold text-ink">Tool </dt>
@@ -192,7 +192,7 @@ export function BecomeASupervisor() {
                 "A valid NIN",
                 "Two guarantors we can contact",
                 "An Android phone (Android 8 or later) with a working camera and GPS",
-                "Based in Enugu and able to reach sites in Independence Layout, GRA, New Haven and Trans-Ekulu",
+                "Able to reach building sites near where you live",
                 "Willing to declare any relatives who work as contractors",
               ]}
             />

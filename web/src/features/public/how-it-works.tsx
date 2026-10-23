@@ -100,7 +100,7 @@ export function HowItWorks() {
             },
             {
               title: "Agree the bill of quantities",
-              body: "Your contractor prices the work in milestones. We check it against current Enugu prices.",
+              body: "Your contractor prices the work in milestones. We check it against current market prices.",
             },
             {
               title: "Pin your site",

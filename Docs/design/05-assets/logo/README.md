@@ -1,14 +1,15 @@
 # Logo
 
-The wordmark from the approved design system (Stage 2, board `Main.dc.html`): a house outline with an eye inside, in a rounded square, plus "iBackHome" in Inter 700.
+The iBackHome logo, updated 23 Oct 2026: a house with an eye looking out over the waves, and the word "iBackHome" beneath. Use the artwork as supplied; never recolour, stretch or rebuild it.
 
 | File | Use |
 |---|---|
-| `ibackhome-wordmark-on-light.svg` | Navy mark + ink text on white or mist |
-| `ibackhome-wordmark-on-dark.svg` | White mark + white text on navy |
-| `ibackhome-mark-on-light.svg` | Icon only (favicon, app icon source) on light |
-| `ibackhome-mark-on-dark.svg` | Icon only on navy |
+| `ibackhome-logo-on-light.png` | Full logo, blue, on white or light surfaces (485 × 263) |
+| `ibackhome-logo-on-dark.png` | Full logo, white, on Navy 900 (#00022E) or other dark surfaces (499 × 271) |
+| `ibackhome-mark-on-light.png` | House and eye only, blue, 512 × 512 transparent square: favicon, app icon source, tight bars |
+| `ibackhome-mark-on-dark.png` | House and eye only, white, 512 × 512: on navy (Android adaptive icon background) |
 
-The text is live `<text>` set in Inter, not outlined: load Inter (see ../fonts.md) or convert the text to paths before using the SVG outside the app. Icon geometry (24-unit grid): house `M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z`, eye `M6.5 15c1.5-2.1 3.3-3.2 5.5-3.2s4 1.1 5.5 3.2c-1.5 2.1-3.3 3.2-5.5 3.2s-4-1.1-5.5-3.2z`, pupil circle at (12, 15) r 1.3. Keep clear space of one eye height around the mark; only navy and white.
-
-No Android launcher icon or favicon set was designed (see PACKAGE-REPORT.md).
+- The full logo is no smaller than 40px tall on screen (20mm in print), so the word stays readable; use the mark alone below that.
+- Keep the height of the window panes clear on every side.
+- These are trimmed PNGs made from the supplied 1200 × 1200 artwork (transparent background). Vector (SVG) files will replace them when available; until then, show them at or below their natural size.
+- The web app serves the same files from `web/public/brand/` and uses the light mark as its favicon (`web/src/app/icon.png`).

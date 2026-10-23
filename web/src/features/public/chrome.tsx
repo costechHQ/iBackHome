@@ -115,7 +115,7 @@ export function PublicFooter() {
     <footer className="ibh-on-navy bg-navy-900 text-navy-200">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-8 lg:grid-cols-5">
         <div className="flex flex-col gap-3 lg:col-span-2">
-          <Wordmark onDark />
+          <Wordmark onDark size="lg" />
           <p className="text-white">Far from home, never out of sight.</p>
           <p className="type-small">
             Client funds are held by a licensed escrow partner, never by iBackHome.
@@ -139,7 +139,7 @@ export function PublicFooter() {
       <div className="border-t border-navy-700">
         <div className="type-small mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-5 sm:px-8">
           <p>{copyrightLine()}</p>
-          {address ? <p>{address}, Enugu, Nigeria</p> : null}
+          {address ? <p>{address}</p> : null}
         </div>
       </div>
     </footer>

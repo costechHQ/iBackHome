@@ -9,7 +9,7 @@ export type SiteContent = {
     registeredName: string | null;
     /** CAC registration number (RC). */
     rcNumber: string | null;
-    /** Street address in Enugu, without ", Enugu, Nigeria". */
+    /** The office address as it should read, e.g. "12 Example Road, Ikeja, Lagos State". */
     officeAddress: string | null;
   };
   contact: {

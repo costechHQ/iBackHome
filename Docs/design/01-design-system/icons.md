@@ -90,7 +90,7 @@ Names were matched from the approved frames' SVG paths. Some boards drew circles
 
 | Item | Screens | Note |
 |---|---|---|
-| `ibackhome-wordmark` | AND-CONTRACTOR-002, AND-CONTRACTOR-006, AND-PUBLIC-001, AND-SUPERVISOR-004, AND-SUPERVISOR-007, AND-SUPERVISOR-010, AND-SUPERVISOR-012, AND-SUPERVISOR-013, AND-SUPERVISOR-014, AND-SUPERVISOR-016, EMAIL-CLIENT-001, WA-CLIENT-001 | Brand mark (house + eye). SVGs in [05-assets/logo](../05-assets/logo/). | …
+| `ibackhome-wordmark` | AND-CONTRACTOR-002, AND-CONTRACTOR-006, AND-PUBLIC-001, AND-SUPERVISOR-004, AND-SUPERVISOR-007, AND-SUPERVISOR-010, AND-SUPERVISOR-012, AND-SUPERVISOR-013, AND-SUPERVISOR-014, AND-SUPERVISOR-016, EMAIL-CLIENT-001, WA-CLIENT-001 | Brand mark (house + eye). SVGs in [05-assets/logo](../05-assets/logo/). | Brand logo (house and eye above "iBackHome"), updated 23 Oct 2026: PNGs in [05-assets/logo](../05-assets/logo/README.md), blue on light and white on navy; the mark alone for icons and tight bars. |
 | `illustration: map` | AND-SUPERVISOR-005, WEB-CLIENT-004, WEB-CLIENT-011, WEB-CLIENT-012, WEB-CONTRACTOR-001, WEB-OPS-002, WEB-OPS-004, WEB-OPS-005, WEB-PUBLIC-001, WEB-SUPPLIER-001 | Map drawings (roads, plots, geofence) on mockups. Real screens use the map component with live tiles; see open question on the tile provider. |
 | `custom: legend glyph` | WEB-OPS-002 | Small glyph drawn for map legends or selects; build with CSS or the map library. |
 | `custom: map legend flag` | WEB-CLIENT-012 | Small glyph drawn for map legends or selects; build with CSS or the map library. |

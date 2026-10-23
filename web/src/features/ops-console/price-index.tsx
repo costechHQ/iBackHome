@@ -26,7 +26,7 @@ export function PriceIndex({ environment }: { environment: string }) {
   const timeZone = useViewerTimeZone();
   const index = usePriceIndex();
   const [tab, setTab] = useState<Tab>("all");
-  const header = <OpsHeader title="Price index · Enugu" environment={environment} />;
+  const header = <OpsHeader title="Price index" environment={environment} />;
 
   if (index.isPending) {
     return (

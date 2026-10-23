@@ -57,7 +57,8 @@ test("create a project and invite the contractor", async () => {
   await expect(client.getByRole("heading", { name: "New project" })).toBeVisible();
   await client.getByLabel("Project name").fill(title);
   await client.getByLabel("Site address").fill("14 Test Avenue");
-  await client.getByLabel("Area, Enugu").fill("Independence Layout");
+  await client.getByLabel("Town or city").fill("Independence Layout");
+  await client.getByLabel("State").selectOption("Enugu");
   await client.getByLabel("Total budget (naira)").fill("2,000,000");
   // One digit short: the designed message, nothing sent.
   await client.getByRole("textbox", { name: "Contractor's phone" }).fill("803 000 000");
@@ -219,7 +220,7 @@ test("review the BoQ, check it, and give the final approval", async ({ browser }
   await expect(client.getByText("₦204,000", { exact: true })).toBeVisible(); // (11,500 − 9,800) × 120
   await shoot(client, "quote-check");
   await client.getByRole("radio", { name: "Price index" }).click();
-  await expect(client.getByText(/No supplier prices yet|Enugu price index/).first()).toBeVisible();
+  await expect(client.getByText(/No supplier prices yet|Price index/).first()).toBeVisible();
 
   // The final approval: the project becomes active and the site locks.
   await client.goto(`/projects/${projectId}/boq`);

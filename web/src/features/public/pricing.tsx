@@ -105,7 +105,7 @@ export function Pricing() {
           {[
             {
               title: "Materials from verified suppliers",
-              body: "Order through partner suppliers; quotes are checked against the Enugu price index and delivery is confirmed on site.",
+              body: "Order through partner suppliers; quotes are checked against our price index and delivery is confirmed on site.",
               chip: <ToneChip label="Available" tone="ok" size="small" />,
               price: p.materialsCharge,
             },

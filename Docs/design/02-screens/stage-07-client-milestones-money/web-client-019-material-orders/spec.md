@@ -22,7 +22,7 @@ source_boards: ["Orders.dc.html"]
 
 Approve a contractor's material order with the quote check, and follow orders through delivery confirmation.
 
-From the approved board (`Orders.dc.html`): "Engr. Obi requests materials from a verified supplier; the client approves each order line by line against the Enugu price index. The supplier is paid from the milestone's escrow, directly by Paystack, only after the supervisor confirms the delivery on site with photos and quantities."
+From the approved board (`Orders.dc.html`): "Engr. Obi requests materials from a verified supplier; the client approves each order line by line against the price index. The supplier is paid from the milestone's escrow, directly by Paystack, only after the supervisor confirms the delivery on site with photos and quantities."
 
 Stage 1 inventory: CM-07. Priority P1 · FRs FR-16, FR-17.
 
