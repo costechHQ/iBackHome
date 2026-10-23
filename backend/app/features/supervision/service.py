@@ -6,6 +6,7 @@ so a decision and its audit entry land together or not at all. Every change writ
 Used by:
 - Christopher (projects.set_supervisor):  ensure_assignable()
 - Abigail (ops queue):                    list_pending_vetting()
+- the ops console (GET /supervisors/{id}/application): get_application()
 Rules that need a project (assignment wrapper, project spot checks, rotation) are in rotation.py,
 because projects.service imports this module.
 """
@@ -21,7 +22,13 @@ from app.base import audit
 from app.base.users import service as users
 from app.core.errors import AppError
 from app.features.supervision.models import SpotCheck, SupervisorProfile, SupervisorRelation, VettingStatus
-from app.features.supervision.schemas import SupervisorApplication, VettingDecision
+from app.features.supervision.schemas import (
+    DeclaredRelationOut,
+    SupervisorApplication,
+    SupervisorApplicationOut,
+    SupervisorProfileOut,
+    VettingDecision,
+)
 
 CHECKS = ("registration_verified", "nin_verified", "guarantor_1_verified", "guarantor_2_verified")
 
@@ -168,6 +175,55 @@ async def list_pending_vetting(session: AsyncSession) -> list[SupervisorProfile]
         .order_by(SupervisorProfile.created_at)
     )
     return list(result)
+
+
+async def list_profiles(session: AsyncSession, status: VettingStatus) -> list[SupervisorProfile]:
+    """Every application with this vetting status: approved by when they were vetted, others oldest first."""
+    order = (
+        (SupervisorProfile.vetted_at, SupervisorProfile.user_id)
+        if status == VettingStatus.APPROVED
+        else (SupervisorProfile.created_at, SupervisorProfile.user_id)
+    )
+    result = await session.scalars(
+        select(SupervisorProfile).where(SupervisorProfile.vetting_status == status).order_by(*order)
+    )
+    return list(result)
+
+
+async def list_relations(session: AsyncSession, supervisor_id: uuid.UUID) -> list[SupervisorRelation]:
+    """The contractors this supervisor declared as related, by phone."""
+    result = await session.scalars(
+        select(SupervisorRelation)
+        .where(SupervisorRelation.supervisor_id == supervisor_id)
+        .order_by(SupervisorRelation.contractor_phone)
+    )
+    return list(result)
+
+
+async def get_application(session: AsyncSession, supervisor_id: uuid.UUID) -> SupervisorApplicationOut:
+    """One application in full for ops: the profile, the person's contacts, the guarantors and the declared
+    relatives. Read-only. 404 supervisor_profile_not_found."""
+    profile = await get_profile(session, supervisor_id)
+    user = await users.get_user(session, supervisor_id)
+    if user is None:
+        raise AppError("supervisor_profile_not_found", "This supervisor has not applied for vetting.", 404)
+    return SupervisorApplicationOut.model_validate(
+        {
+            **SupervisorProfileOut.model_validate(profile).model_dump(),
+            "full_name": user.full_name,
+            "phone": user.phone,
+            "email": user.email,
+            "account_status": user.status,
+            "guarantor_1": profile.guarantor_1,
+            "guarantor_2": profile.guarantor_2,
+            "related_contractors": [
+                DeclaredRelationOut(contractor_phone=r.contractor_phone, relationship=r.relationship)
+                for r in await list_relations(session, supervisor_id)
+            ],
+            "submitted_at": profile.created_at,
+            "updated_at": profile.updated_at,
+        }
+    )
 
 
 async def is_related(session: AsyncSession, supervisor_id: uuid.UUID, contractor_phone: str) -> bool:

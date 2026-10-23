@@ -2986,6 +2986,175 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Project Spot Checks",
+        "description": "Ops: every spot check on a project, planned and done, soonest first.",
+        "operationId": "project_spot_checks_api_v1_projects__project_id__spot_checks_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SpotCheckOut"
+                  },
+                  "title": "Response Project Spot Checks Api V1 Projects  Project Id  Spot Checks Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supervisors": {
+      "get": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "List Supervisors",
+        "description": "Ops: supervisors by vetting status (approved by default) with their load. With `project_id`, also\nwhether each may take that project (not related to its contractor).",
+        "operationId": "list_supervisors_api_v1_supervisors_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "vetting_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/VettingStatus",
+              "default": "approved"
+            }
+          },
+          {
+            "name": "project_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SupervisorListItem"
+                  },
+                  "title": "Response List Supervisors Api V1 Supervisors Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/supervisors/{supervisor_id}/application": {
+      "get": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Supervisor Application",
+        "description": "Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting.",
+        "operationId": "supervisor_application_api_v1_supervisors__supervisor_id__application_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "supervisor_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Supervisor Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorApplicationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/v1/supervisors/me/spot-checks": {
@@ -4001,6 +4170,24 @@
           "relationship"
         ],
         "title": "DeclaredRelation"
+      },
+      "DeclaredRelationOut": {
+        "properties": {
+          "contractor_phone": {
+            "type": "string",
+            "title": "Contractor Phone"
+          },
+          "relationship": {
+            "type": "string",
+            "title": "Relationship"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contractor_phone",
+          "relationship"
+        ],
+        "title": "DeclaredRelationOut"
       },
       "DeliveryIn": {
         "properties": {
@@ -6663,6 +6850,275 @@
         ],
         "title": "SupervisorApplication",
         "description": "What a supervisor submits to be vetted."
+      },
+      "SupervisorApplicationOut": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "registration_body": {
+            "type": "string",
+            "title": "Registration Body"
+          },
+          "registration_no": {
+            "type": "string",
+            "title": "Registration No"
+          },
+          "registration_verified": {
+            "type": "boolean",
+            "title": "Registration Verified"
+          },
+          "nin_verified": {
+            "type": "boolean",
+            "title": "Nin Verified"
+          },
+          "guarantor_1_verified": {
+            "type": "boolean",
+            "title": "Guarantor 1 Verified"
+          },
+          "guarantor_2_verified": {
+            "type": "boolean",
+            "title": "Guarantor 2 Verified"
+          },
+          "vetting_status": {
+            "$ref": "#/components/schemas/VettingStatus"
+          },
+          "vetted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vetted At"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "account_status": {
+            "type": "string",
+            "title": "Account Status"
+          },
+          "guarantor_1": {
+            "type": "string",
+            "title": "Guarantor 1"
+          },
+          "guarantor_2": {
+            "type": "string",
+            "title": "Guarantor 2"
+          },
+          "related_contractors": {
+            "items": {
+              "$ref": "#/components/schemas/DeclaredRelationOut"
+            },
+            "type": "array",
+            "title": "Related Contractors"
+          },
+          "submitted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Submitted At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "registration_body",
+          "registration_no",
+          "registration_verified",
+          "nin_verified",
+          "guarantor_1_verified",
+          "guarantor_2_verified",
+          "vetting_status",
+          "vetted_at",
+          "rejection_reason",
+          "rating",
+          "full_name",
+          "phone",
+          "email",
+          "account_status",
+          "guarantor_1",
+          "guarantor_2",
+          "related_contractors",
+          "submitted_at",
+          "updated_at"
+        ],
+        "title": "SupervisorApplicationOut",
+        "description": "One application in full, for ops to check before deciding (GET /supervisors/{id}/application)."
+      },
+      "SupervisorListItem": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "account_status": {
+            "type": "string",
+            "title": "Account Status"
+          },
+          "registration_body": {
+            "type": "string",
+            "title": "Registration Body"
+          },
+          "vetting_status": {
+            "$ref": "#/components/schemas/VettingStatus"
+          },
+          "vetted_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vetted At"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating"
+          },
+          "active_projects": {
+            "type": "integer",
+            "title": "Active Projects",
+            "description": "Projects not yet completed that this supervisor is assigned to"
+          },
+          "related_contractors": {
+            "type": "integer",
+            "title": "Related Contractors",
+            "description": "How many contractors this supervisor declared as related"
+          },
+          "assigned_here": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assigned Here"
+          },
+          "related_to_contractor": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Related To Contractor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "full_name",
+          "phone",
+          "account_status",
+          "registration_body",
+          "vetting_status",
+          "vetted_at",
+          "rating",
+          "active_projects",
+          "related_contractors"
+        ],
+        "title": "SupervisorListItem",
+        "description": "One supervisor in GET /supervisors, with what ops need to choose one for a project."
       },
       "SupervisorProfileOut": {
         "properties": {
