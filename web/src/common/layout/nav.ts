@@ -74,7 +74,7 @@ export const OPS_NAV: readonly OpsSection[] = [
     heading: "Operations",
     items: [
       { label: "Projects", href: "/ops/projects", ready: true }, // WEB-OPS-004 (W8a)
-      { label: "Spot checks", href: "/ops/spot-checks", ready: false }, // WEB-OPS-007
+      { label: "Spot checks", href: "/ops/spot-checks", ready: true }, // WEB-OPS-007 (W8b)
       { label: "Suppliers", href: "/ops/suppliers", ready: false }, // WEB-OPS-008
       { label: "Price index", href: "/ops/price-index", ready: true }, // WEB-OPS-009 (W8a, read-only)
       { label: "Weekly reports", href: "/ops/reports", ready: true }, // WEB-OPS-010 (W8a)
