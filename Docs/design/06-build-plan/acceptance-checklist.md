@@ -138,6 +138,16 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Unit tests (queue ages, project flags and now); stack test of W8a; axe clean at 1440 px
 - [x] Gaps logged: W-42 to W-48. W8b (vetting decision, supervisor assignment, spot checks) waits for the MX-15/MX-14 read routes
 
+### W8b · Vetting, supervisor choice, spot checks
+
+- [x] WEB-OPS-003 vetting detail at `/ops/vetting/:id` (linked from the queue): registration, NIN, guarantors, declared relatives, a tick box per check; approve locked until all four; reject needs a reason; both confirmed and audited
+- [x] WEB-OPS-004 supervisor and rotation on the project page: vetted supervisors with load and link to the project, relatives blocked, "Assign" with confirmation, backend refusals shown; the project's spot checks with "Book one"
+- [x] WEB-OPS-007 spot checks at `/ops/spot-checks`: book (live project, eligible supervisor, day and time in WAT, future only), upcoming and results across projects; Spot checks on in the sidebar
+- [x] Backend #78: the three ops read routes (MX-15, MX-14)
+- [x] Seed driver `--applicant`: a new supervisor application (declares the seeded contractor as a cousin)
+- [x] Unit tests (open checks, who may take or spot-check a project, WAT time, upcoming/done); stack test of W8b; axe clean at 1440 px
+- [x] Gaps logged: W-49 to W-51, MX-14 and MX-15 notes
+
 ### Brand refresh · logo, primary colour, nationwide copy (23 Oct 2026)
 
 - [x] New logo everywhere: public header and footer, sign-in and onboarding, client, contractor and ops bars, the 404 page, favicon; light and dark versions; the mark alone on the client's phone bar

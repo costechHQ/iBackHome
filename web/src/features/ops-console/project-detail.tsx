@@ -25,10 +25,12 @@ import { heldMinor } from "@/features/milestones/contractor";
 import { useApproveBoq, useBoq } from "@/features/projects/api";
 import { SavedLines } from "@/features/projects/boq-editor";
 
+import { ProjectSpotChecks, SupervisorPicker } from "./supervisor-picker";
+
 // WEB-OPS-004 Project detail at /ops/projects/:id: milestones and the money held, the site boundary with
 // "Change site" (ops may change it at any time; every change is audited), the BoQ with the ops approval, and
-// whether a supervisor is assigned. Not shown (PACKAGE-REPORT W-43): "Pause project" (MX-09), names (MX-26),
-// choosing the next supervisor and the rotation (needs the vetted-supervisor list, MX-15).
+// the supervisor (choose or change one) and the spot checks (W8b, supervisor-picker.tsx). Not shown
+// (PACKAGE-REPORT W-43): "Pause project" (MX-09), client and contractor names (MX-26).
 
 const GeofenceMap = dynamic(() => import("@/common/map/geofence-map").then((m) => m.GeofenceMap), {
   ssr: false,
@@ -215,6 +217,7 @@ export function OpsProjectDetail({ projectId, environment }: { projectId: string
               )}
             </Card>
             <BoqCard projectId={projectId} />
+            <SupervisorPicker projectId={p.id} status={p.status} />
           </div>
 
           <div className="flex flex-col gap-5 lg:col-span-2">
@@ -245,22 +248,7 @@ export function OpsProjectDetail({ projectId, environment }: { projectId: string
                 Every change is in the audit log.
               </p>
             </Card>
-            <Card className="flex flex-col gap-2 p-4">
-              <h2 className="font-semibold text-ink">Supervisor</h2>
-              {p.supervisor_id ? (
-                <p className="type-small flex items-center gap-2 text-ink">
-                  <CircleCheck aria-hidden strokeWidth={1.75} className="size-4 text-ok-fg" />A vetted
-                  supervisor is assigned.
-                </p>
-              ) : (
-                <ToneChip
-                  className="self-start"
-                  label="No supervisor yet"
-                  tone={p.status === "active" ? "bad" : "neutral"}
-                  size="small"
-                />
-              )}
-            </Card>
+            <ProjectSpotChecks projectId={p.id} />
           </div>
         </div>
       </div>
