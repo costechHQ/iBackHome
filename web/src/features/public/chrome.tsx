@@ -115,7 +115,7 @@ export function PublicFooter() {
     <footer className="ibh-on-navy bg-navy-900 text-navy-200">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-8 lg:grid-cols-5">
         <div className="flex flex-col gap-3 lg:col-span-2">
-          <Wordmark onDark size="lg" />
+          <Wordmark onDark size="lg" className="self-start" />
           <p className="text-white">Far from home, never out of sight.</p>
           <p className="type-small">
             Client funds are held by a licensed escrow partner, never by iBackHome.

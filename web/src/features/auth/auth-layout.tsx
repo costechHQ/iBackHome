@@ -18,7 +18,7 @@ export function PublicAuthFrame({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh bg-white lg:grid-cols-5">
       <aside className="ibh-on-navy hidden flex-col justify-between bg-navy-900 p-12 text-white lg:col-span-2 lg:flex">
-        <Wordmark onDark size="lg" />
+        <Wordmark onDark size="lg" className="self-start" />
         <div className="flex flex-col gap-8">
           <p className="type-display">Far from home, never out of sight.</p>
           <ul className="flex flex-col gap-4">
