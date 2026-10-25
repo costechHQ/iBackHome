@@ -7,6 +7,7 @@
 //   bun scripts/drive/index.ts --to funded --currency USD     # the client pays in USD (default GBP)
 //   bun scripts/drive/index.ts --new-project --to funded      # a fresh active project (the gate test uses this)
 //   bun scripts/drive/index.ts --new-project --to funded --flagged  # and the same photo twice: the second is flagged
+//   bun scripts/drive/index.ts --applicant                     # a new supervisor application for ops to vet
 //
 // States: funded, claimed, verified, approved (release requested), released (waits for escrow), disputed,
 // sent-back (the supervisor rejects the claim with reasons: back to funded, rework needed).
@@ -14,6 +15,7 @@
 import { randomUUID } from "node:crypto";
 import { parseArgs } from "node:util";
 
+import { newApplicant } from "./applicant";
 import { capture, sitePhoto, waitAccepted, waitChecked } from "./capture";
 import { DriveError } from "./env";
 import { fundMilestone } from "./funding";
@@ -43,12 +45,18 @@ const { values } = parseArgs({
     currency: { type: "string", default: "GBP" },
     // After funding: the supervisor sends one photo twice, so the reuse check flags the second (ops review it).
     flagged: { type: "boolean", default: false },
+    // Only a new supervisor application (no milestone): see applicant.ts.
+    applicant: { type: "boolean", default: false },
   },
 });
 
 const step = (message: string) => console.log(`  - ${message}`);
 
 async function main() {
+  if (values.applicant) {
+    console.log(`applicant ${newApplicant()}`);
+    return;
+  }
   const target = values.to as Target | undefined;
   if (!target || !TARGETS.includes(target)) {
     throw new DriveError(`--to must be one of: ${TARGETS.join(", ")}`);

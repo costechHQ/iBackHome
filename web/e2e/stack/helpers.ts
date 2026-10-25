@@ -26,6 +26,21 @@ export function drive(...args: string[]): { projectId: string; milestoneId: stri
   return { projectId: match[1]!, milestoneId: match[2]! };
 }
 
+/** A new supervisor application waiting for ops (the driver's --applicant); returns the supervisor's id. */
+export function driveApplicant(): string {
+  const out = execFileSync("bun", ["scripts/drive/index.ts", "--applicant"], {
+    cwd: webRoot,
+    encoding: "utf8",
+    timeout: 120_000,
+    shell: process.platform === "win32",
+  });
+  const id = /applicant ([0-9a-f-]{36})/.exec(out)?.[1];
+  if (!id)
+    throw new Error(`drive --applicant: no applicant in the output
+${out}`);
+  return id;
+}
+
 export function latestCode(identifier: string): string {
   const logs = execFileSync("docker", ["compose", "logs", "api", "--since", "2m"], {
     cwd: repoRoot,
