@@ -22,7 +22,7 @@ source_boards: ["Setup-Quote.dc.html"]
 
 Run the AI quote checker on the BoQ or an uploaded quote PDF and show flagged lines first, with the index price and % difference.
 
-From the approved board (`Setup-Quote.dc.html`): "AI reads the quote into line items; plain rules compare each unit price with the Enugu price index and each quantity with the expected range for the house plan. Lines more than 15% above the index are flagged. It's advisory only — the client and ops decide. Prices shown are sample data."
+From the approved board (`Setup-Quote.dc.html`): "AI reads the quote into line items; plain rules compare each unit price with the price index and each quantity with the expected range for the house plan. Lines more than 15% above the index are flagged. It's advisory only — the client and ops decide. Prices shown are sample data."
 
 Stage 1 inventory: CS-07. Priority P0 · FRs FR-17, FR-05.
 

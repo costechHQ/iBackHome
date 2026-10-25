@@ -8,6 +8,7 @@ import { useId, useState } from "react";
 import { toUiState } from "@/common/api/errors";
 import { ApiError } from "@/common/api/errors";
 import { countryByIso } from "@/common/countries";
+import { NIGERIAN_STATES, siteAddress } from "@/common/nigeria";
 import { Alert } from "@/common/ui/alert";
 import { Button } from "@/common/ui/button";
 import { cn } from "@/common/ui/cn";
@@ -20,12 +21,13 @@ import { useCreateProject } from "./api";
 // WEB-CLIENT-003 CS-02/03 "New project". The backend keeps BoQ lines and milestones in the project's currency
 // and pays in naira, so a project is created in NGN and the budget is entered in naira (PACKAGE-REPORT B-6).
 // The contractor is invited by phone (POST /projects contractor_phone); an email invite, the contractor's
-// name and the area list aren't stored, so the address takes the street and area as typed (W-31).
+// name and the area list aren't stored, so the address is the street, town and state as entered (W-31). Sites
+// can be anywhere in Nigeria (PACKAGE-REPORT W-52).
 
 const field =
   "min-h-12 w-full rounded-control border bg-white px-3.5 type-body-lg text-ink placeholder:text-muted";
 
-type Problems = Partial<Record<"title" | "street" | "area" | "budget" | "phone", string>>;
+type Problems = Partial<Record<"title" | "street" | "town" | "state" | "budget" | "phone", string>>;
 
 /** Naira typed with commas ("25,000,000") to kobo; null if it isn't a positive whole number of naira. */
 export function nairaToKobo(typed: string): number | null {
@@ -46,10 +48,18 @@ export function nigerianLengthProblem(typed: string): string | null {
 
 export function CreateProject() {
   const router = useRouter();
-  const ids = { title: useId(), street: useId(), area: useId(), budget: useId(), phone: useId() };
+  const ids = {
+    title: useId(),
+    street: useId(),
+    town: useId(),
+    state: useId(),
+    budget: useId(),
+    phone: useId(),
+  };
   const [title, setTitle] = useState("");
   const [street, setStreet] = useState("");
-  const [area, setArea] = useState("");
+  const [town, setTown] = useState("");
+  const [state, setState] = useState("");
   const [budget, setBudget] = useState("");
   const [iso, setIso] = useState("NG");
   const [phone, setPhone] = useState("");
@@ -60,7 +70,8 @@ export function CreateProject() {
     const next: Problems = {};
     if (!title.trim()) next.title = "Give the project a name.";
     if (!street.trim()) next.street = "Enter the site address.";
-    if (!area.trim()) next.area = "Enter the area.";
+    if (!town.trim()) next.town = "Enter the town or city.";
+    if (!state) next.state = "Choose the state.";
     const kobo = nairaToKobo(budget);
     if (kobo === null) next.budget = "Enter the budget in naira, for example 25,000,000.";
     if (!phone.trim()) next.phone = "Enter your contractor's phone number.";
@@ -73,7 +84,7 @@ export function CreateProject() {
     create.mutate(
       {
         title: title.trim(),
-        address: `${street.trim()}, ${area.trim()}, Enugu`,
+        address: siteAddress(street, town, state),
         currency: "NGN",
         budget_minor: kobo,
         contractor_phone: phoneIdentifier(countryByIso(iso)?.dial ?? "234", phone),
@@ -129,35 +140,59 @@ export function CreateProject() {
             />
             {error("title", ids.title)}
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <label htmlFor={ids.street} className="type-small font-semibold text-ink">
-                Site address
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor={ids.street} className="type-small font-semibold text-ink">
+              Site address
+            </label>
+            <input
+              id={ids.street}
+              value={street}
+              autoComplete="street-address"
+              placeholder="House number and street"
+              onChange={(e) => setStreet(e.target.value)}
+              aria-invalid={problems.street ? true : undefined}
+              aria-describedby={described("street", ids.street)}
+              className={cn(field, problems.street ? "border-bad-fg" : "border-line-strong")}
+            />
+            {error("street", ids.street)}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={ids.town} className="type-small font-semibold text-ink">
+                Town or city
               </label>
               <input
-                id={ids.street}
-                value={street}
-                autoComplete="street-address"
-                onChange={(e) => setStreet(e.target.value)}
-                aria-invalid={problems.street ? true : undefined}
-                aria-describedby={described("street", ids.street)}
-                className={cn(field, problems.street ? "border-bad-fg" : "border-line-strong")}
+                id={ids.town}
+                value={town}
+                autoComplete="address-level2"
+                onChange={(e) => setTown(e.target.value)}
+                aria-invalid={problems.town ? true : undefined}
+                aria-describedby={described("town", ids.town)}
+                className={cn(field, problems.town ? "border-bad-fg" : "border-line-strong")}
               />
-              {error("street", ids.street)}
+              {error("town", ids.town)}
             </div>
             <div className="flex flex-col gap-1.5">
-              <label htmlFor={ids.area} className="type-small font-semibold text-ink">
-                Area, Enugu
+              <label htmlFor={ids.state} className="type-small font-semibold text-ink">
+                State
               </label>
-              <input
-                id={ids.area}
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                aria-invalid={problems.area ? true : undefined}
-                aria-describedby={described("area", ids.area)}
-                className={cn(field, problems.area ? "border-bad-fg" : "border-line-strong")}
-              />
-              {error("area", ids.area)}
+              <select
+                id={ids.state}
+                value={state}
+                autoComplete="address-level1"
+                onChange={(e) => setState(e.target.value)}
+                aria-invalid={problems.state ? true : undefined}
+                aria-describedby={described("state", ids.state)}
+                className={cn(field, problems.state ? "border-bad-fg" : "border-line-strong")}
+              >
+                <option value="">Choose the state</option>
+                {NIGERIAN_STATES.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+              {error("state", ids.state)}
             </div>
           </div>
           <div className="flex flex-col gap-1.5">

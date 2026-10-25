@@ -8,9 +8,9 @@
 export const ibhTheme = {
   colors: {
     ibh: {
-        'navy-900': '#131F39',
-        'navy-800': '#1E2B4A',
-        'navy-700': '#2A3753',
+        'navy-900': '#00022E',
+        'navy-800': '#10144A',
+        'navy-700': '#1E2260',
         'navy-200': '#C9D3E3',
         'ink': '#0B1324',
         'slate': '#3A4354',

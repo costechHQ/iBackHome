@@ -44,7 +44,7 @@ export const LANDING_FAQ = [
   },
   {
     q: "Who are the supervisors?",
-    a: "Registered builders and engineers in Enugu. We check their professional registration, NIN and two guarantors, rotate them across sites, and send others on unannounced spot checks.",
+    a: "Registered builders and engineers, matched to sites near them. We check their professional registration, NIN and two guarantors, rotate them across sites, and send others on unannounced spot checks.",
   },
   {
     q: "What if I don’t agree a milestone is done?",
@@ -56,7 +56,7 @@ export const LANDING_FAQ = [
   },
   {
     q: "Where do you work?",
-    a: "Enugu, for now — including Independence Layout, GRA, New Haven and Trans-Ekulu.",
+    a: "Anywhere in Nigeria. When you set up your project, we match a vetted supervisor near your site.",
   },
   {
     q: "What does it cost?",
@@ -80,7 +80,7 @@ export function Landing() {
           <div className="flex flex-col gap-5">
             <p className="type-small flex items-center gap-2 self-start rounded-pill bg-mist px-3 py-1 text-ink">
               <MapPin aria-hidden strokeWidth={1.75} className="size-4" />
-              For Nigerians abroad building in Enugu
+              For Nigerians abroad building at home
             </p>
             <h1 className="type-display text-ink">Far from home, never out of sight.</h1>
             <p className="type-body-lg text-slate">
@@ -133,7 +133,7 @@ export function Landing() {
             {
               icon: Receipt,
               title: "Quotes get inflated",
-              body: "Prices padded well above what materials actually cost in Enugu, with no way for you to check.",
+              body: "Prices padded well above what materials actually cost locally, with no way for you to check.",
             },
             {
               icon: Images,

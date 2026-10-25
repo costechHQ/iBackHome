@@ -162,7 +162,7 @@ test("weekly reports, price index and the vetting queue", async () => {
   await shoot(ops, "ops-reports");
 
   await ops.getByRole("link", { name: "Price index" }).click();
-  await expect(ops.getByRole("heading", { name: "Price index · Enugu" })).toBeVisible();
+  await expect(ops.getByRole("heading", { name: "Price index", exact: true })).toBeVisible();
   await shoot(ops, "ops-price-index");
 
   await ops.getByRole("link", { name: "Vetting" }).first().click();

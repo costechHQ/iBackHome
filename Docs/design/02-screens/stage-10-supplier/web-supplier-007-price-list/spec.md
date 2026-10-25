@@ -20,9 +20,9 @@ source_boards: ["Sp-PriceList.dc.html"]
 
 ## 1. Purpose
 
-Supplier confirms or updates its own prices in the Enugu index; stale items flagged after 14 days.
+Supplier confirms or updates its own prices in the price index; stale items flagged after 14 days.
 
-From the approved board (`Sp-PriceList.dc.html`): "Partner suppliers keep the Enugu price index current. Each price shows when it was last updated, and anything older than 14 days is marked stale. This is the same rule the client and contractor see as "Index updated Mon 4 Jan"."
+From the approved board (`Sp-PriceList.dc.html`): "Partner suppliers keep the price index current. Each price shows when it was last updated, and anything older than 14 days is marked stale. This is the same rule the client and contractor see as "Index updated Mon 4 Jan"."
 
 ## 2. Layout and components used
 

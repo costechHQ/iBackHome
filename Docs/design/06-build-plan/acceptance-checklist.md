@@ -148,6 +148,14 @@ The repo builds the web app in stages W0–W4 (ADR 0004); the screen blocks belo
 - [x] Unit tests (open checks, who may take or spot-check a project, WAT time, upcoming/done); stack test of W8b; axe clean at 1440 px
 - [x] Gaps logged: W-49 to W-51, MX-14 and MX-15 notes
 
+### Brand refresh · logo, primary colour, nationwide copy (23 Oct 2026)
+
+- [x] New logo everywhere: public header and footer, sign-in and onboarding, client, contractor and ops bars, the 404 page, favicon; light and dark versions; the mark alone on the client's phone bar
+- [x] Primary #00022E (hover #10144A, raised #1E2260) in tokens.json, tokens.css, tailwind.tokens.ts, flutter_theme.dart, every screen and prototype, and the web token copy (sync:tokens)
+- [x] No Enugu-only copy: public site, quote check, BoQ review, price index, create project (town or city, and state), map default view, footer and contact address; design package copy, times and sample data
+- [x] Unit tests (states list, site address); public, smoke, auth and states e2e; stack: project set-up (new address fields), ops console (price index title)
+- [x] Logged: W-52, with the items for the backend and the root docs' owners
+
 ### W9 · Public site
 
 - [x] WEB-PUBLIC-001 to 009 built at `web/src/features/public/`, routes `/`, `/how-it-works`, `/pricing`, `/contractors`, `/supervisors`, `/trust`, `/contact`, `/privacy`, `/terms`, all static, with the public header (phone menu) and footer
