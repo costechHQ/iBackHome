@@ -20,6 +20,7 @@ import { ToneChip } from "@/common/ui/status-chip";
 import { Card, CardLabel } from "@/common/ui/surfaces";
 import { Table, Td, Th, Tr } from "@/common/ui/table";
 
+import { needsSubscription } from "../subscriptions/state";
 import { useApproveBoq, useBoq, type Boq } from "./api";
 
 // WEB-CLIENT-005 BoQ review and approval at /projects/:id/boq. Amounts are naira (the BoQ's currency); the
@@ -263,6 +264,13 @@ export function BoqReview({ projectId }: { projectId: string }) {
                 <Alert tone="warn" title="Save your site first">
                   <Link href={`/projects/${p.id}/site`} className="underline">
                     Pin the site and draw its boundary
+                  </Link>
+                  , then approve.
+                </Alert>
+              ) : needsSubscription(conflict) ? (
+                <Alert tone="warn" title="Start the monthly supervision first">
+                  <Link href={`/projects/${p.id}/subscription`} className="underline">
+                    Set up the supervision subscription
                   </Link>
                   , then approve.
                 </Alert>
