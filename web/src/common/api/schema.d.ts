@@ -787,6 +787,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Subscription
+         * @description Project members and ops: status, price and renewal date; 404 until one is started.
+         */
+        get: operations["get_subscription_api_v1_projects__project_id__subscription_get"];
+        put?: never;
+        /**
+         * Start Subscription
+         * @description Client: get a Stripe Checkout link for the monthly supervision fee (GBP, USD or EUR).
+         *
+         *     Nothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the
+         *     same key returns the same link.
+         */
+        post: operations["start_subscription_api_v1_projects__project_id__subscription_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/subscription/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Subscription
+         * @description Client: stop renewing at the end of the paid month. The project keeps running until then.
+         */
+        post: operations["cancel_subscription_api_v1_projects__project_id__subscription_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/supervisors/me/profile": {
         parameters: {
             query?: never;
@@ -2507,6 +2554,59 @@ export interface components {
             /** Findings */
             findings: string | null;
         };
+        /** SubscriptionCheckoutOut */
+        SubscriptionCheckoutOut: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Checkout Session Id */
+            checkout_session_id: string;
+            /** Checkout Url */
+            checkout_url: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Amount Minor
+             * @description Charged every month
+             */
+            amount_minor: number;
+        };
+        /** SubscriptionCreate */
+        SubscriptionCreate: {
+            /**
+             * Currency
+             * @description The currency the client pays in: GBP, USD or EUR
+             * @enum {string}
+             */
+            currency: "GBP" | "USD" | "EUR";
+        };
+        /** SubscriptionOut */
+        SubscriptionOut: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "incomplete" | "active" | "past_due" | "canceled";
+            /** Currency */
+            currency: string;
+            /** Amount Minor */
+            amount_minor: number;
+            /** Current Period End */
+            current_period_end: string | null;
+            /** Cancel At Period End */
+            cancel_at_period_end: boolean;
+            /** Past Due Since */
+            past_due_since: string | null;
+            /** Paused By Billing */
+            paused_by_billing: boolean;
+        };
         /**
          * SupervisorApplication
          * @description What a supervisor submits to be vetted.
@@ -4190,6 +4290,105 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReportOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_subscription_api_v1_projects__project_id__subscription_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_subscription_api_v1_projects__project_id__subscription_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscriptionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionCheckoutOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_subscription_api_v1_projects__project_id__subscription_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionOut"];
                 };
             };
             /** @description Validation Error */

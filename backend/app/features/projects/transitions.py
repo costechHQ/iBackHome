@@ -28,9 +28,9 @@ ALLOWED_TRANSITIONS: dict[tuple[S, S], frozenset[ActorRole]] = {
     (S.BOQ_REVIEW, S.DRAFT): frozenset({R.CLIENT, R.CONTRACTOR, R.OPS}),
     # Client, contractor and ops have all approved the BoQ
     (S.BOQ_REVIEW, S.ACTIVE): frozenset({R.SYSTEM}),
-    # Ops pauses and resumes work
-    (S.ACTIVE, S.PAUSED): frozenset({R.OPS}),
-    (S.PAUSED, S.ACTIVE): frozenset({R.OPS}),
+    # Ops pauses and resumes work; the system does too when the subscription lapses or is paid again
+    (S.ACTIVE, S.PAUSED): frozenset({R.OPS, R.SYSTEM}),
+    (S.PAUSED, S.ACTIVE): frozenset({R.OPS, R.SYSTEM}),
     # The last milestone has been released
     (S.ACTIVE, S.COMPLETED): frozenset({R.SYSTEM}),
 }
