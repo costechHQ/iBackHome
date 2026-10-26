@@ -26,9 +26,10 @@ jobs:
       - uses: actions/checkout@v4
 
       # CI only, no real secrets. Every sign-in comes from one IP here (the driver and the browsers), more than
-      # the 10 login codes per IP per 15 minutes a real network gets, so the per-IP limit is raised.
+      # the 10 login codes per IP per 15 minutes a real network gets, so the per-IP limit is raised. The simulator
+      # approves BoQs with no Stripe payment, so the subscription gate is off.
       - name: Local settings
-        run: printf 'ENVIRONMENT=local\nSTRIPE_WEBHOOK_SECRET=whsec_ci_only\nOTP_LIMIT_PER_IP=100\n' > .env
+        run: printf 'ENVIRONMENT=local\nSTRIPE_WEBHOOK_SECRET=whsec_ci_only\nOTP_LIMIT_PER_IP=100\nSUBSCRIPTION_REQUIRED=false\n' > .env
 
       - name: Start the backend (api, worker, beat, PostGIS, Redis, SeaweedFS)
         run: docker compose up -d --build --wait api worker beat db redis storage
