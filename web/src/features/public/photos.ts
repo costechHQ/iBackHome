@@ -41,11 +41,17 @@ export const PHOTOS = {
     1050,
     "A modern apartment block still under construction, with a worker on the ground below.",
   ),
-  abeokutaRooftops: photo(
-    "abeokuta-rooftops",
+  duplexWhite: photo(
+    "modern-duplex-white",
+    808,
+    632,
+    "A modern white duplex with a cantilevered upper floor, stone cladding, a green terrace and cars in the carport.",
+  ),
+  duplexDusk: photo(
+    "modern-duplex-dusk",
     1400,
-    934,
-    "Red and brown roofs of houses spreading across green hills.",
+    1400,
+    "A modern white and timber duplex at dusk with glowing windows, roof gardens and palm trees.",
   ),
   lagosAerial: photo(
     "lagos-aerial",
@@ -92,12 +98,31 @@ export const PHOTOS = {
   ),
 } as const;
 
-/** The hero carousel, in order, each with a short line about what the picture shows. */
+/** The hero carousel, in order: a short line about each picture and where to anchor it when the frame crops it. */
 export const HERO_SLIDES = [
-  { photo: PHOTOS.abujaBungalow, line: "A home like this starts as a plot and a promise." },
-  { photo: PHOTOS.enuguAerial, line: "Enugu, where many Nigerians abroad are building." },
-  { photo: PHOTOS.abujaHouse, line: "Finished, because every stage was checked." },
-  { photo: PHOTOS.lagosApartments, line: "Walls rising while you are thousands of miles away." },
-  { photo: PHOTOS.abujaZumaRock, line: "Family houses, built a milestone at a time." },
-  { photo: PHOTOS.abeokutaRooftops, line: "Nigeria is full of homes someone built from far away." },
+  {
+    photo: PHOTOS.duplexWhite,
+    line: "A home like this starts as a plot and a promise.",
+    position: "object-center",
+  },
+  {
+    photo: PHOTOS.duplexDusk,
+    line: "Come home to the house you approved, stage by stage.",
+    position: "object-bottom",
+  },
+  {
+    photo: PHOTOS.abujaBungalow,
+    line: "Family houses, built a milestone at a time.",
+    position: "object-center",
+  },
+  {
+    photo: PHOTOS.abujaHouse,
+    line: "Finished, because every stage was checked.",
+    position: "object-center",
+  },
+  {
+    photo: PHOTOS.lagosApartments,
+    line: "Walls rising while you are thousands of miles away.",
+    position: "object-center",
+  },
 ] as const;

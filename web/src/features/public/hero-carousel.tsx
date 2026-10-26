@@ -73,7 +73,7 @@ export function HeroCarousel() {
         if (Math.abs(moved) >= SWIPE_PX) go(index + (moved < 0 ? 1 : -1));
       }}
     >
-      {HERO_SLIDES.map(({ photo, line }, i) => (
+      {HERO_SLIDES.map(({ photo, line, position }, i) => (
         <div
           key={photo.src}
           role="group"
@@ -92,7 +92,7 @@ export function HeroCarousel() {
             height={photo.height}
             priority={i === 0}
             sizes="(min-width: 1024px) 900px, 100vw"
-            className={cn("size-full object-cover", i === index && "ibh-kenburns")}
+            className={cn("size-full object-cover", position, i === index && "ibh-kenburns")}
           />
           <div className="absolute inset-x-0 bottom-0 h-2/3 bg-linear-to-t from-navy-900/90 via-navy-900/40 to-transparent" />
           <p
