@@ -10,3 +10,47 @@
     accent-color: var(--ibh-accent);
   }
 }
+
+/* Landing-page motion. All of it stops for visitors who ask for less motion. */
+@keyframes ibh-kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.ibh-kenburns {
+  animation: ibh-kenburns 9s ease-out forwards;
+}
+
+.ibh-scrollbar-none {
+  scrollbar-width: none;
+}
+
+.ibh-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Starts hidden only when scripting runs and motion is welcome; Reveal adds .is-in when it scrolls into view. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .ibh-reveal {
+    opacity: 0;
+    transform: translateY(var(--ibh-space-24));
+    transition:
+      opacity 700ms ease-out,
+      transform 700ms ease-out;
+  }
+
+  .ibh-reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-kenburns {
+    animation: none;
+  }
+}
