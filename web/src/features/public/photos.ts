@@ -1,15 +1,13 @@
 // Landing-page photography: free-licence stock from Pexels, resized by hand into public/landing/. These are
 // illustrations of Nigerian homes and building sites, not iBackHome customers' projects, and the pages say so.
-// Every photo has a place only where its Pexels caption gives one.
 
-export type Photo = { src: string; width: number; height: number; alt: string; place?: string };
+export type Photo = { src: string; width: number; height: number; alt: string };
 
-const photo = (name: string, width: number, height: number, alt: string, place?: string): Photo => ({
+const photo = (name: string, width: number, height: number, alt: string): Photo => ({
   src: `/landing/${name}.jpg`,
   width,
   height,
   alt,
-  place,
 });
 
 export const PHOTOS = {
@@ -18,56 +16,48 @@ export const PHOTOS = {
     1400,
     935,
     "A blue and white bungalow with arched doorways, palm trees and a trimmed hedge.",
-    "Abuja",
   ),
   abujaHouse: photo(
     "abuja-house",
     900,
     1350,
     "A finished three-storey house with a brick feature wall, balconies and a boundary fence.",
-    "Abuja",
   ),
   enuguAerial: photo(
     "enugu-aerial",
     1400,
     754,
     "An aerial view of Enugu: red roofs among trees and a lake at dusk.",
-    "Enugu",
   ),
   abujaZumaRock: photo(
     "abuja-zuma-rock",
     1400,
     788,
     "Rooftops of an Abuja neighbourhood below Zuma Rock at sunset.",
-    "Abuja",
   ),
   lagosApartments: photo(
     "lagos-apartments",
     1400,
     1050,
     "A modern apartment block still under construction, with a worker on the ground below.",
-    "Lagos",
   ),
   abeokutaRooftops: photo(
     "abeokuta-rooftops",
     1400,
     934,
     "Red and brown roofs of houses spreading across green hills.",
-    "Abeokuta",
   ),
   lagosAerial: photo(
     "lagos-aerial",
     1400,
     1050,
     "An aerial view of Lagos: new apartment blocks beside a busy road.",
-    "Lagos",
   ),
   portHarcourtAerial: photo(
     "port-harcourt-aerial",
     1400,
     934,
     "An aerial view of Port Harcourt's riverbank homes and the road bridge.",
-    "Port Harcourt",
   ),
   family: photo(
     "nigerian-family",
@@ -80,7 +70,6 @@ export const PHOTOS = {
     900,
     1195,
     "A builder walking along a foundation trench with the first course of blocks laid.",
-    "Kaduna",
   ),
   sandcrete: photo("sandcrete-blocks", 1400, 934, "Rows of freshly made sandcrete blocks drying in the sun."),
   blockwork: photo(
@@ -109,6 +98,6 @@ export const HERO_SLIDES = [
   { photo: PHOTOS.enuguAerial, line: "Enugu, where many Nigerians abroad are building." },
   { photo: PHOTOS.abujaHouse, line: "Finished, because every stage was checked." },
   { photo: PHOTOS.lagosApartments, line: "Walls rising while you are thousands of miles away." },
-  { photo: PHOTOS.abujaZumaRock, line: "Family houses across Abuja, built a milestone at a time." },
+  { photo: PHOTOS.abujaZumaRock, line: "Family houses, built a milestone at a time." },
   { photo: PHOTOS.abeokutaRooftops, line: "Nigeria is full of homes someone built from far away." },
 ] as const;

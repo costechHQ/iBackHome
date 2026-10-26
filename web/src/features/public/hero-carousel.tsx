@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, MapPin, Pause, Play, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
@@ -103,17 +103,6 @@ export function HeroCarousel() {
           >
             {line}
           </p>
-          {photo.place ? (
-            <p
-              className={cn(
-                "type-caption absolute top-4 right-4 flex items-center gap-1 rounded-pill bg-white px-3 py-1 tracking-normal text-ink transition-opacity duration-700",
-                i === index ? "opacity-100 delay-500" : "opacity-0",
-              )}
-            >
-              <MapPin aria-hidden strokeWidth={1.75} className="size-3.5" />
-              {photo.place}
-            </p>
-          ) : null}
         </div>
       ))}
 
