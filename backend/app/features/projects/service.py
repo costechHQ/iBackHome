@@ -597,6 +597,7 @@ async def approve_boq(
     - 409 boq_not_in_review: the project is not in `boq_review`
     - 409 boq_already_approved: this role has already approved this version
     - 409 site_not_set: the last approval, but the site (geofence) is not set yet; nothing is saved
+    - 409 subscription_required: the last approval, but no active subscription; nothing is saved
     """
     if user.role not in APPROVER_ROLES:
         raise AppError("forbidden_role", "Only the client, the contractor or ops can approve the BoQ.", 403)
@@ -613,6 +614,11 @@ async def approve_boq(
         raise AppError(
             "site_not_set", "Set the site and geofence before the final BoQ approval starts the project.", 409
         )
+    if completes:
+        # Imported here: subscriptions imports this module (projects.transition).
+        from app.features.subscriptions import service as subscriptions
+
+        await subscriptions.ensure_can_start(session, project.id)
 
     session.add(BoqApproval(project_id=project.id, user_id=user.id, role=user.role))
     await session.flush()
