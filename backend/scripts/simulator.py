@@ -4,6 +4,7 @@ Run from backend/ after scripts/seed.py (inside the api container on staging):
 
     uv run python scripts/simulator.py                        # in-process, against DATABASE_URL
     uv run python scripts/simulator.py --base-url http://localhost:8000 --photos 4
+    uv run python scripts/simulator.py --photos-dir scripts/sim_photos   # real photos (sim_photos/fetch.sh)
 
 For each seeded project, as the people seed.py created:
 1. the contractor submits a bill of quantities; client, contractor and ops approve it -> project active;
@@ -236,11 +237,12 @@ async def capture(
     project: dict[str, Any],
     rng: random.Random,
     now: datetime,
+    photo: bytes | None = None,
 ) -> dict[str, Any]:
     """Take, upload and submit one signed photo from inside the project's geofence."""
     project_id = str(project["id"])
     pin = project["site"]["location"]
-    photo = site_photo(rng)
+    photo = photo or site_photo(rng)
     sha256 = hashlib.sha256(photo).hexdigest()
     lat = round(float(pin["lat"]) + rng.uniform(-0.00005, 0.00005), 6)  # a few metres from the pin
     lon = round(float(pin["lon"]) + rng.uniform(-0.00005, 0.00005), 6)
@@ -308,6 +310,7 @@ async def simulate(
     people: dict[str, User],
     *,
     photos: int = 3,
+    library: list[bytes] | None = None,
     now: datetime | None = None,
     rng: random.Random | None = None,
 ) -> Summary:
@@ -328,7 +331,8 @@ async def simulate(
             "POST", "/devices", supervisor, {"device_id": phone.device_id, "public_key": phone.public_key_b64}
         )
         for _ in range(photos):
-            await capture(api, storage, supervisor, phone, project, rng, now)
+            real = library.pop() if library else None  # each real photo is used once per run
+            await capture(api, storage, supervisor, phone, project, rng, now, real)
         summary.done.append(
             f"{project['title']}: {photos} signed photos by {supervisor.full_name} (checks queued)"
         )
@@ -371,8 +375,18 @@ async def load_people() -> dict[str, User]:
         return people
 
 
-async def main(base_url: str | None, photos: int) -> None:
+def load_library(photos_dir: Path, needed: int) -> list[bytes]:
+    """Real JPEGs from `photos_dir`, shuffled. Every capture needs its own, or the reuse check flags it."""
+    files = sorted(photos_dir.glob("*.jpg"))
+    if len(files) < needed:
+        sys.exit(f"{photos_dir} has {len(files)} .jpg files, {needed} needed (run sim_photos/fetch.sh)")
+    random.shuffle(files)  # noqa: S311 - picks which photo goes where, not a secret
+    return [path.read_bytes() for path in files]
+
+
+async def main(base_url: str | None, photos: int, photos_dir: Path | None) -> None:
     refuse_production()
+    library = load_library(photos_dir, photos * len(seed.PROJECTS)) if photos_dir else None
     people = await load_people()
     if base_url:
         http = httpx.AsyncClient(base_url=base_url, timeout=30)
@@ -383,7 +397,7 @@ async def main(base_url: str | None, photos: int) -> None:
             transport=httpx.ASGITransport(app=app), base_url="http://simulator", timeout=30
         )
     async with http, httpx.AsyncClient(timeout=30) as storage:
-        summary = await simulate(http, storage, people, photos=photos)
+        summary = await simulate(http, storage, people, photos=photos, library=library)
     print("Simulation finished:")
     summary.print()
 
@@ -392,7 +406,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--base-url", help="a running API, e.g. http://localhost:8000 (default: in-process)")
     parser.add_argument("--photos", type=int, default=3, help="signed photos per project (default 3)")
+    parser.add_argument(
+        "--photos-dir", type=Path, help="use real .jpg files from this folder instead of drawn ones"
+    )
     args = parser.parse_args()
     if sys.platform == "win32":  # async psycopg can't use Windows' default event loop
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    asyncio.run(main(args.base_url, args.photos))
+    asyncio.run(main(args.base_url, args.photos, args.photos_dir))
