@@ -2670,6 +2670,178 @@
         }
       }
     },
+    "/api/v1/projects/{project_id}/subscription": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Start Subscription",
+        "description": "Client: get a Stripe Checkout link for the monthly supervision fee (GBP, USD or EUR).\n\nNothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the\nsame key returns the same link.",
+        "operationId": "start_subscription_api_v1_projects__project_id__subscription_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscriptionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionCheckoutOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Get Subscription",
+        "description": "Project members and ops: status, price and renewal date; 404 until one is started.",
+        "operationId": "get_subscription_api_v1_projects__project_id__subscription_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/subscription/cancel": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Cancel Subscription",
+        "description": "Client: stop renewing at the end of the paid month. The project keeps running until then.",
+        "operationId": "cancel_subscription_api_v1_projects__project_id__subscription_cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/supervisors/me/profile": {
       "put": {
         "tags": [
@@ -6799,6 +6971,132 @@
           "findings"
         ],
         "title": "SpotCheckOut"
+      },
+      "SubscriptionCheckoutOut": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "checkout_session_id": {
+            "type": "string",
+            "title": "Checkout Session Id"
+          },
+          "checkout_url": {
+            "type": "string",
+            "title": "Checkout Url"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor",
+            "description": "Charged every month"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "checkout_session_id",
+          "checkout_url",
+          "currency",
+          "amount_minor"
+        ],
+        "title": "SubscriptionCheckoutOut"
+      },
+      "SubscriptionCreate": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "GBP",
+              "USD",
+              "EUR"
+            ],
+            "title": "Currency",
+            "description": "The currency the client pays in: GBP, USD or EUR"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "currency"
+        ],
+        "title": "SubscriptionCreate"
+      },
+      "SubscriptionOut": {
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "incomplete",
+              "active",
+              "past_due",
+              "canceled"
+            ],
+            "title": "Status"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor"
+          },
+          "current_period_end": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Period End"
+          },
+          "cancel_at_period_end": {
+            "type": "boolean",
+            "title": "Cancel At Period End"
+          },
+          "past_due_since": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Past Due Since"
+          },
+          "paused_by_billing": {
+            "type": "boolean",
+            "title": "Paused By Billing"
+          }
+        },
+        "type": "object",
+        "required": [
+          "project_id",
+          "status",
+          "currency",
+          "amount_minor",
+          "current_period_end",
+          "cancel_at_period_end",
+          "past_due_since",
+          "paused_by_billing"
+        ],
+        "title": "SubscriptionOut"
       },
       "SupervisorApplication": {
         "properties": {

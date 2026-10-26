@@ -132,6 +132,8 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `disputes` | escrow | project → projects, milestone → milestones, raised_by → users, reason, status (`open`, `resolved_release`, `resolved_reject`), resolution_notes, resolved_by → users |
 | `ledger_entries` | base/payments | transaction_id, account (e.g. `client_funding`, `escrow`, `contractor_payable`, `supplier_payable`, `fees`), direction (`debit`, `credit`), amount_minor, currency, fx_rate, ref_type, ref_id |
 | `payment_events` | base/payments | provider (`stripe`, `paystack`, `escrow`), event_id (unique per provider; Paystack sends none, so ours is `<event>:<data.id>`), event_type, payload (JSONB), processed_at |
+| `subscriptions` | subscriptions | project → projects (unique), client → users, status (`incomplete`, `active`, `past_due`, `canceled`), currency (GBP, USD, EUR), amount_minor (monthly), stripe_customer_id, stripe_subscription_id (unique), current_period_end, cancel_at_period_end, past_due_since, paused_by_billing, canceled_at, stripe_event_at (time of the last Stripe event applied) |
+| `subscription_invoices` | subscriptions | subscription → subscriptions, stripe_invoice_id (unique), period_start, period_end, amount_minor, currency |
 | `payout_recipients` | base/payments | user → users or supplier → suppliers (exactly one), provider (`paystack`), recipient_code (unique), bank_code, bank_name, account_name, account_number_masked (`******1234`; the full number is never stored), currency |
 | `payouts` | base/payments | recipient → payout_recipients, provider, reference (ours, unique, so a retry never pays twice), amount_minor, currency, reason, status (`pending`, `success`, `failed`, `reversed`), provider_transfer_code, failure_reason, completed_at |
 | `price_index_entries` | price_index | item_key, item, unit, price_minor, currency, supplier_name, supplier → suppliers (nullable), observed_on, source |
@@ -410,8 +412,8 @@ stateDiagram-v2
 | `draft` | `boq_review` | contractor | Contractor submits the BoQ (project has a contractor) |
 | `boq_review` | `draft` | client, contractor, ops | BoQ sent back for changes |
 | `boq_review` | `active` | system | Client, contractor and ops have all approved the BoQ |
-| `active` | `paused` | ops | Ops pauses the work |
-| `paused` | `active` | ops | Ops resumes the work |
+| `active` | `paused` | ops, system | Ops pauses the work; the system pauses it when the subscription payment fails or the subscription ends |
+| `paused` | `active` | ops, system | Ops resumes the work; the system resumes it when billing paused it and the subscription is paid again |
 | `active` | `completed` | system | The last milestone has been released |
 
 The site pin set with `PUT /projects/{id}/site` must lie inside the geofence polygon (422 `pin_outside_geofence`). The client can set or change the site only while the project is `draft` or `boq_review` (409 `site_locked` after that); ops can change it at any time. Every change is audited.
@@ -448,6 +450,9 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |
 | POST | `/milestones/{id}/disputes` | client, contractor | Raise dispute |
 | POST | `/disputes/{id}/resolve` | ops | Resolve (release or rework); needs two ops approvals |
+| POST | `/projects/{id}/subscription` | client | Create a Stripe Checkout session for the monthly supervision fee (body: `currency`) |
+| GET | `/projects/{id}/subscription` | members, ops | Status, price, renewal date; 404 until one is started |
+| POST | `/projects/{id}/subscription/cancel` | client | Stop renewing at the end of the paid month |
 | POST | `/projects/{id}/funding` | client | Create Stripe checkout for a milestone amount |
 | GET | `/projects/{id}/ledger` | client, ops | Funding, releases and payouts |
 | GET | `/price-index` | signed in | Current material prices |
@@ -561,6 +566,16 @@ Release to contractor: debit `contractor_payable`, credit `escrow:{project}`; on
 - A nightly reconciliation job compares our ledger with Stripe, Paystack and the escrow partner and alerts ops on any difference.
 
 **FX**: the rate used is stored on every entry at the moment of conversion; dashboards show both the client's currency and NGN.
+
+**Subscriptions (supervision fee)**
+
+The monthly fee per project is iBackHome's own income, paid by the project's client through Stripe Billing in GBP, USD or EUR (prices in `SUBSCRIPTION_PRICE_*_MINOR`). It is never escrow money.
+
+- The final BoQ approval needs an `active` subscription, else 409 `subscription_required` and nothing is saved. `SUBSCRIPTION_REQUIRED=false` switches the gate off (staging demos).
+- Only Stripe's signed webhooks change a subscription: `customer.subscription.created/updated/deleted` (status, period, cancel flag) and `invoice.paid` / `invoice.payment_failed`. An event older than the last one applied is ignored.
+- `invoice.paid` books one balanced transaction per invoice: debit `stripe_clearing:{cur}`, credit `subscription_revenue:{cur}`.
+- Lapse rule: a failed payment (`past_due`) or an ended subscription (`canceled`) pauses an `active` project at once (system `active` → `paused`), which blocks claims, verification, approval, funding and release. A paid invoice resumes it only if billing paused it (`paused_by_billing`), never an ops pause. Cancel by the client takes effect at the end of the paid month.
+- The client is notified when billing pauses or resumes the project.
 
 ## AI agents
 

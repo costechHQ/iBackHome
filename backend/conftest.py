@@ -109,3 +109,14 @@ async def client(db_session: AsyncSession) -> AsyncIterator[AsyncClient]:
             yield http
     finally:
         app.dependency_overrides.pop(get_session, None)
+
+
+@pytest.fixture(autouse=True)
+def _subscription_not_required(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Most tests approve a BoQ without a Stripe subscription; subscription tests switch it back on."""
+    from app.features.subscriptions.settings import get_subscription_settings
+
+    monkeypatch.setenv("SUBSCRIPTION_REQUIRED", "false")
+    get_subscription_settings.cache_clear()
+    yield
+    get_subscription_settings.cache_clear()
