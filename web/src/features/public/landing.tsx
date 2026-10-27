@@ -28,6 +28,8 @@ import {
   SectionHead,
   Steps,
 } from "./blocks";
+import { HeroCarousel } from "./hero-carousel";
+import { CitiesSection, HomeBanner, StagesSection } from "./landing-photos";
 
 // WEB-PUBLIC-001 Landing at "/" (static). The design's pilot testimonials are placeholders until real quotes
 // are collected with consent, so that section isn't shown; the hero and report illustrations use neutral
@@ -76,7 +78,7 @@ export function Landing() {
   return (
     <>
       <section className="bg-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-8 lg:grid-cols-2 lg:py-20">
+        <div className="mx-auto grid max-w-336 items-center gap-10 px-4 py-14 sm:px-8 lg:grid-cols-2 lg:px-12 lg:py-20 xl:px-16">
           <div className="flex flex-col gap-5">
             <p className="type-small flex items-center gap-2 self-start rounded-pill bg-mist px-3 py-1 text-ink">
               <MapPin aria-hidden strokeWidth={1.75} className="size-4" />
@@ -107,14 +109,11 @@ export function Landing() {
               </li>
             </ul>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-            <ChecksIllustration />
-            <div className="flex items-end">
-              <ReleaseIllustration />
-            </div>
-          </div>
+          <HeroCarousel />
         </div>
       </section>
+
+      <CitiesSection />
 
       <Section tone="mist" labelledBy="problem">
         <SectionHead
@@ -180,7 +179,9 @@ export function Landing() {
         />
       </Section>
 
-      <Section tone="mist" labelledBy="proof">
+      <StagesSection />
+
+      <Section labelledBy="proof">
         <div className="grid items-start gap-10 lg:grid-cols-2">
           <div className="flex flex-col gap-6">
             <SectionHead id="proof" eyebrow="Proof, not promises" title="Evidence that can't be faked" />
@@ -215,12 +216,15 @@ export function Landing() {
       </Section>
 
       <Section tone="navy" labelledBy="escrow">
-        <SectionHead
-          id="escrow"
-          eyebrow="The escrow promise"
-          title="Your money waits until the work is proven"
-          onDark
-        />
+        <div className="grid items-center gap-8 lg:grid-cols-2">
+          <SectionHead
+            id="escrow"
+            eyebrow="The escrow promise"
+            title="Your money waits until the work is proven"
+            onDark
+          />
+          <ReleaseIllustration />
+        </div>
         <FeatureCards
           onDark
           items={[
@@ -326,6 +330,8 @@ export function Landing() {
           </div>
         </div>
       </Section>
+
+      <HomeBanner />
 
       <Section labelledBy="faq" className="max-w-3xl">
         <h2 id="faq" className="type-h1 text-ink">

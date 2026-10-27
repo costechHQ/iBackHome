@@ -10,3 +10,455 @@
     accent-color: var(--ibh-accent);
   }
 }
+
+/* Landing-page motion. All of it stops for visitors who ask for less motion. */
+@keyframes ibh-kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.ibh-kenburns {
+  animation: ibh-kenburns 9s ease-out forwards;
+}
+
+.ibh-scrollbar-none {
+  scrollbar-width: none;
+}
+
+.ibh-scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Starts hidden only when scripting runs and motion is welcome; Reveal adds .is-in when it scrolls into view. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .ibh-reveal {
+    opacity: 0;
+    transform: translateY(var(--ibh-space-24));
+    transition:
+      opacity 700ms ease-out,
+      transform 700ms ease-out;
+  }
+
+  .ibh-reveal.is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-kenburns {
+    animation: none;
+  }
+}
+
+/* Contractor-page motion: entrance, gentle float and the house marquee. All of it stops for visitors who ask for less motion. */
+@keyframes ibh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes ibh-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes ibh-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes ibh-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.ibh-rise {
+  animation: ibh-rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--ibh-delay, 0ms);
+}
+
+.ibh-float {
+  animation: ibh-float 6s ease-in-out infinite;
+  animation-delay: var(--ibh-delay, 0ms);
+}
+
+.ibh-underline {
+  transform-origin: left;
+  animation: ibh-underline 900ms 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.ibh-marquee-track {
+  animation: ibh-marquee 60s linear infinite;
+}
+
+.ibh-marquee:hover .ibh-marquee-track,
+.ibh-marquee:focus-within .ibh-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-rise,
+  .ibh-float,
+  .ibh-underline,
+  .ibh-marquee-track {
+    animation: none;
+  }
+
+  .ibh-marquee {
+    overflow-x: auto;
+  }
+}
+
+/* Where a photo is anchored when its frame crops it: horizontal % and vertical %. */
+.ibh-focus-30-25 {
+  object-position: 30% 25%;
+}
+
+.ibh-focus-50-25 {
+  object-position: 50% 25%;
+}
+
+.ibh-focus-50-30 {
+  object-position: 50% 30%;
+}
+
+.ibh-focus-50-40 {
+  object-position: 50% 40%;
+}
+
+.ibh-focus-50-72 {
+  object-position: 50% 72%;
+}
+
+.ibh-focus-50-75 {
+  object-position: 50% 75%;
+}
+
+.ibh-focus-30-50 {
+  object-position: 30% 50%;
+}
+
+/* A build cross-fading from unfinished to finished: four frames of five seconds each, every frame fading in as the previous one fades out. */
+@keyframes ibh-stage {
+  0% {
+    opacity: 0;
+    transform: scale(1);
+  }
+  4% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  29%,
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes ibh-stage-label {
+  0% {
+    opacity: 0;
+  }
+  4% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 1;
+  }
+  29%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.ibh-stage {
+  animation: ibh-stage 20s linear infinite both;
+  animation-delay: var(--ibh-delay, 0s);
+}
+
+.ibh-stage-label {
+  animation: ibh-stage-label 20s linear infinite both;
+  animation-delay: var(--ibh-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-stage,
+  .ibh-stage-label {
+    animation: none;
+  }
+
+  .ibh-stage-label:not(:last-child) {
+    display: none;
+  }
+}
+
+/* The contact page's chat illustration: one message, typing dots, a reply, then it starts over (12 seconds). */
+@keyframes ibh-chat-a {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  5%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-chat-b {
+  0%,
+  33% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  38%,
+  90% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-typing {
+  0%,
+  14% {
+    opacity: 0;
+  }
+  17%,
+  31% {
+    opacity: 1;
+  }
+  34%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-dot {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.ibh-chat-a {
+  animation: ibh-chat-a 12s ease-out infinite both;
+}
+
+.ibh-chat-b {
+  animation: ibh-chat-b 12s ease-out infinite both;
+}
+
+.ibh-typing {
+  animation: ibh-typing 12s linear infinite both;
+}
+
+.ibh-dot {
+  animation: ibh-dot 1s ease-in-out infinite;
+  animation-delay: var(--ibh-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-chat-a,
+  .ibh-chat-b,
+  .ibh-dot {
+    animation: none;
+  }
+
+  .ibh-typing {
+    display: none;
+  }
+}
+
+/* A headline whose words rise into place one by one. */
+@keyframes ibh-word-up {
+  from {
+    transform: translateY(110%);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.ibh-word {
+  animation: ibh-word-up 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--ibh-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-word {
+    animation: none;
+  }
+}
+
+/* The contact hero's phone chat: two exchanges with typing dots, played once through every 16 seconds. */
+@keyframes ibh-m1 {
+  0%,
+  2% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  5%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-m2 {
+  0%,
+  22% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  26%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-m3 {
+  0%,
+  38% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  42%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-m4 {
+  0%,
+  56% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  60%,
+  92% {
+    opacity: 1;
+    transform: none;
+  }
+  97%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-t1 {
+  0%,
+  10% {
+    opacity: 0;
+  }
+  13%,
+  21% {
+    opacity: 1;
+  }
+  24%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ibh-t2 {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  47%,
+  55% {
+    opacity: 1;
+  }
+  58%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.ibh-m1 {
+  animation: ibh-m1 16s ease-out infinite both;
+}
+
+.ibh-m2 {
+  animation: ibh-m2 16s ease-out infinite both;
+}
+
+.ibh-m3 {
+  animation: ibh-m3 16s ease-out infinite both;
+}
+
+.ibh-m4 {
+  animation: ibh-m4 16s ease-out infinite both;
+}
+
+.ibh-t1 {
+  animation: ibh-t1 16s linear infinite both;
+}
+
+.ibh-t2 {
+  animation: ibh-t2 16s linear infinite both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-m1,
+  .ibh-m2,
+  .ibh-m3,
+  .ibh-m4 {
+    animation: none;
+  }
+
+  .ibh-t1,
+  .ibh-t2 {
+    display: none;
+  }
+}

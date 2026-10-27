@@ -1,4 +1,5 @@
 import { Camera, Check, ChevronLeft, CircleCheck, Lock } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -17,7 +18,30 @@ const PROMISES = [
 export function PublicAuthFrame({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-dvh bg-white lg:grid-cols-5">
-      <aside className="ibh-on-navy hidden flex-col justify-between bg-navy-900 p-12 text-white lg:col-span-2 lg:flex">
+      <aside className="ibh-on-navy relative isolate hidden flex-col justify-between overflow-hidden bg-navy-900 p-12 text-white lg:col-span-2 lg:flex">
+        {/* A silent, looping video as the backdrop, faded so the words on top stay easy to read. The still of a
+            home shows while it loads, and instead of the video for visitors who ask for less motion. */}
+        <Image
+          aria-hidden
+          src="/landing/abuja-modern-home.jpg"
+          alt=""
+          width={900}
+          height={1350}
+          priority
+          sizes="40vw"
+          className="absolute inset-0 -z-10 hidden size-full object-cover opacity-15 motion-reduce:block"
+        />
+        <video
+          aria-hidden
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/landing/abuja-modern-home.jpg"
+          className="absolute inset-0 -z-10 size-full object-cover opacity-15 motion-reduce:hidden"
+        >
+          <source src="/landing/sign-in-bg.mp4" type="video/mp4" />
+        </video>
         <Wordmark onDark size="lg" className="self-start" />
         <div className="flex flex-col gap-8">
           <p className="type-display">Far from home, never out of sight.</p>

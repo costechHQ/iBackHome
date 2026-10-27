@@ -1,10 +1,15 @@
 import { Award, MessageSquareOff, PackageCheck, TrendingUp } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { Button } from "@/common/ui/button";
 
-import { CheckList, CtaBand, Faq, FeatureCards, PageHero, Section, SectionHead, Steps } from "./blocks";
+import { CheckList, CtaBand, Faq, FeatureCards, Section, SectionHead, Steps } from "./blocks";
+import { ContractorHero, HomesMarquee } from "./contractors-visuals";
+import { PHOTOS } from "./photos";
+import { Reveal } from "./reveal";
 import { SITE } from "./site";
+import { SitesMarquee, SupervisorHero } from "./supervisors-visuals";
 
 // WEB-PUBLIC-004 For contractors and WEB-PUBLIC-005 Become a supervisor. Contractors join when a client adds
 // their phone number to a project (no invitation link is sent yet, and no email invite exists), so the steps
@@ -31,23 +36,14 @@ export function ForContractors() {
   ];
   return (
     <>
-      <PageHero
-        eyebrow="For contractors"
-        title="Do honest work. Get paid without the wait."
-        lead="Clients abroad pay faster when they can see the proof. iBackHome gives them that — and gives you a record of every stage done right."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Button asChild size="lg">
-            <Link href="#join">How to join</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <Link href="/how-it-works">See the release flow</Link>
-          </Button>
-        </div>
-      </PageHero>
+      <ContractorHero />
+      <HomesMarquee />
       <Section tone="mist" labelledBy="why">
-        <SectionHead id="why" title="Why good contractors like being supervised" />
+        <Reveal>
+          <SectionHead id="why" title="Why good contractors like being supervised" />
+        </Reveal>
         <FeatureCards
+          animate
           columns={4}
           items={[
             {
@@ -73,9 +69,34 @@ export function ForContractors() {
           ]}
         />
       </Section>
+      <section aria-label="A track record" className="bg-white px-4 pt-14 sm:px-8 lg:px-12 lg:pt-20 xl:px-16">
+        <Reveal className="group relative mx-auto aspect-4/5 max-w-336 overflow-hidden rounded-card shadow-raised sm:aspect-16/9 lg:aspect-21/9">
+          <Image
+            src={PHOTOS.siteLeadRoad.src}
+            alt={PHOTOS.siteLeadRoad.alt}
+            width={PHOTOS.siteLeadRoad.width}
+            height={PHOTOS.siteLeadRoad.height}
+            sizes="(min-width: 1280px) 1216px, 100vw"
+            className="ibh-focus-50-30 size-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-linear-to-r from-navy-900/85 via-navy-900/50 to-transparent" />
+          <div className="ibh-on-navy absolute inset-y-0 left-0 flex max-w-2xl flex-col justify-center gap-4 p-6 sm:p-10 lg:p-14">
+            <p className="type-caption text-x-on-navy-muted uppercase">A record of good work</p>
+            <p className="type-h1 text-white">
+              Every verified, paid milestone builds a track record you can show your next client.
+            </p>
+            <Button asChild variant="white-on-navy" className="self-start">
+              <Link href="#join">How to join</Link>
+            </Button>
+          </div>
+        </Reveal>
+      </section>
       <Section labelledBy="join">
-        <SectionHead id="join" title="How it works for you" />
+        <Reveal>
+          <SectionHead id="join" title="How it works for you" />
+        </Reveal>
         <Steps
+          animate
           items={[
             {
               tag: "Phone",
@@ -112,19 +133,29 @@ export function ForContractors() {
               ]}
             />
           </div>
-          <div className="flex flex-col gap-3 rounded-card bg-canvas p-6">
-            <h3 className="type-h3 text-ink">Contractors join through their client</h3>
-            <p className="text-slate">
-              Your client creates the project and adds you by your phone number. Sign in with that number and
-              a one-time code — no password.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link href="/sign-in">I&apos;ve been added — sign in</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/contact">Tell us about a client project</Link>
-              </Button>
+          <div className="flex flex-col gap-3 overflow-hidden rounded-card bg-canvas">
+            <Image
+              src={PHOTOS.youngEngineer.src}
+              alt={PHOTOS.youngEngineer.alt}
+              width={PHOTOS.youngEngineer.width}
+              height={PHOTOS.youngEngineer.height}
+              sizes="(min-width: 1024px) 560px, 100vw"
+              className="ibh-focus-50-25 h-56 w-full object-cover"
+            />
+            <div className="flex flex-col gap-3 p-6 pt-3">
+              <h3 className="type-h3 text-ink">Contractors join through their client</h3>
+              <p className="text-slate">
+                Your client creates the project and adds you by your phone number. Sign in with that number
+                and a one-time code — no password.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild>
+                  <Link href="/sign-in">I&apos;ve been added — sign in</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/contact">Tell us about a client project</Link>
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -158,30 +189,10 @@ export function BecomeASupervisor() {
   ];
   return (
     <>
-      <PageHero
-        eyebrow="Become a supervisor"
-        title="Be the eyes on site for families abroad"
-        lead="We're looking for registered builders and engineers across Nigeria to visit sites, capture evidence in our app and verify each stage of work. Paid per visit."
-      >
-        <dl className="type-small flex flex-wrap gap-x-8 gap-y-2 text-slate">
-          {s.ratePerVisit ? (
-            <div>
-              <dt className="inline font-semibold text-ink">Pay </dt>
-              <dd className="inline">{s.ratePerVisit} per visit plus transport</dd>
-            </div>
-          ) : null}
-          <div>
-            <dt className="inline font-semibold text-ink">Where </dt>
-            <dd className="inline">Across Nigeria, near where you live</dd>
-          </div>
-          <div>
-            <dt className="inline font-semibold text-ink">Tool </dt>
-            <dd className="inline">Your Android phone</dd>
-          </div>
-        </dl>
-      </PageHero>
+      <SupervisorHero ratePerVisit={s.ratePerVisit || undefined} />
+      <SitesMarquee />
       <Section tone="mist" labelledBy="who">
-        <div className="grid gap-10 lg:grid-cols-2">
+        <Reveal className="grid gap-10 lg:grid-cols-2">
           <div className="flex flex-col gap-4">
             <h2 id="who" className="type-h2 text-ink">
               Who we&apos;re looking for
@@ -215,15 +226,30 @@ export function BecomeASupervisor() {
               ))}
             </dl>
           </div>
-        </div>
+        </Reveal>
       </Section>
       <Section labelledBy="independence">
-        <SectionHead
-          id="independence"
-          title="Independence is the job"
-          lead="Clients trust your verification because nobody can lean on it. These rules protect you as much as them."
-        />
+        <div className="grid items-center gap-8 lg:grid-cols-2">
+          <Reveal className="group overflow-hidden rounded-card shadow-raised">
+            <Image
+              src={PHOTOS.siteCrewScaffold.src}
+              alt={PHOTOS.siteCrewScaffold.alt}
+              width={PHOTOS.siteCrewScaffold.width}
+              height={PHOTOS.siteCrewScaffold.height}
+              sizes="(min-width: 1024px) 560px, 100vw"
+              className="ibh-focus-50-75 aspect-4/3 w-full object-cover transition-transform duration-1000 ease-out group-hover:scale-105"
+            />
+          </Reveal>
+          <Reveal delay={150}>
+            <SectionHead
+              id="independence"
+              title="Independence is the job"
+              lead="Clients trust your verification because nobody can lean on it. These rules protect you as much as them."
+            />
+          </Reveal>
+        </div>
         <FeatureCards
+          animate
           columns={4}
           items={[
             {
@@ -246,12 +272,15 @@ export function BecomeASupervisor() {
         />
       </Section>
       <Section tone="mist" labelledBy="apply">
-        <SectionHead
-          id="apply"
-          title="How to apply"
-          lead="Applications open in the iBackHome supervisor app, where you'll see your vetting status as each check is completed. The app isn't published yet: get in touch and we'll tell you when it is."
-        />
+        <Reveal>
+          <SectionHead
+            id="apply"
+            title="How to apply"
+            lead="Applications open in the iBackHome supervisor app, where you'll see your vetting status as each check is completed. The app isn't published yet: get in touch and we'll tell you when it is."
+          />
+        </Reveal>
         <Steps
+          animate
           items={[
             { title: "Sign up in the app", body: "With your phone number and a one-time code." },
             {
