@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, X } from "lucide-react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -9,6 +9,9 @@ import { Button } from "@/common/ui/button";
 import { cn } from "@/common/ui/cn";
 import { Wordmark } from "@/common/ui/wordmark";
 
+import { FooterOrbit } from "./footer-orbit";
+import { FooterSocials } from "./footer-socials";
+import { Reveal } from "./reveal";
 import { copyrightLine, SITE } from "./site";
 
 // The public site's header and footer (WEB-PUBLIC-001 to 009). One call to action everywhere: "Get started",
@@ -112,33 +115,71 @@ const FOOTER = [
 export function PublicFooter() {
   const address = SITE.company.officeAddress;
   return (
-    <footer className="ibh-on-navy bg-navy-900 text-navy-200">
-      <div className="mx-auto grid max-w-336 gap-10 px-4 py-12 sm:px-8 lg:grid-cols-5 lg:px-12 xl:px-16">
-        <div className="flex flex-col gap-3 lg:col-span-2">
-          <Wordmark onDark size="lg" className="self-start" />
-          <p className="text-white">Far from home, never out of sight.</p>
-          <p className="type-small">
-            Client funds are held by a licensed escrow partner, never by iBackHome.
-          </p>
-        </div>
-        {FOOTER.map((col) => (
-          <nav key={col.heading} aria-label={col.heading} className="flex flex-col gap-3">
-            <p className="type-caption text-x-on-navy-muted uppercase">{col.heading}</p>
-            <ul className="flex flex-col gap-2">
-              {col.links.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="rounded-control text-white hover:underline">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ))}
+    <footer className="ibh-on-navy relative isolate overflow-hidden bg-navy-900 text-navy-200">
+      <div aria-hidden className="absolute inset-0 -z-10">
+        <div className="ibh-float absolute -top-32 -left-24 size-112 rounded-full bg-accent/20 blur-3xl" />
+        <div className="ibh-float absolute -right-24 bottom-0 size-96 rounded-full bg-navy-700 blur-3xl [--ibh-delay:2s]" />
       </div>
-      <div className="border-t border-navy-700">
-        <div className="type-small mx-auto flex max-w-336 flex-wrap justify-between gap-2 px-4 py-5 sm:px-8 lg:px-12 xl:px-16">
-          <p>{copyrightLine()}</p>
+
+      <div className="mx-auto flex max-w-336 flex-col gap-14 px-4 pt-12 pb-8 sm:px-8 lg:px-12 lg:pt-16 xl:px-16">
+        <Reveal>
+          <div className="rounded-3xl grid items-center gap-8 overflow-hidden bg-white p-8 shadow-raised lg:grid-cols-2 lg:p-12">
+            <div className="flex flex-col items-start gap-4">
+              <p className="type-caption text-muted uppercase">Talk to us</p>
+              <h2 className="type-h1 text-ink">Questions about your build?</h2>
+              <p className="type-body-lg text-slate">
+                Ask about a build, joining as a contractor or supervisor, or partnering with us.
+              </p>
+              <Button asChild size="lg">
+                <Link href="/contact">
+                  Contact us
+                  <ArrowUpRight aria-hidden strokeWidth={1.75} className="size-4" />
+                </Link>
+              </Button>
+            </div>
+            <FooterOrbit />
+          </div>
+        </Reveal>
+
+        <div className="grid gap-10 lg:grid-cols-5">
+          <Reveal className="flex flex-col gap-3 lg:col-span-2">
+            <Wordmark onDark size="lg" className="self-start" />
+            <p className="text-white">Far from home, never out of sight.</p>
+            <p className="type-small max-w-sm">
+              Client funds are held by a licensed escrow partner, never by iBackHome.
+            </p>
+          </Reveal>
+          {FOOTER.map((col, i) => (
+            <Reveal key={col.heading} delay={(i + 1) * 100}>
+              <nav aria-label={col.heading} className="flex flex-col gap-3">
+                <p className="type-caption text-x-on-navy-muted uppercase">{col.heading}</p>
+                <ul className="flex flex-col gap-2">
+                  {col.links.map((l) => (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        className="group inline-flex items-center gap-1 rounded-control text-white"
+                      >
+                        <span className="group-hover:underline">{l.label}</span>
+                        <ArrowUpRight
+                          aria-hidden
+                          strokeWidth={1.75}
+                          className="size-3.5 text-navy-200 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                        />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="type-small flex flex-wrap items-center justify-between gap-4 border-t border-navy-700 pt-6">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <FooterSocials />
+            <p>{copyrightLine()}</p>
+          </div>
           {address ? <p>{address}</p> : null}
         </div>
       </div>

@@ -462,3 +462,33 @@
     display: none;
   }
 }
+
+/* The footer's orbit: rings turn slowly, and each rider turns back the other way so faces stay upright. */
+@keyframes ibh-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ibh-orbit-rev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+.ibh-orbit {
+  animation: ibh-orbit var(--ibh-dur, 40s) linear infinite;
+  animation-delay: var(--ibh-delay, 0s);
+}
+
+.ibh-orbit-rev {
+  animation: ibh-orbit-rev var(--ibh-dur, 40s) linear infinite;
+  animation-delay: var(--ibh-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ibh-orbit,
+  .ibh-orbit-rev {
+    animation: none;
+  }
+}
