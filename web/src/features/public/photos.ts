@@ -125,12 +125,10 @@ export const PHOTOS = {
     750,
     "A contemporary two-storey home with a paved courtyard and a swimming pool under a bright sky.",
   ),
-  nairaNotesWide: photo(
-    "naira-notes-wide",
-    1600,
-    1067,
-    "Two hundred and five hundred naira notes fanned out on a dark background.",
-  ),
+  noteNgn1000: photo("note-ngn-1000", 1000, 500, "The front of a Nigerian one thousand naira note."),
+  noteUsd100: photo("note-usd-100", 1000, 421, "The front of a United States one hundred dollar note."),
+  noteGbp50: photo("note-gbp-50", 1000, 344, "A Bank of England fifty pound note."),
+  noteEur500: photo("note-eur-500", 944, 484, "The front of a five hundred euro note."),
   nairaPayout: photo(
     "naira-payout",
     700,
