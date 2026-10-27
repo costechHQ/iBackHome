@@ -1,9 +1,23 @@
 import { Check, ChevronDown, Copy, KeyRound, Lock, MapPin, type LucideIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Button } from "@/common/ui/button";
 import { cn } from "@/common/ui/cn";
+
+import { PHOTOS } from "./photos";
+import { Reveal } from "./reveal";
+
+// The six captures shown in the "every capture is checked" card; the fifth is the one highlighted.
+const CAPTURE_PHOTOS = [
+  { photo: PHOTOS.sandShovelling, position: "ibh-focus-50-25" },
+  { photo: PHOTOS.hammeringFormwork, position: "ibh-focus-30-25" },
+  { photo: PHOTOS.wheelbarrowEarth, position: "object-center" },
+  { photo: PHOTOS.siteCrewScaffold, position: "ibh-focus-50-75" },
+  { photo: PHOTOS.rebarCrew, position: "object-center" },
+  { photo: PHOTOS.smilingCrew, position: "object-center" },
+];
 
 // Building blocks shared by the public pages: sections, eyebrows, feature cards, the FAQ (native details, so it
 // works without JavaScript), the closing call to action, and the two product illustrations. The illustrations
@@ -29,7 +43,12 @@ export function Section({
         tone === "white" && "bg-white",
       )}
     >
-      <div className={cn("mx-auto flex max-w-7xl flex-col gap-8 px-4 py-14 sm:px-8 lg:py-20", className)}>
+      <div
+        className={cn(
+          "mx-auto flex max-w-336 flex-col gap-8 px-4 py-14 sm:px-8 lg:px-12 lg:py-20 xl:px-16",
+          className,
+        )}
+      >
         {children}
       </div>
     </section>
@@ -49,6 +68,7 @@ export function SectionHead({
   lead,
   onDark,
   action,
+  centered,
 }: {
   id: string;
   eyebrow?: string;
@@ -56,10 +76,12 @@ export function SectionHead({
   lead?: ReactNode;
   onDark?: boolean;
   action?: ReactNode;
+  /** Centre the eyebrow, title and lead instead of aligning them to the left. */
+  centered?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="flex max-w-3xl flex-col gap-3">
+    <div className={cn("flex flex-wrap items-end gap-4", centered ? "justify-center" : "justify-between")}>
+      <div className={cn("flex max-w-3xl flex-col gap-3", centered && "items-center text-center")}>
         {eyebrow ? <Eyebrow onDark={onDark}>{eyebrow}</Eyebrow> : null}
         <h2 id={id} className={cn("type-h1", onDark ? "text-white" : "text-ink")}>
           {title}
@@ -71,27 +93,56 @@ export function SectionHead({
   );
 }
 
+/** A grid item that, when `animate` is set, fades and lifts in as it scrolls into view, one after another. */
+function GridItem({
+  animate,
+  index,
+  className,
+  children,
+}: {
+  animate?: boolean;
+  index: number;
+  className: string;
+  children: ReactNode;
+}) {
+  if (!animate) return <li className={className}>{children}</li>;
+  return (
+    <li className="flex">
+      <Reveal delay={index * 120} className="flex w-full">
+        <div className={cn(className, "w-full transition-transform duration-300 hover:-translate-y-1")}>
+          {children}
+        </div>
+      </Reveal>
+    </li>
+  );
+}
+
 export function FeatureCards({
   items,
   columns = 3,
   onDark,
+  animate,
 }: {
   items: readonly { icon?: LucideIcon; title: string; body: ReactNode }[];
-  columns?: 2 | 3 | 4;
+  columns?: 1 | 2 | 3 | 4;
   onDark?: boolean;
+  animate?: boolean;
 }) {
   return (
     <ul
       className={cn(
         "grid gap-4",
+        columns === 1 && "grid-cols-1",
         columns === 2 && "sm:grid-cols-2",
         columns === 3 && "sm:grid-cols-2 lg:grid-cols-3",
         columns === 4 && "sm:grid-cols-2 lg:grid-cols-4",
       )}
     >
-      {items.map(({ icon: Icon, title, body }) => (
-        <li
+      {items.map(({ icon: Icon, title, body }, i) => (
+        <GridItem
           key={title}
+          animate={animate}
+          index={i}
           className={cn(
             "flex flex-col gap-2 rounded-card border p-5",
             onDark ? "border-navy-700 bg-navy-800" : "border-line bg-white shadow-card",
@@ -109,18 +160,29 @@ export function FeatureCards({
           ) : null}
           <h3 className={cn("type-h3", onDark ? "text-white" : "text-ink")}>{title}</h3>
           <p className={onDark ? "text-navy-200" : "text-slate"}>{body}</p>
-        </li>
+        </GridItem>
       ))}
     </ul>
   );
 }
 
-export function Steps({ items }: { items: readonly { title: string; body: ReactNode; tag?: string }[] }) {
+export function Steps({
+  items,
+  animate,
+  columns = 4,
+}: {
+  items: readonly { title: string; body: ReactNode; tag?: string }[];
+  animate?: boolean;
+  /** Four across on large screens by default; 2 for a narrower column. */
+  columns?: 2 | 4;
+}) {
   return (
-    <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <ol className={cn("grid gap-4 sm:grid-cols-2", columns === 4 && "lg:grid-cols-4")}>
       {items.map((s, i) => (
-        <li
+        <GridItem
           key={s.title}
+          animate={animate}
+          index={i}
           className="flex flex-col gap-2 rounded-card border border-line bg-white p-5 shadow-card"
         >
           <span className="flex items-center gap-2">
@@ -131,7 +193,7 @@ export function Steps({ items }: { items: readonly { title: string; body: ReactN
           </span>
           <h3 className="type-h3 text-ink">{s.title}</h3>
           <p className="text-slate">{s.body}</p>
-        </li>
+        </GridItem>
       ))}
     </ol>
   );
@@ -181,7 +243,7 @@ export function CtaBand({
 }) {
   return (
     <section aria-labelledby="cta" className="bg-white">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-8 lg:py-20">
+      <div className="mx-auto max-w-336 px-4 py-14 sm:px-8 lg:px-12 lg:py-20 xl:px-16">
         <div className="flex flex-col items-center gap-4 rounded-card bg-canvas px-6 py-12 text-center">
           <h2 id="cta" className="type-h1 max-w-2xl text-ink">
             {title}
@@ -216,7 +278,7 @@ export function PageHero({
 }) {
   return (
     <section className="bg-white">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 pt-14 pb-10 sm:px-8 lg:pt-20">
+      <div className="mx-auto flex max-w-336 flex-col gap-4 px-4 pt-14 pb-10 sm:px-8 lg:px-12 lg:pt-20 xl:px-16">
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1 className="type-display max-w-4xl text-ink">{title}</h1>
         <p className="type-body-lg max-w-3xl text-slate">{lead}</p>
@@ -242,12 +304,24 @@ export function ChecksIllustration() {
           Accepted
         </span>
       </div>
-      <div aria-hidden className="grid h-36 grid-cols-3 gap-2">
-        {[0, 1, 2, 3, 4, 5].map((i) => (
+      <div aria-hidden className="grid h-52 grid-cols-3 gap-2">
+        {CAPTURE_PHOTOS.map(({ photo, position }, i) => (
           <span
-            key={i}
-            className={cn("rounded-control bg-placeholder", i === 4 && "border-2 border-navy-900")}
-          />
+            key={photo.src}
+            className={cn(
+              "relative overflow-hidden rounded-control bg-placeholder",
+              i === 4 && "ring-2 ring-navy-900 ring-offset-2",
+            )}
+          >
+            <Image
+              src={photo.src}
+              alt=""
+              width={photo.width}
+              height={photo.height}
+              sizes="(min-width: 1024px) 140px, 30vw"
+              className={cn("size-full object-cover", position)}
+            />
+          </span>
         ))}
       </div>
       <ul className="flex flex-col gap-2">

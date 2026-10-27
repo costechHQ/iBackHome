@@ -78,7 +78,7 @@ export function Landing() {
   return (
     <>
       <section className="bg-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:px-8 lg:grid-cols-2 lg:py-20">
+        <div className="mx-auto grid max-w-336 items-center gap-10 px-4 py-14 sm:px-8 lg:grid-cols-2 lg:px-12 lg:py-20 xl:px-16">
           <div className="flex flex-col gap-5">
             <p className="type-small flex items-center gap-2 self-start rounded-pill bg-mist px-3 py-1 text-ink">
               <MapPin aria-hidden strokeWidth={1.75} className="size-4" />

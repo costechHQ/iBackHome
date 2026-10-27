@@ -27,7 +27,7 @@ export function PublicHeader() {
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-8">
+      <div className="mx-auto flex h-16 max-w-336 items-center gap-6 px-4 sm:px-8 lg:px-12 xl:px-16">
         <Link href="/" className="rounded-control" aria-label="iBackHome home">
           <Wordmark />
         </Link>
@@ -113,7 +113,7 @@ export function PublicFooter() {
   const address = SITE.company.officeAddress;
   return (
     <footer className="ibh-on-navy bg-navy-900 text-navy-200">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-8 lg:grid-cols-5">
+      <div className="mx-auto grid max-w-336 gap-10 px-4 py-12 sm:px-8 lg:grid-cols-5 lg:px-12 xl:px-16">
         <div className="flex flex-col gap-3 lg:col-span-2">
           <Wordmark onDark size="lg" className="self-start" />
           <p className="text-white">Far from home, never out of sight.</p>
@@ -137,7 +137,7 @@ export function PublicFooter() {
         ))}
       </div>
       <div className="border-t border-navy-700">
-        <div className="type-small mx-auto flex max-w-7xl flex-wrap justify-between gap-2 px-4 py-5 sm:px-8">
+        <div className="type-small mx-auto flex max-w-336 flex-wrap justify-between gap-2 px-4 py-5 sm:px-8 lg:px-12 xl:px-16">
           <p>{copyrightLine()}</p>
           {address ? <p>{address}</p> : null}
         </div>

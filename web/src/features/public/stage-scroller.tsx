@@ -30,7 +30,7 @@ export function StageScroller({ stages }: { stages: readonly Stage[] }) {
         ref={strip}
         tabIndex={0}
         aria-label="Building stages, scroll sideways"
-        className="ibh-scrollbar-none -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto scroll-smooth px-4 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8"
+        className="ibh-scrollbar-none -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto scroll-smooth px-4 pb-2 sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:-mx-12 lg:scroll-px-12 lg:px-12 xl:-mx-16 xl:scroll-px-16 xl:px-16"
       >
         {stages.map(({ title, body, photo }, i) => (
           <li
