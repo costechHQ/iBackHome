@@ -49,7 +49,12 @@ export type SiteContent = {
 
 export const SITE: SiteContent = {
   company: { registeredName: null, rcNumber: null, officeAddress: null },
-  contact: { email: null, whatsapp: null, responseTime: null, openingHours: null },
+  contact: {
+    email: "hello@ibackhome.com",
+    whatsapp: "+234 803 836 2327",
+    responseTime: null,
+    openingHours: null,
+  },
   trust: {
     escrowPartner: null,
     regulator: null,

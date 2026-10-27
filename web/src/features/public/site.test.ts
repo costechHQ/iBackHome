@@ -11,8 +11,11 @@ const filled = (patch: (c: SiteContent) => void): SiteContent => {
 };
 
 describe("site content", () => {
-  it("ships with every company value empty, so no design placeholder can be published", () => {
-    const values = Object.values(SITE).flatMap((group) => Object.values(group));
+  it("ships with every company value empty except the published WhatsApp number and email", () => {
+    const { email, whatsapp, ...contact } = SITE.contact;
+    expect(email).toBe("hello@ibackhome.com");
+    expect(whatsapp).toBe("+234 803 836 2327");
+    const values = Object.values({ ...SITE, contact }).flatMap((group) => Object.values(group));
     expect(values.every((v) => v === null)).toBe(true);
   });
 
@@ -37,9 +40,10 @@ describe("site content", () => {
 });
 
 describe("contact channels", () => {
-  it("lists none until they're set, then only the ones that are", () => {
-    expect(contactChannels(SITE)).toEqual([]);
+  it("lists only the channels that are set", () => {
+    expect(contactChannels(SITE).map((c) => c.label)).toEqual(["WhatsApp", "Email"]);
     const some = filled((c) => {
+      c.contact.email = null;
       c.contact.whatsapp = "+234 800 000 0000";
       c.contact.openingHours = "Monday to Friday, 9:00 to 17:00";
     });
