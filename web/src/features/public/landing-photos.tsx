@@ -147,15 +147,27 @@ export function HomeBanner() {
           </div>
         </Reveal>
         <Reveal delay={150} className="mx-auto w-full max-w-sm">
-          <figure className="overflow-hidden rounded-card shadow-raised">
+          {/* A silent, looping video. The family photo shows while it loads, and instead of it for visitors who ask for less motion. */}
+          <figure className="relative aspect-4/5 overflow-hidden rounded-card bg-navy-800 shadow-raised">
             <Image
               src={PHOTOS.family.src}
               alt={PHOTOS.family.alt}
               width={PHOTOS.family.width}
               height={PHOTOS.family.height}
               sizes="(min-width: 1024px) 384px, 90vw"
-              className="h-auto w-full"
+              className="hidden size-full object-cover motion-reduce:block"
             />
+            <video
+              aria-hidden
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={PHOTOS.family.src}
+              className="absolute inset-0 size-full object-cover motion-reduce:hidden"
+            >
+              <source src="/landing/sign-in-bg.mp4" type="video/mp4" />
+            </video>
           </figure>
         </Reveal>
       </div>
