@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ArrowUpRight,
   ClipboardCheck,
   Clock,
   HardHat,
@@ -11,7 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 
 import { Button } from "@/common/ui/button";
 
@@ -20,11 +21,19 @@ import { ContactHero } from "./contact-visuals";
 import { PHOTOS } from "./photos";
 import { Reveal } from "./reveal";
 import { SITE, type SiteContent } from "./site";
+import { WhatsAppIcon } from "./whatsapp-icon";
 
 // WEB-PUBLIC-007 Contact. There's no contact endpoint, so the design's form isn't built (PACKAGE-REPORT W-37):
 // the page lists the channels from site.ts, and says they're on their way while none is set.
 
-type Channel = { icon: typeof Mail; label: string; value: ReactNode; note: string };
+type Channel = {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  value: ReactNode;
+  note: string;
+  /** Links on the right of the card, one per way of using the channel, e.g. "Chat now" and "Call now". */
+  actions?: readonly { label: string; href: string }[];
+};
 
 /** wa.me wants the number as digits only. */
 export function whatsappLink(number: string): string {
@@ -36,26 +45,23 @@ export function contactChannels(content: SiteContent = SITE): Channel[] {
   const channels: (Channel | null)[] = [
     contact.whatsapp
       ? {
-          icon: MessageCircle,
-          label: "WhatsApp",
-          value: (
-            <a href={whatsappLink(contact.whatsapp)} className="text-accent underline">
-              {contact.whatsapp}
-            </a>
-          ),
-          note: "Fastest for quick questions",
+          icon: WhatsAppIcon,
+          label: "Call / WhatsApp",
+          value: contact.whatsapp,
+          note: "Speak to us directly",
+          actions: [
+            { label: "Chat now", href: whatsappLink(contact.whatsapp) },
+            { label: "Call now", href: `tel:+${contact.whatsapp.replace(/\D/g, "")}` },
+          ],
         }
       : null,
     contact.email
       ? {
           icon: Mail,
           label: "Email",
-          value: (
-            <a href={`mailto:${contact.email}`} className="text-accent underline">
-              {contact.email}
-            </a>
-          ),
+          value: contact.email,
           note: "For anything with documents",
+          actions: [{ label: "Write to us", href: `mailto:${contact.email}` }],
         }
       : null,
     company.officeAddress
@@ -71,6 +77,33 @@ export function contactChannels(content: SiteContent = SITE): Channel[] {
       : null,
   ];
   return channels.filter((c): c is Channel => c !== null);
+}
+
+function ChannelCard({ channel: c }: { channel: Channel }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-4 p-4 sm:p-5">
+      <span className="flex size-14 shrink-0 items-center justify-center bg-navy-900 text-white">
+        <c.icon className="size-7" />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="type-caption text-muted uppercase">{c.label}</span>
+        <span className="type-h3 break-words text-ink">{c.value}</span>
+        <span className="type-small text-slate">{c.note}</span>
+      </span>
+      {c.actions ? (
+        <span className="flex flex-col gap-3">
+          {c.actions.map((a) => (
+            <a key={a.label} href={a.href} className="group flex items-center justify-end gap-3">
+              <span className="type-small font-semibold text-ink">{a.label}</span>
+              <span className="flex size-10 items-center justify-center rounded-pill bg-mist text-ink transition duration-300 group-hover:bg-navy-900 group-hover:text-white">
+                <ArrowUpRight aria-hidden strokeWidth={1.75} className="size-5" />
+              </span>
+            </a>
+          ))}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 type Route = { icon: typeof Mail; title: string; body: string; href: string };
@@ -191,22 +224,15 @@ export function Contact() {
                 </div>
               </Reveal>
             ) : (
-              <dl className="grid gap-3 sm:grid-cols-2">
+              <ul className="flex flex-col divide-y divide-line border border-line bg-white shadow-card">
                 {channels.map((c, i) => (
-                  <Reveal key={c.label} delay={i * 120} className="flex">
-                    <div className="group flex w-full items-start gap-4 rounded-card bg-white p-5 text-slate shadow-card transition duration-300 hover:-translate-y-1 hover:shadow-raised">
-                      <span className="flex size-11 shrink-0 items-center justify-center rounded-control bg-navy-900 text-white transition-transform duration-300 group-hover:scale-110">
-                        <c.icon aria-hidden strokeWidth={1.75} className="size-5" />
-                      </span>
-                      <div className="flex flex-col gap-0.5">
-                        <dt className="type-caption text-muted uppercase">{c.label}</dt>
-                        <dd className="type-h3 text-ink">{c.value}</dd>
-                        <dd className="type-small text-slate">{c.note}</dd>
-                      </div>
-                    </div>
-                  </Reveal>
+                  <li key={c.label}>
+                    <Reveal delay={i * 150}>
+                      <ChannelCard channel={c} />
+                    </Reveal>
+                  </li>
                 ))}
-              </dl>
+              </ul>
             )}
             {reply ? (
               <p className="type-small flex w-fit items-center gap-2 rounded-pill border border-navy-700 bg-navy-800 px-4 py-2 text-white">

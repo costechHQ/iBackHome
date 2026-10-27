@@ -41,13 +41,13 @@ describe("site content", () => {
 
 describe("contact channels", () => {
   it("lists only the channels that are set", () => {
-    expect(contactChannels(SITE).map((c) => c.label)).toEqual(["WhatsApp", "Email"]);
+    expect(contactChannels(SITE).map((c) => c.label)).toEqual(["Call / WhatsApp", "Email"]);
     const some = filled((c) => {
       c.contact.email = null;
       c.contact.whatsapp = "+234 800 000 0000";
       c.contact.openingHours = "Monday to Friday, 9:00 to 17:00";
     });
-    expect(contactChannels(some).map((c) => c.label)).toEqual(["WhatsApp", "Hours"]);
+    expect(contactChannels(some).map((c) => c.label)).toEqual(["Call / WhatsApp", "Hours"]);
   });
 
   it("links WhatsApp with the digits only", () => {
