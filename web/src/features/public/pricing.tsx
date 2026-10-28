@@ -38,8 +38,8 @@ export function Pricing() {
   return (
     <>
       <PricingHero
-        title="Small next to what you're protecting"
-        lead="A monthly fee for supervision, a small fee each time you fund a milestone, and optional extras. You pay in GBP, USD or EUR."
+        title="A small price to protect what you value."
+        lead="A monthly fee for supervision, a small fee each time you fund a milestone, and optional extras."
       >
         {priced ? null : (
           <Alert tone="info" title="Pricing is being finalised" className="max-w-3xl">

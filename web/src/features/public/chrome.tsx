@@ -23,6 +23,7 @@ export const PUBLIC_NAV = [
   { label: "For contractors", href: "/contractors" },
   { label: "Become a supervisor", href: "/supervisors" },
   { label: "Trust and safety", href: "/trust" },
+  { label: "Contact", href: "/contact" },
 ] as const;
 
 export function PublicHeader() {
