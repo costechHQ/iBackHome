@@ -63,6 +63,20 @@ async def test_termii_sends_plain_sms() -> None:
     ]
 
 
+async def test_termii_channel_is_configurable() -> None:
+    seen: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(json.loads(request.content))
+        return httpx.Response(200, json={"message_id": "1"})
+
+    adapter = TermiiSmsAdapter(
+        settings(termii_api_key="key-123", termii_channel="dnd"), transport=httpx.MockTransport(handler)
+    )
+    await adapter.send("+2348031234567", MESSAGE)
+    assert seen[0]["channel"] == "dnd"
+
+
 @pytest.mark.parametrize(
     "handler",
     [

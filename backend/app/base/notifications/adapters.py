@@ -97,7 +97,7 @@ class TermiiSmsAdapter:
             "from": s.termii_sender_id,
             "sms": message.text,
             "type": "plain",
-            "channel": "generic",
+            "channel": s.termii_channel,
         }
         async with httpx.AsyncClient(
             base_url=s.termii_base_url, timeout=s.notify_timeout_seconds, transport=self.transport

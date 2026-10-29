@@ -16,6 +16,7 @@ ENVIRONMENT=local an unconfigured channel writes the message to the API log inst
     TERMII_API_KEY=                    # SMS; empty = SMS not configured
     TERMII_SENDER_ID=iBackHome         # sender name approved by Termii
     TERMII_BASE_URL=https://api.ng.termii.com
+    TERMII_CHANNEL=generic             # generic, or dnd to also reach Do-Not-Disturb numbers
 
     FCM_PROJECT_ID=                    # Firebase push; empty = push not configured
     FCM_SERVICE_ACCOUNT_JSON=          # the service account key file's contents (one line of JSON)
@@ -32,6 +33,7 @@ ENVIRONMENT=local an unconfigured channel writes the message to the API log inst
 """
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -52,6 +54,7 @@ class NotificationSettings(BaseSettings):
     termii_api_key: str = ""
     termii_sender_id: str = "iBackHome"
     termii_base_url: str = "https://api.ng.termii.com"
+    termii_channel: Literal["generic", "dnd"] = "generic"
 
     fcm_project_id: str = ""
     fcm_service_account_json: str = ""
