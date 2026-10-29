@@ -128,12 +128,15 @@ export function GeofenceMap({
   mode = "view",
   locked = false,
   captures = [],
+  focus = null,
   onPin,
   onAddCorner,
   onMoveCorner,
   label,
   className,
 }: {
+  /** Where to centre the map while there is no pin or boundary (e.g. the geocoded site address). */
+  focus?: LatLon | null;
   pin: LatLon | null;
   corners: readonly LatLon[];
   mode?: MapMode;
@@ -201,6 +204,13 @@ export function GeofenceMap({
     const bounds = leaflet.current.latLngBounds((JSON.parse(shapeKey) as LatLon[]).map(latLng));
     map.current.fitBounds(bounds, { padding: [48, 48], maxZoom: 19 });
   }, [ready, shapeKey]);
+
+  // No pin or boundary yet: centre on the area of the entered address once it is found.
+  useEffect(() => {
+    if (ready && focus && !pin && corners.length === 0 && map.current) {
+      map.current.setView([focus.lat, focus.lon], 16);
+    }
+  }, [ready, focus, pin, corners.length]);
 
   // Bring a pin set from outside the map (typed coordinates) into view.
   useEffect(() => {
