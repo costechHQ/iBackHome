@@ -32,6 +32,7 @@ from typing import Any, Protocol
 import httpx
 import jwt
 
+from app.base.notifications.email_layout import LOGO_CID, LOGO_PATH, html_for
 from app.base.notifications.models import Channel
 from app.base.notifications.settings import NotificationSettings, get_notification_settings
 from app.base.notifications.templates import Rendered
@@ -63,6 +64,14 @@ class EmailAdapter:
         email["Subject"] = message.subject
         email["Message-ID"] = make_msgid(domain="ibackhome")
         email.set_content(message.text)
+        html = html_for(message)
+        if html:
+            email.add_alternative(html, subtype="html")
+            html_part = email.get_body(("html",))
+            assert html_part is not None
+            html_part.add_related(
+                LOGO_PATH.read_bytes(), "image", "png", cid=f"<{LOGO_CID}>", filename="ibackhome.png"
+            )
         with smtplib.SMTP(s.email_smtp_host, s.email_smtp_port, timeout=s.notify_timeout_seconds) as smtp:
             if s.email_smtp_starttls:
                 smtp.starttls()
@@ -97,7 +106,7 @@ class TermiiSmsAdapter:
             "from": s.termii_sender_id,
             "sms": message.text,
             "type": "plain",
-            "channel": "generic",
+            "channel": s.termii_channel,
         }
         async with httpx.AsyncClient(
             base_url=s.termii_base_url, timeout=s.notify_timeout_seconds, transport=self.transport

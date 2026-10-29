@@ -88,6 +88,27 @@ the first request (port 80 must be open and the DNS record must point here).
 Copy Stripe's signing secret (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`, then apply the change:
 `docker compose -f deploy/staging/docker-compose.staging.yml up -d`.
 
+### Login codes by WhatsApp (Meta Cloud API)
+
+Checked 2026-10-29 with Meta's test number and a real phone: the code arrived, a wrong code gave `invalid_code`, the right
+one signed in, and the same code a second time was refused. That run used plain text (`WHATSAPP_USE_TEMPLATES=false`),
+which Meta delivers only to a person who wrote to the number in the last 24 hours.
+
+- Needs the **WhatsApp Business Platform** (a Meta app with the WhatsApp use case), not the WhatsApp Business phone app.
+  Settings: `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_USE_TEMPLATES`, `WHATSAPP_LANGUAGE`.
+- The test number reaches only recipients added under API Setup → To → Manage phone number list. Any other number gets
+  Meta error `131030` and the API answers 502 `notification_failed`. Its token lasts 24 hours.
+- **Before real users:**
+  1. Business-verify the Meta portfolio and register our own sending number (one that is not active in the WhatsApp
+     Business app, or is migrated off it).
+  2. In WhatsApp Manager create the template `login_code` (category **Authentication**, with a copy-code button), wait for
+     approval, then set `WHATSAPP_USE_TEMPLATES=true`. `WHATSAPP_LANGUAGE` must equal the approved language code exactly
+     (`en` is not `en_US`).
+  3. Replace the temporary token with a permanent **System User** token for the app.
+  4. Send one code with templates on to a phone that never wrote to the number, and to a number outside Nigeria.
+- A login code goes on exactly the channel the user picked, so a person without WhatsApp needs SMS or email.
+- Meta bills per message after the free monthly allowance.
+
 ## 6. Data and the gate
 
 ```bash
