@@ -56,15 +56,12 @@ def login_code_html(code: str) -> str:
             <td style="font-family:{FONT};font-size:12px;line-height:16px;font-weight:600;
                        letter-spacing:0.08em;text-transform:uppercase;color:{ACCENT};">
               Verification code</td>
-            <td align="right" style="font-family:{FONT};font-size:12px;line-height:16px;
-                                     font-weight:600;color:{ACCENT};white-space:nowrap;">
-              <span style="font-size:15px;">&#128203;</span>&nbsp;Copy</td>
           </tr></table>
           <div style="margin:14px 0 12px;font-family:{MONO};font-size:34px;line-height:40px;
                       font-weight:700;letter-spacing:0.3em;color:{NAVY};
                       -webkit-user-select:all;user-select:all;">{escape(code)}</div>
           <div style="font-size:14px;line-height:20px;color:{MUTED};">
-            Valid for 5 minutes. Press and hold the code to copy it.</div>
+            Valid for 5 minutes. Press and hold the code above to copy it.</div>
         </td></tr>
       </table>
     </td></tr>
