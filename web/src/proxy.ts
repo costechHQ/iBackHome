@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { ACCESS_COOKIE, SESSION_COOKIE } from "./common/auth/cookies";
 import { needsRefresh } from "./common/auth/jwt";
+import { siteUrl } from "./common/auth/origin";
 import { signInPathFor } from "./common/auth/roles";
 
 // Next's request proxy (the file once called middleware), for the signed-in portals only. It doesn't check
@@ -15,7 +16,7 @@ import { signInPathFor } from "./common/auth/roles";
 export function proxy(req: NextRequest) {
   if (req.nextUrl.pathname === "/") {
     return req.cookies.has(SESSION_COOKIE)
-      ? NextResponse.redirect(new URL("/home", req.url))
+      ? NextResponse.redirect(siteUrl(req, "/home"))
       : NextResponse.next();
   }
   // The ops sign-in page sits under /ops but is for signed-out staff.
@@ -23,10 +24,10 @@ export function proxy(req: NextRequest) {
   const next = `${req.nextUrl.pathname}${req.nextUrl.search}`;
 
   if (!req.cookies.has(SESSION_COOKIE)) {
-    return NextResponse.redirect(new URL(signInPathFor(next), req.url));
+    return NextResponse.redirect(siteUrl(req, signInPathFor(next)));
   }
   if (needsRefresh(req.cookies.get(ACCESS_COOKIE)?.value, Math.floor(Date.now() / 1000), 60)) {
-    return NextResponse.redirect(new URL(`/api/session/refresh?next=${encodeURIComponent(next)}`, req.url));
+    return NextResponse.redirect(siteUrl(req, `/api/session/refresh?next=${encodeURIComponent(next)}`));
   }
   return NextResponse.next();
 }

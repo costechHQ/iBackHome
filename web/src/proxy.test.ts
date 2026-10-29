@@ -23,3 +23,23 @@ describe("request proxy", () => {
     expect(visit("/projects").headers.get("location")).toBe("http://web.test/sign-in?next=%2Fprojects");
   });
 });
+
+describe("redirect host", () => {
+  // Docker binds HOSTNAME=0.0.0.0, so Next builds req.url from it; the browser's own host must win.
+  const behindDocker = (headers: Record<string, string>) =>
+    proxy(new NextRequest("http://0.0.0.0:3000/projects", { headers }));
+
+  it("redirects to the host the browser used, not the bind address", () => {
+    const res = behindDocker({ host: "127.0.0.1:3000" });
+    expect(res.headers.get("location")).toBe("http://127.0.0.1:3000/sign-in?next=%2Fprojects");
+  });
+
+  it("follows the proxy's forwarded host and scheme", () => {
+    const res = behindDocker({
+      host: "web:3000",
+      "x-forwarded-host": "staging.ibackhome.com",
+      "x-forwarded-proto": "https",
+    });
+    expect(res.headers.get("location")).toBe("https://staging.ibackhome.com/sign-in?next=%2Fprojects");
+  });
+});

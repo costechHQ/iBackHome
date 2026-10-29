@@ -11,6 +11,7 @@ import {
   setSessionCookies,
   type TokenPair,
 } from "./cookies";
+import { siteUrl } from "./origin";
 import { refreshSession } from "./refresh";
 import { homeFor, safeNext, signInPathFor } from "./roles";
 
@@ -74,12 +75,12 @@ export async function verifyOtp(req: NextRequest): Promise<NextResponse> {
 export async function refreshAndReturn(req: NextRequest): Promise<NextResponse> {
   const next = safeNext(req.nextUrl.searchParams.get("next"));
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
-  const signIn = new URL(signInPathFor(next, true), req.nextUrl);
+  const signIn = siteUrl(req, signInPathFor(next, true));
 
   if (refreshToken) {
     try {
       const tokens = await refreshSession(refreshToken);
-      const response = NextResponse.redirect(new URL(next, req.nextUrl), 303);
+      const response = NextResponse.redirect(siteUrl(req, next), 303);
       response.headers.set("Cache-Control", NO_STORE);
       setSessionCookies(response.cookies, tokens);
       return response;
@@ -121,7 +122,7 @@ export async function goHome(req: NextRequest): Promise<NextResponse> {
     role = me?.ok ? ((await me.json()) as { role: string }).role : null;
   }
   const target = role ? (homeFor(role) ?? "/projects") : "/sign-in";
-  const response = NextResponse.redirect(new URL(target, req.nextUrl), 303);
+  const response = NextResponse.redirect(siteUrl(req, target), 303);
   response.headers.set("Cache-Control", NO_STORE);
   return response;
 }
