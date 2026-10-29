@@ -123,27 +123,40 @@ function LocateButton({ onPin }: { onPin: (p: LatLon) => void }) {
   );
 }
 
-function KeyboardSite({
+/**
+ * The pin's coordinates, always on the page and open by default. While drawing they can be typed (and
+ * give keyboard users a way to set the site); when the site is only being viewed they are read-only.
+ */
+function Coordinates({
   pin,
+  readOnly,
   onPin,
   onSquare,
 }: {
   pin: LatLon | null;
+  readOnly: boolean;
   onPin: (p: LatLon) => void;
   onSquare: () => void;
 }) {
   const ids = { lat: useId(), lon: useId() };
   const [lat, setLat] = useState(pin ? String(pin.lat) : "");
   const [lon, setLon] = useState(pin ? String(pin.lon) : "");
+  // Follow the pin when it is moved on the map or by "Use my current location".
+  const [shown, setShown] = useState(pin);
+  if (pin !== shown) {
+    setShown(pin);
+    setLat(pin ? String(pin.lat) : "");
+    setLon(pin ? String(pin.lon) : "");
+  }
   const valid = Number.isFinite(Number(lat)) && Number.isFinite(Number(lon)) && lat !== "" && lon !== "";
   return (
-    <details className="rounded-card border border-line p-4">
-      <summary className="cursor-pointer rounded-control font-semibold text-ink">
-        Can&apos;t use the map?
-      </summary>
+    <details open className="rounded-card border border-line p-4">
+      <summary className="cursor-pointer rounded-control font-semibold text-ink">Coordinates</summary>
       <div className="mt-3 flex flex-col gap-3">
         <p className="type-small text-slate">
-          Enter the plot&apos;s coordinates, then use a square boundary around them.
+          {readOnly
+            ? "The pin's latitude and longitude."
+            : "Type the plot's coordinates to place the pin, then use a square boundary around them if you can't draw one."}
         </p>
         <div className="grid grid-cols-2 gap-3">
           <label htmlFor={ids.lat} className="type-small flex flex-col gap-1 font-semibold text-ink">
@@ -152,6 +165,8 @@ function KeyboardSite({
               id={ids.lat}
               inputMode="decimal"
               value={lat}
+              readOnly={readOnly}
+              placeholder={readOnly ? "Not set" : undefined}
               onChange={(e) => setLat(e.target.value)}
               className="min-h-11 rounded-control border border-line-strong bg-white px-3 font-normal"
             />
@@ -162,24 +177,28 @@ function KeyboardSite({
               id={ids.lon}
               inputMode="decimal"
               value={lon}
+              readOnly={readOnly}
+              placeholder={readOnly ? "Not set" : undefined}
               onChange={(e) => setLon(e.target.value)}
               className="min-h-11 rounded-control border border-line-strong bg-white px-3 font-normal"
             />
           </label>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!valid}
-            onClick={() => onPin({ lat: Number(lat), lon: Number(lon) })}
-          >
-            Set the pin here
-          </Button>
-          <Button type="button" variant="outline" disabled={!pin} onClick={onSquare}>
-            Square boundary around the pin (about 90 m)
-          </Button>
-        </div>
+        {readOnly ? null : (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!valid}
+              onClick={() => onPin({ lat: Number(lat), lon: Number(lon) })}
+            >
+              Set the pin here
+            </Button>
+            <Button type="button" variant="outline" disabled={!pin} onClick={onSquare}>
+              Square boundary around the pin (about 90 m)
+            </Button>
+          </div>
+        )}
       </div>
     </details>
   );
@@ -389,11 +408,15 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
             Photos and videos are accepted only from inside this boundary. To allow for GPS drift, we accept
             captures up to 25 m outside the line.
           </p>
+          {!drawing ? (
+            <Coordinates pin={shape.pin} readOnly onPin={() => undefined} onSquare={() => undefined} />
+          ) : null}
           {drawing ? (
             <>
               <LocateButton onPin={(pin) => update({ pin, corners: shape.corners })} />
-              <KeyboardSite
+              <Coordinates
                 pin={shape.pin}
+                readOnly={false}
                 onPin={(pin) => update({ pin, corners: shape.corners })}
                 onSquare={() => shape.pin && update({ pin: shape.pin, corners: squareAround(shape.pin) })}
               />
