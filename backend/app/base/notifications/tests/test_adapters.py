@@ -24,7 +24,7 @@ from app.base.notifications.adapters import (
 )
 from app.base.notifications.models import Channel
 from app.base.notifications.settings import NotificationSettings, get_notification_settings
-from app.base.notifications.templates import Rendered
+from app.base.notifications.templates import LOGIN_CODE, Rendered
 
 DEVICE = "device-token-1"  # a test push token, not a secret
 MESSAGE = Rendered(
@@ -224,6 +224,20 @@ async def test_email_is_sent_over_starttls(fake_smtp: type[FakeSMTP]) -> None:
     )
     assert email.get_content().strip() == "Foundation is done."
     assert ref == email["Message-ID"]
+
+
+async def test_login_code_email_has_html_with_the_logo(fake_smtp: type[FakeSMTP]) -> None:
+    message = LOGIN_CODE.render({"code": "409340"})
+    await EmailAdapter(settings(**EMAIL_SETTINGS)).send("ada@example.com", message)
+    [email] = fake_smtp.instances[0].sent
+    plain, html_part = email.get_body(("plain",)), email.get_body(("html",))
+    assert plain is not None and html_part is not None
+    assert "409340" in plain.get_content()
+    html = html_part.get_content()
+    assert ">409340</div>" in html and "cid:ibackhome-logo" in html
+    assert "mailto:support@ibackhome.com" in html
+    [logo] = [p for p in email.walk() if p.get_content_type() == "image/png"]
+    assert logo["Content-ID"] == "<ibackhome-logo>"
 
 
 async def test_email_refused_raises(fake_smtp: type[FakeSMTP]) -> None:
