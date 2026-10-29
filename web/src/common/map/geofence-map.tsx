@@ -24,6 +24,8 @@ type Handlers = {
   onPin?: (p: LatLon) => void;
   onAddCorner?: (p: LatLon) => void;
   onMoveCorner?: (index: number, p: LatLon) => void;
+  onInsertCorner?: (index: number, p: LatLon) => void;
+  onRemoveCorner?: (index: number) => void;
 };
 
 type Shapes = {
@@ -92,7 +94,34 @@ function drawLayers(
         const at = handle.getLatLng();
         handlers.current?.onMoveCorner?.(i, { lat: at.lat, lon: at.lng });
       });
+      // Double-click or right-click a corner to remove it (a boundary keeps at least three).
+      const remove = () => {
+        if (s.corners.length > 3) handlers.current?.onRemoveCorner?.(i);
+      };
+      handle.on("dblclick", (e) => {
+        L.DomEvent.stopPropagation(e);
+        remove();
+      });
+      handle.on("contextmenu", remove);
     });
+    // A small hollow handle on the middle of every edge: click it to add a corner there, or drag it to a new spot.
+    if (s.corners.length >= 3) {
+      s.corners.forEach((a, i) => {
+        const b = s.corners[(i + 1) % s.corners.length]!;
+        const mid = { lat: (a.lat + b.lat) / 2, lon: (a.lon + b.lon) / 2 };
+        const add = L.marker(latLng(mid), {
+          draggable: true,
+          keyboard: false,
+          icon: L.divIcon({ className: "ibh-map-corner-mid", iconSize: [10, 10] }),
+          title: "Add a corner here",
+        }).addTo(group);
+        add.on("click", () => handlers.current?.onInsertCorner?.(i + 1, mid));
+        add.on("dragend", () => {
+          const at = add.getLatLng();
+          handlers.current?.onInsertCorner?.(i + 1, { lat: at.lat, lon: at.lng });
+        });
+      });
+    }
   }
 
   for (const c of s.captures) {
@@ -136,6 +165,8 @@ export function GeofenceMap({
   onPin,
   onAddCorner,
   onMoveCorner,
+  onInsertCorner,
+  onRemoveCorner,
   label,
   className,
 }: {
@@ -149,6 +180,8 @@ export function GeofenceMap({
   onPin?: (p: LatLon) => void;
   onAddCorner?: (p: LatLon) => void;
   onMoveCorner?: (index: number, p: LatLon) => void;
+  onInsertCorner?: (index: number, p: LatLon) => void;
+  onRemoveCorner?: (index: number) => void;
   label: string;
   className?: string;
 }) {
@@ -156,13 +189,21 @@ export function GeofenceMap({
   const map = useRef<LeafletMap | null>(null);
   const layers = useRef<LayerGroup | null>(null);
   const leaflet = useRef<typeof import("leaflet") | null>(null);
-  const handlers = useRef<Handlers>({ mode, locked, onPin, onAddCorner, onMoveCorner });
+  const handlers = useRef<Handlers>({
+    mode,
+    locked,
+    onPin,
+    onAddCorner,
+    onMoveCorner,
+    onInsertCorner,
+    onRemoveCorner,
+  });
   const [ready, setReady] = useState(false);
   const start = useRef(pin ?? corners[0] ?? null);
 
   // The latest props for the map's own event handlers.
   useEffect(() => {
-    handlers.current = { mode, locked, onPin, onAddCorner, onMoveCorner };
+    handlers.current = { mode, locked, onPin, onAddCorner, onMoveCorner, onInsertCorner, onRemoveCorner };
   });
 
   // Create the map once.
@@ -172,10 +213,11 @@ export function GeofenceMap({
       if (cancelled || !box.current || map.current) return;
       leaflet.current = L;
       const at = start.current ?? NIGERIA;
-      const m = L.map(box.current, { zoomControl: true, attributionControl: true }).setView(
-        [at.lat, at.lon],
-        start.current ? 18 : 6,
-      );
+      const m = L.map(box.current, {
+        zoomControl: true,
+        attributionControl: true,
+        doubleClickZoom: false,
+      }).setView([at.lat, at.lon], start.current ? 18 : 6);
       // Satellite imagery shows bare land, tracks and buildings that rural areas lack on the street map.
       const streets = L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(m);
       const satellite = L.tileLayer(SATELLITE_TILES, {
