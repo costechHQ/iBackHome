@@ -34,14 +34,38 @@ const GeofenceMap = dynamic(() => import("@/common/map/geofence-map").then((m) =
   loading: () => <Skeleton className="h-full w-full" />,
 });
 
-/** Finds the area of a site address with OpenStreetMap's Nominatim (same provider as the map tiles); null if not found. */
-async function geocodeAddress(address: string): Promise<LatLon | null> {
-  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ng&q=${encodeURIComponent(address)}`;
+async function searchNominatim(q: string): Promise<LatLon | null> {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ng&q=${encodeURIComponent(q)}`;
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) return null;
   const hits = (await res.json()) as { lat: string; lon: string }[];
   const first = hits[0];
   return first ? { lat: Number(first.lat), lon: Number(first.lon) } : null;
+}
+
+/**
+ * Finds the area of a site address with OpenStreetMap's Nominatim (same provider as the map tiles); null if not
+ * found. Addresses are free text ("Shopping Mall, Old Abakaliki Rd, GRA, ..., Enugu State") and the whole string
+ * rarely matches, so it tries the full text, then each part with the last part (usually the state) as context,
+ * then the last part alone. One request a second, as Nominatim's policy asks.
+ */
+async function geocodeAddress(address: string): Promise<LatLon | null> {
+  const parts = address
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const context = parts.length > 1 ? parts[parts.length - 1] : "";
+  const tries = [
+    address,
+    ...parts.slice(0, -1).map((part) => `${part}, ${context}`),
+    ...(context ? [context] : []),
+  ];
+  for (const [i, q] of tries.entries()) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 1100));
+    const found = await searchNominatim(q).catch(() => null);
+    if (found) return found;
+  }
+  return null;
 }
 
 /** About 90 m a side around the pin, like the seeded sites. */
