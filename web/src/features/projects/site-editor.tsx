@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Check, CircleAlert, MapPin, Pentagon, Trash2, Undo2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -32,6 +33,16 @@ const GeofenceMap = dynamic(() => import("@/common/map/geofence-map").then((m) =
   ssr: false,
   loading: () => <Skeleton className="h-full w-full" />,
 });
+
+/** Finds the area of a site address with OpenStreetMap's Nominatim (same provider as the map tiles); null if not found. */
+async function geocodeAddress(address: string): Promise<LatLon | null> {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ng&q=${encodeURIComponent(address)}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return null;
+  const hits = (await res.json()) as { lat: string; lon: string }[];
+  const first = hits[0];
+  return first ? { lat: Number(first.lat), lon: Number(first.lon) } : null;
+}
 
 /** About 90 m a side around the pin, like the seeded sites. */
 function squareAround(p: LatLon, half = 0.0004): LatLon[] {
@@ -109,6 +120,14 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
   const timeZone = useViewerTimeZone();
   const project = useProject(projectId);
   const save = useSaveSite(projectId);
+  const siteSaved = Boolean(project.data?.site);
+  const addressArea = useQuery({
+    queryKey: ["geocode", project.data?.address],
+    queryFn: () => geocodeAddress(project.data?.address ?? ""),
+    enabled: Boolean(project.data?.address) && !siteSaved,
+    staleTime: Infinity,
+    retry: false,
+  });
   const [draft, setDraft] = useState<{ pin: LatLon | null; corners: LatLon[] } | null>(null);
   const [mode, setMode] = useState<MapMode>("pin");
   const [editing, setEditing] = useState(false);
@@ -199,6 +218,7 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
             label="Site map: the pin and the boundary"
             pin={shape.pin}
             corners={shape.corners}
+            focus={addressArea.data ?? null}
             mode={drawing ? mode : "view"}
             locked={!drawing}
             onPin={(pin) => update({ pin, corners: shape.corners })}
