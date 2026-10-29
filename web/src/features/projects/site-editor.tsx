@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Check, CircleAlert, MapPin, Pentagon, Trash2, Undo2 } from "lucide-react";
+import { Check, CircleAlert, LocateFixed, MapPin, Pentagon, Trash2, Undo2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useId, useState } from "react";
@@ -10,7 +10,7 @@ import { ApiError } from "@/common/api/errors";
 import { useProject } from "@/common/api/queries";
 import { useViewerTimeZone } from "@/common/layout/online";
 import { ServerErrorContent } from "@/common/layout/system-pages";
-import { fromGeoJson, insidePolygon, toGeoJson, type LatLon } from "@/common/map/geo";
+import { fromGeoJson, insidePolygon, metresBetween, toGeoJson, type LatLon } from "@/common/map/geo";
 import type { MapMode } from "@/common/map/geofence-map";
 import { formatDateTime } from "@/common/time";
 import { Alert } from "@/common/ui/alert";
@@ -76,6 +76,51 @@ function squareAround(p: LatLon, half = 0.0004): LatLon[] {
     { lat: p.lat + half, lon: p.lon + half },
     { lat: p.lat + half, lon: p.lon - half },
   ];
+}
+
+/** Further than this from the address area, the pin is probably in the wrong place. */
+const FAR_FROM_ADDRESS_M = 50_000;
+
+/** Puts the pin where the person is standing (browser GPS) and says how accurate the fix is (phones drift 5 to 20 m). */
+function LocateButton({ onPin }: { onPin: (p: LatLon) => void }) {
+  const [state, setState] = useState<{ busy: boolean; note: string | null }>({ busy: false, note: null });
+  const locate = () => {
+    if (!("geolocation" in navigator))
+      return setState({ busy: false, note: "This browser can’t share a location." });
+    setState({ busy: true, note: null });
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        onPin({ lat: coords.latitude, lon: coords.longitude });
+        const m = Math.round(coords.accuracy);
+        setState({
+          busy: false,
+          note:
+            m > 25
+              ? `Pin set, but the phone is only sure to about ${m} m. Move into the open and try again for a better fix.`
+              : `Pin set to where you are (accurate to about ${m} m).`,
+        });
+      },
+      () =>
+        setState({
+          busy: false,
+          note: "We couldn’t get your location. Allow location access, or place the pin on the map.",
+        }),
+      { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 },
+    );
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <Button type="button" variant="outline" loading={state.busy} onClick={locate}>
+        <LocateFixed aria-hidden strokeWidth={1.75} className="size-4" />
+        Use my current location
+      </Button>
+      {state.note ? (
+        <p role="status" className="type-small text-slate">
+          {state.note}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 function KeyboardSite({
@@ -207,6 +252,10 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
   };
 
   const outside = problem === "outside" || serverOutside;
+  const farFromAddress =
+    drawing && shape.pin && addressArea.data
+      ? metresBetween(shape.pin, addressArea.data) > FAR_FROM_ADDRESS_M
+      : false;
   const status = locked
     ? { label: "Locked", tone: "neutral" as const }
     : outside
@@ -295,6 +344,10 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
             </Alert>
           ) : problem ? (
             <Alert tone="warn" title={problem} />
+          ) : farFromAddress ? (
+            <Alert tone="warn" title="The pin is far from the site address">
+              It is more than 50 km from the address on this project. Check the pin is on the right plot.
+            </Alert>
           ) : save.error ? (
             <Alert tone="bad" title="The site wasn’t saved">
               Nothing changed. Try again.
@@ -338,6 +391,7 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
           </p>
           {drawing ? (
             <>
+              <LocateButton onPin={(pin) => update({ pin, corners: shape.corners })} />
               <KeyboardSite
                 pin={shape.pin}
                 onPin={(pin) => update({ pin, corners: shape.corners })}
