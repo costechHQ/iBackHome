@@ -13,8 +13,17 @@ export const SESSION_COOKIE = "ibh_s";
 // a cookie that outlives its token just leads to one failed refresh and a sign-in.
 export const REFRESH_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
-// Secure everywhere; browsers accept Secure cookies on http://localhost and http://127.0.0.1 for development.
-const base = { httpOnly: true, secure: true, sameSite: "lax" as const };
+// Secure everywhere except the local Docker stack (IBH_ENVIRONMENT=local, set only in docker-compose.yml). Browsers
+// accept Secure cookies on http://localhost and http://127.0.0.1, but a phone opening the dev server by its LAN
+// address (http://192.168.x.x:3000) refuses them, so sign-in appeared to work and then kept no session. Unset or
+// any other value stays Secure.
+const base = {
+  httpOnly: true,
+  get secure() {
+    return process.env.IBH_ENVIRONMENT !== "local";
+  },
+  sameSite: "lax" as const,
+};
 
 export type TokenPair = { access_token: string; refresh_token: string; expires_in: number };
 
