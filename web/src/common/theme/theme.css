@@ -145,6 +145,13 @@
     border: 2px solid var(--ibh-accent);
     border-radius: 3px;
   }
+  .ibh-map-corner-mid {
+    background: var(--ibh-white);
+    border: 2px solid var(--ibh-accent);
+    border-radius: 50%;
+    opacity: 0.7;
+    cursor: copy;
+  }
   .ibh-map-pin {
     background: transparent;
     border: 0;
