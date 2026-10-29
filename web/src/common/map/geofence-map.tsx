@@ -36,6 +36,10 @@ type Shapes = {
 
 const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+// Esri World Imagery: free for light use with attribution; production needs a licensed imagery provider with a key.
+const SATELLITE_TILES =
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+const SATELLITE_ATTRIBUTION = "Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics";
 /** The middle of Nigeria, zoomed out to show the whole country, when there is no pin yet: sites can be anywhere. */
 export const NIGERIA: LatLon = { lat: 9.082, lon: 8.6753 };
 
@@ -172,7 +176,16 @@ export function GeofenceMap({
         [at.lat, at.lon],
         start.current ? 18 : 6,
       );
-      L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(m);
+      // Satellite imagery shows bare land, tracks and buildings that rural areas lack on the street map.
+      const streets = L.tileLayer(TILES, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(m);
+      const satellite = L.tileLayer(SATELLITE_TILES, {
+        maxZoom: 19,
+        maxNativeZoom: 18,
+        attribution: SATELLITE_ATTRIBUTION,
+      });
+      L.control
+        .layers({ Streets: streets, Satellite: satellite }, undefined, { position: "topright" })
+        .addTo(m);
       m.on("click", (e) => {
         const { mode: now, locked: frozen, onPin: setPin, onAddCorner: add } = handlers.current;
         if (frozen) return;
