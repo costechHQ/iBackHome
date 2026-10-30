@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/geo.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
-import 'capture_screen.dart';
+import 'arrival_screen.dart';
+import 'capture_target.dart';
+import 'permissions_screen.dart';
 import 'verify_screen.dart';
 import 'widgets.dart';
 
@@ -68,15 +70,20 @@ class ProjectScreen extends ConsumerWidget {
                       OutlinedButton.icon(
                         icon: const Icon(Icons.photo_camera_outlined),
                         label: const Text('Capture'),
-                        onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                          builder: (_) => CaptureScreen(
-                            projectId: projectId,
-                            milestoneId: m['id'] as String,
-                            milestoneName: m['name'] as String,
-                            fence: d.fence,
-                            asContractor: auth.isContractor,
-                          ),
-                        )),
+                        onPressed: () async {
+                          if (!await ensureCaptureReady(context, ref) || !context.mounted) return;
+                          await Navigator.of(context).push(MaterialPageRoute<void>(
+                            builder: (_) => ArrivalScreen(
+                              target: CaptureTarget(
+                                projectId: projectId,
+                                milestoneId: m['id'] as String,
+                                title: '${m['sequence']}. ${m['name']}',
+                                fence: d.fence,
+                                asContractor: auth.isContractor,
+                              ),
+                            ),
+                          ));
+                        },
                       ),
                       if (auth.isContractor && m['status'] == 'funded')
                         FilledButton(onPressed: () => _claim(context, ref, m['id'] as String), child: const Text('Claim')),

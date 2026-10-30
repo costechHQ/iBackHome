@@ -3,34 +3,26 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 
-import '../core/geo.dart';
+import '../core/capture_rules.dart';
+import '../core/location_tracker.dart';
+import '../core/queue_db.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import 'capture_target.dart';
 import 'home_screen.dart';
+import 'review_screen.dart';
 import 'widgets.dart';
 
-/// AND-SUPERVISOR-005/006: arrival check and the in-app camera.
+/// AND-SUPERVISOR-006: the in-app camera.
 ///
-/// This is the only way evidence enters the app: there is no gallery picker anywhere. The
-/// geofence banner is a warning only; the server makes the real decision.
+/// There is no gallery or file picker anywhere in the app. The shutter is refused for weak GPS
+/// or a mock location; outside the boundary the app warns but allows the shot (the server rejects).
 class CaptureScreen extends ConsumerStatefulWidget {
-  const CaptureScreen({
-    super.key,
-    required this.projectId,
-    required this.milestoneId,
-    required this.milestoneName,
-    required this.fence,
-    required this.asContractor,
-  });
+  const CaptureScreen({super.key, required this.target, required this.tracker});
 
-  final String projectId;
-  final String milestoneId;
-  final String milestoneName;
-  final List<List<double>>? fence;
-  final bool asContractor;
+  final CaptureTarget target;
+  final LocationTracker tracker;
 
   @override
   ConsumerState<CaptureScreen> createState() => _CaptureScreenState();
@@ -38,55 +30,38 @@ class CaptureScreen extends ConsumerStatefulWidget {
 
 class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   CameraController? _camera;
-  StreamSubscription<Position>? _positions;
-  Position? _fix;
   String? _problem;
   bool _busy = false;
-  int _taken = 0;
+  int _kept = 0;
 
   @override
   void initState() {
     super.initState();
-    _init();
+    _initCamera();
   }
 
-  Future<void> _init() async {
-    final cam = await Permission.camera.request();
-    final loc = await Permission.locationWhenInUse.request();
-    if (!cam.isGranted || !loc.isGranted) {
-      setState(() => _problem = 'Camera and location permission are needed to capture evidence. '
-          'Allow them in the phone settings.');
-      return;
-    }
-    if (!await Geolocator.isLocationServiceEnabled()) {
-      setState(() => _problem = 'Turn on the phone location (GPS) to capture evidence.');
-      return;
-    }
+  Future<void> _initCamera() async {
     try {
       final cameras = await availableCameras();
       final back = cameras.firstWhere((c) => c.lensDirection == CameraLensDirection.back,
           orElse: () => cameras.first);
       final controller = CameraController(back, ResolutionPreset.high, enableAudio: false);
       await controller.initialize();
-      _positions = Geolocator.getPositionStream(
-        locationSettings: AndroidSettings(accuracy: LocationAccuracy.best, distanceFilter: 0),
-      ).listen((p) => mounted ? setState(() => _fix = p) : null);
       if (mounted) setState(() => _camera = controller);
     } catch (e) {
-      setState(() => _problem = 'The camera could not start: $e');
+      if (mounted) setState(() => _problem = 'The camera could not start. Close other camera apps and try again.');
     }
   }
 
   @override
   void dispose() {
-    _positions?.cancel();
     _camera?.dispose();
     super.dispose();
   }
 
   Future<void> _shoot() async {
-    final fix = _fix;
-    if (fix == null || _camera == null || _busy) return;
+    final fix = widget.tracker.fix;
+    if (fix == null || _camera == null || _busy || !widget.tracker.readiness.canShoot) return;
     setState(() => _busy = true);
     try {
       final deviceId = await ref.read(deviceProvider.future); // the key must be registered first
@@ -94,77 +69,104 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
       final shot = await _camera!.takePicture();
       final raw = await shot.readAsBytes();
       final s = ref.read(servicesProvider);
-      await s.capture.saveSignedPhoto(
+      final draft = await s.capture.saveSignedPhoto(
         rawJpeg: raw,
         fix: fix,
         shutterTime: shutter,
-        projectId: widget.projectId,
-        milestoneId: widget.milestoneId,
+        projectId: widget.target.projectId,
+        milestoneId: widget.target.milestoneId,
         deviceId: deviceId,
+        contextRef: widget.target.contextRef,
+        asContractor: widget.target.asContractor,
       );
-      setState(() => _taken++);
-      unawaited(s.sync.syncNow());
+      if (!mounted) return;
+      final kept = await Navigator.of(context).push<bool>(MaterialPageRoute(
+          builder: (_) => ReviewScreen(capture: draft, target: widget.target)));
+      if (kept == true) {
+        setState(() => _kept++);
+        unawaited(s.sync.syncNow());
+      }
     } catch (e) {
-      if (mounted) showError(context, e);
+      if (mounted) showError(context, e is StateError ? e.message : e);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  ({String text, ChipTone tone}) get _arrival {
-    final fix = _fix;
-    if (fix == null) return (text: 'Waiting for a GPS fix...', tone: ChipTone.neutral);
-    final fence = widget.fence;
-    if (fence == null) return (text: 'No site boundary set; the server will flag this capture.', tone: ChipTone.warn);
-    final d = Geo.distanceToFence(fence, fix.latitude, fix.longitude);
-    final acc = '±${fix.accuracy.round()} m';
-    if (d == 0) return (text: 'You are inside the site ($acc).', tone: ChipTone.ok);
-    if (d <= 25) return (text: 'Just outside the boundary, within the 25 m allowance ($acc).', tone: ChipTone.warn);
-    return (text: 'You are about ${d.round()} m outside the site. The server will reject captures from here.', tone: ChipTone.bad);
-  }
-
   @override
   Widget build(BuildContext context) {
     final camera = _camera;
-    final arrival = _arrival;
     return Scaffold(
       backgroundColor: IbhColors.camera,
-      appBar: AppBar(title: Text(widget.milestoneName)),
+      appBar: AppBar(title: Text(widget.target.title, overflow: TextOverflow.ellipsis)),
       body: _problem != null
           ? Padding(padding: const EdgeInsets.all(IbhSpace.s24), child: Alert(_problem!, tone: ChipTone.bad))
           : camera == null
               ? const Center(child: CircularProgressIndicator())
-              : Column(children: [
-                  Padding(
-                    padding: const EdgeInsets.all(IbhSpace.s12),
-                    child: Alert(arrival.text, tone: arrival.tone),
-                  ),
-                  if (widget.asContractor)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: IbhSpace.s12),
-                      child: Alert('Contractor evidence is labelled as yours and does not count toward verification.',
-                          tone: ChipTone.info),
-                    ),
-                  Expanded(child: Center(child: CameraPreview(camera))),
-                  Padding(
-                    padding: const EdgeInsets.all(IbhSpace.s16),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                      Text('$_taken taken', style: const TextStyle(color: IbhColors.white)),
-                      const SizedBox(width: IbhSpace.s24),
-                      SizedBox(
-                        width: 72,
-                        height: 72,
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(shape: const CircleBorder(), padding: EdgeInsets.zero),
-                          onPressed: _fix == null || _busy ? null : _shoot,
-                          child: _busy
-                              ? const CircularProgressIndicator(color: IbhColors.white)
-                              : const Icon(Icons.camera_alt, size: 32),
-                        ),
+              : ListenableBuilder(
+                  listenable: widget.tracker,
+                  builder: (context, _) {
+                    final r = widget.tracker.readiness;
+                    return Column(children: [
+                      Padding(padding: const EdgeInsets.all(IbhSpace.s12), child: _banner(r)),
+                      Expanded(child: Center(child: CameraPreview(camera))),
+                      Padding(
+                        padding: const EdgeInsets.all(IbhSpace.s16),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          Text('$_kept saved', style: const TextStyle(color: IbhColors.white)),
+                          const SizedBox(width: IbhSpace.s24),
+                          Semantics(
+                            button: true,
+                            label: 'Take photo',
+                            child: SizedBox(
+                              width: 72,
+                              height: 72,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(shape: const CircleBorder(), padding: EdgeInsets.zero),
+                                onPressed: r.canShoot && !_busy ? _shoot : null,
+                                child: _busy
+                                    ? const CircularProgressIndicator(color: IbhColors.white)
+                                    : const Icon(Icons.camera_alt, size: 32),
+                              ),
+                            ),
+                          ),
+                        ]),
                       ),
-                    ]),
-                  ),
-                ]),
+                    ]);
+                  },
+                ),
     );
   }
+
+  Widget _banner(CaptureReadiness r) {
+    final (text, tone) = switch (r.state) {
+      Readiness.finding => ('Waiting for a GPS fix...', ChipTone.neutral),
+      Readiness.weakGps => ('GPS too weak (±${r.accuracyM?.round()} m). Capture needs ±50 m or better.', ChipTone.bad),
+      Readiness.mockLocation => ('Simulated location detected. Capture is blocked.', ChipTone.bad),
+      Readiness.ready => ('At the site (±${r.accuracyM?.round()} m).', ChipTone.ok),
+      Readiness.readyOutside => (
+          'About ${r.distanceM.round()} m outside the site. The server will reject this capture.',
+          ChipTone.warn
+        ),
+      Readiness.readyNoSite => ('No site boundary yet: ops will review this capture.', ChipTone.warn),
+    };
+    return Column(children: [
+      Alert(text, tone: tone),
+      if (widget.target.asContractor) ...[
+        const SizedBox(height: IbhSpace.s8),
+        const Alert('Uploaded by the contractor: does not count toward verification.', tone: ChipTone.info),
+      ],
+    ]);
+  }
 }
+
+/// Small helper for screens that list a capture's thumbnail status.
+String captureStatusLabel(String status) => switch (status) {
+      CaptureStatus.accepted => 'Accepted',
+      CaptureStatus.flagged => 'Flagged for review',
+      CaptureStatus.rejected => 'Rejected',
+      CaptureStatus.failed => 'Needs attention',
+      CaptureStatus.submitted => 'Server checking',
+      CaptureStatus.draft => 'Not saved yet',
+      _ => 'Waiting to upload',
+    };
