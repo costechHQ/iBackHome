@@ -53,7 +53,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         body: SafeArea(
           child: ListView(padding: const EdgeInsets.all(IbhSpace.s24), children: [
             const SizedBox(height: IbhSpace.s48),
-            const Text('iBackHome', style: IbhText.h1),
+            Image.asset('assets/images/ibackhome-logo-on-light.png', height: 44, alignment: Alignment.centerLeft, semanticLabel: 'iBackHome'),
             const SizedBox(height: IbhSpace.s8),
             const Text('Far from home, never out of sight.', style: IbhText.bodyLg),
             const SizedBox(height: IbhSpace.s40),
