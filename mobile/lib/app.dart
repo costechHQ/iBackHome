@@ -21,7 +21,9 @@ class _IbhAppState extends ConsumerState<IbhApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     Future.microtask(() async {
       await ref.read(authProvider.notifier).restore();
-      ref.read(servicesProvider).sync.start();
+      final s = ref.read(servicesProvider);
+      await s.db.promoteDrafts();
+      s.sync.start();
     });
   }
 

@@ -8,13 +8,15 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import 'capture_rules.dart';
 import 'queue_db.dart';
 import 'signing.dart';
 
-/// Turns a camera frame into a signed, queued capture.
+/// Turns a camera frame into a signed capture.
 ///
 /// Order matters (SIGNING.md): compress first, hash the exact bytes that will be uploaded, sign
 /// that hash with the GPS stamp, and only then store. No gallery or file-picker code exists.
+/// The capture is stored as a `draft` until the supervisor keeps it in the review step.
 class CaptureService {
   CaptureService(this._db, this._keystore);
 
@@ -35,6 +37,16 @@ class CaptureService {
     return Uint8List.fromList(img.encodeJpg(image, quality: 80));
   }
 
+  /// Refuses what the design says the app must refuse; the server still checks everything again.
+  static void ensureAllowed(Position fix) {
+    if (fix.isMocked) {
+      throw StateError('Location looks simulated. Turn off mock locations and try again.');
+    }
+    if (fix.accuracy > maxAccuracyM) {
+      throw StateError('GPS is too weak (±${fix.accuracy.round()} m). Move to open sky and try again.');
+    }
+  }
+
   /// [shutterTime] is the phone's clock at the shutter; [fix] the GPS reading taken with it.
   Future<QueuedCapture> saveSignedPhoto({
     required Uint8List rawJpeg,
@@ -43,12 +55,49 @@ class CaptureService {
     required String projectId,
     String? milestoneId,
     required String deviceId,
+    String? contextRef,
+    bool asContractor = false,
   }) async {
-    if (fix.isMocked) {
-      throw StateError('Location looks simulated. Turn off mock locations and try again.');
-    }
+    ensureAllowed(fix);
     final bytes = await compute(compress, rawJpeg);
-    final sha = sha256.convert(bytes).toString();
+    final dir = await _capturesDir();
+    final id = const Uuid().v4();
+    final file = File(p.join(dir.path, '$id.jpg'));
+    await file.writeAsBytes(bytes, flush: true);
+    return _signAndStore(
+      id: id,
+      file: file,
+      sha: sha256.convert(bytes).toString(),
+      kind: 'photo',
+      fix: fix,
+      shutterTime: shutterTime,
+      projectId: projectId,
+      milestoneId: milestoneId,
+      deviceId: deviceId,
+      contextRef: contextRef,
+      asContractor: asContractor,
+    );
+  }
+
+  Future<Directory> _capturesDir() async {
+    final dir = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'captures'));
+    await dir.create(recursive: true);
+    return dir;
+  }
+
+  Future<QueuedCapture> _signAndStore({
+    required String id,
+    required File file,
+    required String sha,
+    required String kind,
+    required Position fix,
+    required DateTime shutterTime,
+    required String projectId,
+    String? milestoneId,
+    required String deviceId,
+    String? contextRef,
+    bool asContractor = false,
+  }) async {
     final lat = EvidencePayload.round(fix.latitude, 6);
     final lon = EvidencePayload.round(fix.longitude, 6);
     final acc = EvidencePayload.round(fix.accuracy, 1);
@@ -66,17 +115,11 @@ class CaptureService {
       deviceId: deviceId,
     ));
 
-    final id = const Uuid().v4();
-    final dir = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'captures'));
-    await dir.create(recursive: true);
-    final file = File(p.join(dir.path, '$id.jpg'));
-    await file.writeAsBytes(bytes, flush: true);
-
     final capture = QueuedCapture(
       id: id,
       projectId: projectId,
       milestoneId: milestoneId,
-      kind: 'photo',
+      kind: kind,
       filePath: file.path,
       sha256: sha,
       capturedAt: capturedAt,
@@ -86,6 +129,9 @@ class CaptureService {
       accuracyM: acc,
       deviceId: deviceId,
       signature: signature,
+      status: CaptureStatus.draft,
+      contextRef: contextRef,
+      asContractor: asContractor,
     );
     await _db.insert(capture);
     return capture;
