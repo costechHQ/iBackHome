@@ -92,6 +92,15 @@ class Api {
         return res.data as T;
       });
 
+  Future<T> put<T>(String path, {Object? body, String? idempotencyKey}) => _run(() async {
+        final res = await dio.put<T>(
+          path,
+          data: body,
+          options: Options(headers: {'Idempotency-Key': idempotencyKey ?? newKey()}),
+        );
+        return res.data as T;
+      });
+
   Future<T> _run<T>(Future<T> Function() call) async {
     try {
       return await call();

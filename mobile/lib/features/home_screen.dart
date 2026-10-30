@@ -6,6 +6,7 @@ import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
 import 'project_screen.dart';
 import 'queue_screen.dart';
+import 'vetting_screen.dart';
 import 'widgets.dart';
 
 final projectsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
@@ -31,7 +32,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final sync = ref.read(servicesProvider).sync;
     return Scaffold(
       appBar: AppBar(title: Text(['Projects', 'Sync queue', 'Me'][_tab])),
-      body: [const _ProjectsTab(), const QueueScreen(), const _MeTab()][_tab],
+      body: [const VettingGate(child: _ProjectsTab()), const QueueScreen(), const _MeTab()][_tab],
       bottomNavigationBar: ListenableBuilder(
         listenable: sync,
         builder: (_, _) => NavigationBar(
