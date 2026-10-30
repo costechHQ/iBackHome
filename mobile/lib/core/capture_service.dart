@@ -79,6 +79,48 @@ class CaptureService {
     );
   }
 
+  /// Videos are signed as recorded (MP4, up to 60 s at 720p); there is no re-encoding step, so
+  /// the hash is taken over the recorded file itself. [shutterTime] and [fix] are from the moment
+  /// recording started.
+  Future<QueuedCapture> saveSignedVideo({
+    required File recorded,
+    required Position fix,
+    required DateTime shutterTime,
+    required String projectId,
+    String? milestoneId,
+    required String deviceId,
+    String? contextRef,
+    bool asContractor = false,
+  }) async {
+    ensureAllowed(fix);
+    final id = const Uuid().v4();
+    final dir = await _capturesDir();
+    final file = await recorded.copy(p.join(dir.path, '$id.mp4'));
+    await recorded.delete();
+    if (await file.length() > maxVideoBytes) {
+      await file.delete();
+      throw StateError('That video is too large to upload (limit 60 MB). Record a shorter one.');
+    }
+    final sha = (await sha256.bind(file.openRead()).first).toString();
+    return _signAndStore(
+      id: id,
+      file: file,
+      sha: sha,
+      kind: 'video',
+      fix: fix,
+      shutterTime: shutterTime,
+      projectId: projectId,
+      milestoneId: milestoneId,
+      deviceId: deviceId,
+      contextRef: contextRef,
+      asContractor: asContractor,
+    );
+  }
+
+  /// The server accepts videos up to 60 MB and photos up to 10 MB.
+  static const maxVideoBytes = 60 * 1024 * 1024;
+  static const maxVideoSeconds = 60;
+
   Future<Directory> _capturesDir() async {
     final dir = Directory(p.join((await getApplicationDocumentsDirectory()).path, 'captures'));
     await dir.create(recursive: true);

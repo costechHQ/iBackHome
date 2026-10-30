@@ -45,7 +45,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
         body: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(IbhRadius.card),
-            child: Image.file(File(c.filePath), height: 320, fit: BoxFit.cover),
+            child: c.kind == 'video' ? Container(height: 220, color: IbhColors.camera, alignment: Alignment.center, child: const Icon(Icons.videocam, color: IbhColors.white, size: 56)) : Image.file(File(c.filePath), height: 320, fit: BoxFit.cover),
           ),
           const SizedBox(height: IbhSpace.s12),
           Text('${c.lat.toStringAsFixed(5)}, ${c.lon.toStringAsFixed(5)} · ±${c.accuracyM.round()} m · '

@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart' show Position;
 
 import '../core/capture_rules.dart';
+import '../core/capture_service.dart';
 import '../core/location_tracker.dart';
 import '../core/queue_db.dart';
 import '../core/services.dart';
@@ -33,6 +36,12 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
   String? _problem;
   bool _busy = false;
   int _kept = 0;
+  bool _video = false;
+  bool _recording = false;
+  int _seconds = 0;
+  Timer? _timer;
+  DateTime? _recordStart;
+  Position? _recordFix;
 
   @override
   void initState() {
@@ -55,8 +64,66 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _camera?.dispose();
     super.dispose();
+  }
+
+  /// Video: the GPS fix and clock are read when recording starts, and signed with the file.
+  /// Recording stops by itself at 60 seconds.
+  Future<void> _toggleRecording() async {
+    final cam = _camera;
+    if (cam == null || _busy) return;
+    if (!_recording) {
+      final fix = widget.tracker.fix;
+      if (fix == null || !widget.tracker.readiness.canShoot) return;
+      try {
+        await cam.startVideoRecording();
+      } catch (e) {
+        if (mounted) showError(context, 'Recording could not start.');
+        return;
+      }
+      _recordFix = fix;
+      _recordStart = DateTime.now();
+      _seconds = 0;
+      _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+        setState(() => _seconds++);
+        if (_seconds >= CaptureService.maxVideoSeconds) unawaited(_toggleRecording());
+      });
+      setState(() => _recording = true);
+      return;
+    }
+    _timer?.cancel();
+    setState(() {
+      _recording = false;
+      _busy = true;
+    });
+    try {
+      final file = await cam.stopVideoRecording();
+      final deviceId = await ref.read(deviceProvider.future);
+      final s = ref.read(servicesProvider);
+      final draft = await s.capture.saveSignedVideo(
+        recorded: File(file.path),
+        fix: _recordFix!,
+        shutterTime: _recordStart!,
+        projectId: widget.target.projectId,
+        milestoneId: widget.target.milestoneId,
+        deviceId: deviceId,
+        contextRef: widget.target.contextRef,
+        asContractor: widget.target.asContractor,
+      );
+      if (!mounted) return;
+      final kept = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(builder: (_) => ReviewScreen(capture: draft, target: widget.target)));
+      if (kept == true) {
+        setState(() => _kept++);
+        unawaited(s.sync.syncNow());
+      }
+    } catch (e) {
+      if (mounted) showError(context, e is StateError ? e.message : e);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _shoot() async {
@@ -112,24 +179,46 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
                       Expanded(child: Center(child: CameraPreview(camera))),
                       Padding(
                         padding: const EdgeInsets.all(IbhSpace.s16),
-                        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          Text('$_kept saved', style: const TextStyle(color: IbhColors.white)),
-                          const SizedBox(width: IbhSpace.s24),
-                          Semantics(
-                            button: true,
-                            label: 'Take photo',
-                            child: SizedBox(
-                              width: 72,
-                              height: 72,
-                              child: FilledButton(
-                                style: FilledButton.styleFrom(shape: const CircleBorder(), padding: EdgeInsets.zero),
-                                onPressed: r.canShoot && !_busy ? _shoot : null,
-                                child: _busy
-                                    ? const CircularProgressIndicator(color: IbhColors.white)
-                                    : const Icon(Icons.camera_alt, size: 32),
+                        child: Column(children: [
+                          if (!_recording)
+                            SegmentedButton<bool>(
+                              segments: const [
+                                ButtonSegment(value: false, icon: Icon(Icons.photo_camera), label: Text('Photo')),
+                                ButtonSegment(value: true, icon: Icon(Icons.videocam), label: Text('Video')),
+                              ],
+                              selected: {_video},
+                              onSelectionChanged: (s) => setState(() => _video = s.first),
+                            )
+                          else
+                            Text('Recording ${_seconds}s of ${CaptureService.maxVideoSeconds}s',
+                                style: const TextStyle(color: IbhColors.badOnDark, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: IbhSpace.s12),
+                          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Text('$_kept saved', style: const TextStyle(color: IbhColors.white)),
+                            const SizedBox(width: IbhSpace.s24),
+                            Semantics(
+                              button: true,
+                              label: _video ? (_recording ? 'Stop recording' : 'Start recording') : 'Take photo',
+                              child: SizedBox(
+                                width: 72,
+                                height: 72,
+                                child: FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    shape: const CircleBorder(),
+                                    padding: EdgeInsets.zero,
+                                    backgroundColor: _recording ? IbhColors.badFg : null,
+                                  ),
+                                  onPressed: (r.canShoot || _recording) && !_busy
+                                      ? (_video ? _toggleRecording : _shoot)
+                                      : null,
+                                  child: _busy
+                                      ? const CircularProgressIndicator(color: IbhColors.white)
+                                      : Icon(_video ? (_recording ? Icons.stop : Icons.fiber_manual_record) : Icons.camera_alt,
+                                          size: 32),
+                                ),
                               ),
                             ),
-                          ),
+                          ]),
                         ]),
                       ),
                     ]);
