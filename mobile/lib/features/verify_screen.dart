@@ -40,10 +40,26 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
     super.initState();
     ref.read(servicesProvider).db.all(projectId: widget.projectId).then((all) {
       if (!mounted) return;
-      setState(() => _photos = all
+      final photos = all
           .where((c) =>
-              c.status == CaptureStatus.accepted && c.evidenceId != null && c.milestoneId == widget.milestoneId)
-          .toList());
+              c.status == CaptureStatus.accepted &&
+              c.evidenceId != null &&
+              c.milestoneId == widget.milestoneId &&
+              !c.asContractor)
+          .toList();
+      setState(() {
+        _photos = photos;
+        // Photos the supervisor linked to a checklist item at capture start out ticked.
+        final linked = <String, Set<String>>{};
+        for (final p in photos.where((p) => p.checklistItem != null)) {
+          linked.putIfAbsent(p.checklistItem!, () => {}).add(p.evidenceId!);
+        }
+        if (linked.isNotEmpty) {
+          _items
+            ..clear()
+            ..addAll(linked.entries.map((e) => _Item(e.key)..evidenceIds.addAll(e.value)));
+        }
+      });
     });
   }
 

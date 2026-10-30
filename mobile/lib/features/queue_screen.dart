@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/capture_rules.dart';
 import '../core/queue_db.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import 'capture_screen.dart' show captureStatusLabel;
 import 'widgets.dart';
 
 /// AND-SUPERVISOR-007: every capture on this phone and where it stands.
@@ -77,33 +79,52 @@ class _CaptureTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, tone) = switch (c.status) {
-      CaptureStatus.accepted => ('Accepted', ChipTone.ok),
-      CaptureStatus.flagged => ('Flagged for review', ChipTone.warn),
-      CaptureStatus.rejected => ('Rejected', ChipTone.bad),
-      CaptureStatus.failed => ('Needs attention', ChipTone.bad),
-      CaptureStatus.submitted => ('Server checking', ChipTone.info),
-      _ => ('Waiting to upload', ChipTone.neutral),
+    final tone = switch (c.status) {
+      CaptureStatus.accepted => ChipTone.ok,
+      CaptureStatus.flagged || CaptureStatus.draft => ChipTone.warn,
+      CaptureStatus.rejected || CaptureStatus.failed => ChipTone.bad,
+      CaptureStatus.submitted => ChipTone.info,
+      _ => ChipTone.neutral,
     };
     final left = c.windowLeft;
-    final urgent = c.status == CaptureStatus.queued && left < const Duration(hours: 24);
-    return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(IbhRadius.control),
-        child: Image.file(File(c.filePath),
-            width: 56,
-            height: 56,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) =>
-                const SizedBox(width: 56, height: 56, child: Icon(Icons.image_not_supported))),
-      ),
-      title: Align(alignment: Alignment.centerLeft, child: StatusChip(label, tone: tone)),
-      subtitle: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('Taken ${c.capturedAt.toLocal().toString().substring(0, 16)}'),
-        if (c.reason != null) Text(c.reason!, style: const TextStyle(color: IbhColors.badFg)),
-        if (urgent)
-          Text(left.isNegative ? 'Past the 72 h upload window' : '${left.inHours} h left to upload',
-              style: const TextStyle(color: IbhColors.warnFg)),
+    final waiting = c.status == CaptureStatus.queued;
+    return Padding(
+      padding: const EdgeInsets.all(IbhSpace.s12),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(IbhRadius.control),
+          child: c.kind == 'video'
+              ? const SizedBox(width: 64, height: 64, child: ColoredBox(color: IbhColors.camera, child: Icon(Icons.videocam, color: IbhColors.white)))
+              : Image.file(File(c.filePath),
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) =>
+                      const SizedBox(width: 64, height: 64, child: Icon(Icons.image_not_supported))),
+        ),
+        const SizedBox(width: IbhSpace.s12),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Wrap(spacing: 6, runSpacing: 4, children: [
+              StatusChip(captureStatusLabel(c.status), tone: tone),
+              if (c.asContractor) const StatusChip('Uploaded by the contractor', tone: ChipTone.neutral),
+            ]),
+            const SizedBox(height: 4),
+            Text('Taken ${c.capturedAt.toLocal().toString().substring(0, 16)}', style: IbhText.small),
+            if (c.checklistItem != null) Text(c.checklistItem!, style: IbhText.small),
+            if (c.note != null) Text('Note: ${c.note}', style: IbhText.small),
+            if (c.reason != null)
+              Text(c.reason!, style: const TextStyle(color: IbhColors.badFg, fontSize: 13)),
+            if (waiting && left < const Duration(hours: 24))
+              Text(
+                  left.isNegative
+                      ? 'Past the 72 h upload window: the server will reject it.'
+                      : 'Upload within ${left.inHours} h or the server will reject it.',
+                  style: const TextStyle(color: IbhColors.warnFg, fontSize: 13)),
+            const SizedBox(height: 6),
+            ThreeChecksView(ThreeChecks.from(c.status, c.reason)),
+          ]),
+        ),
       ]),
     );
   }

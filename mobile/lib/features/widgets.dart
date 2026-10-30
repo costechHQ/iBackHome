@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_error.dart';
+import '../core/capture_rules.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
 
@@ -166,4 +167,37 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen> {
           ),
         ),
       );
+}
+
+/// The three checks shown wherever evidence appears (inside the site, device-signed, not reused).
+class ThreeChecksView extends StatelessWidget {
+  const ThreeChecksView(this.checks, {super.key});
+
+  final ThreeChecks checks;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget row(String label, CheckState s) {
+      final (icon, color, word) = switch (s) {
+        CheckState.pass => (Icons.check_circle, IbhColors.okFg, 'passed'),
+        CheckState.fail => (Icons.cancel, IbhColors.badFg, 'failed'),
+        CheckState.flagged => (Icons.flag, IbhColors.warnFg, 'sent to ops'),
+        CheckState.pending => (Icons.schedule, IbhColors.muted, 'not checked yet'),
+      };
+      return Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Row(children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Expanded(child: Text('$label: $word', style: const TextStyle(fontSize: 13))),
+        ]),
+      );
+    }
+
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      row('Inside the site', checks.geofence),
+      row('Signed on the device', checks.signed),
+      row('Not a reused photo', checks.notReused),
+    ]);
+  }
 }
