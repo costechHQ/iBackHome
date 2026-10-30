@@ -27,6 +27,18 @@ class Services {
   /// Bumped when the server refuses our refresh token (the session is over).
   final ValueNotifier<int> signedOut;
 
+  @visibleForTesting
+  factory Services.forTesting({
+    required TokenStore tokens,
+    required Api api,
+    required QueueDb db,
+    Keystore? keystore,
+    ValueNotifier<int>? signedOut,
+  }) {
+    final ks = keystore ?? Keystore(Config.keyAlias);
+    return Services._(tokens, api, db, ks, SyncService(api, db), CaptureService(db, ks), signedOut ?? ValueNotifier<int>(0));
+  }
+
   static Future<Services> create() async {
     final tokens = TokenStore();
     await tokens.load();
