@@ -108,24 +108,69 @@ class _MeTab extends ConsumerWidget {
     final auth = ref.watch(authProvider);
     final device = ref.watch(deviceProvider);
     final me = auth.me ?? const {};
+    final s = ref.read(servicesProvider);
     return ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
       Text('${me['full_name'] ?? 'Your account'}', style: IbhText.h3),
       Text('${me['phone'] ?? me['email'] ?? ''}'),
       const SizedBox(height: IbhSpace.s8),
       StatusChip('${me['role']}', tone: ChipTone.info),
+      if (auth.isSupervisor) ...[
+        const SizedBox(height: IbhSpace.s8),
+        ref.watch(vettingProvider).maybeWhen(
+              data: (p) => p == null
+                  ? const StatusChip('Not applied for vetting', tone: ChipTone.warn)
+                  : StatusChip('Vetting: ${p['vetting_status']}',
+                      tone: p['vetting_status'] == 'approved' ? ChipTone.ok : ChipTone.warn),
+              orElse: () => const SizedBox.shrink(),
+            ),
+      ],
       const Divider(height: IbhSpace.s32),
       const Text('This phone', style: IbhText.h3),
       const SizedBox(height: IbhSpace.s8),
       device.when(
         loading: () => const LinearProgressIndicator(),
-        error: (e, _) => Alert(ApiError.from(e).message, tone: ChipTone.bad),
+        error: (e, _) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Alert(ApiError.from(e).message, tone: ChipTone.bad),
+          TextButton(onPressed: () => ref.invalidate(deviceProvider), child: const Text('Try again')),
+        ]),
         data: (id) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const StatusChip('Signing key registered', tone: ChipTone.ok),
           const SizedBox(height: IbhSpace.s8),
           Text(id, style: IbhText.mono.copyWith(fontSize: 11)),
+          const SizedBox(height: IbhSpace.s12),
+          OutlinedButton(
+            onPressed: () async {
+              final go = await showDialog<bool>(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: const Text('Revoke this phone?'),
+                  content: const Text('Use this if the phone is lost or replaced. Its signing key stops working at '
+                      'once. Captures still waiting to upload will be rejected by the server. You can set the phone '
+                      'up again with a new key.'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                    FilledButton(
+                        style: FilledButton.styleFrom(backgroundColor: IbhColors.badFg),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Revoke')),
+                  ],
+                ),
+              );
+              if (go != true) return;
+              try {
+                await s.revokeThisPhone();
+                ref.invalidate(deviceProvider);
+              } catch (e) {
+                if (context.mounted) showError(context, e);
+              }
+            },
+            child: const Text('Revoke this phone'),
+          ),
         ]),
       ),
-      const SizedBox(height: IbhSpace.s32),
+      const Divider(height: IbhSpace.s32),
+      const Text('Held by a licensed escrow partner, never by iBackHome.', style: IbhText.small),
+      const SizedBox(height: IbhSpace.s24),
       OutlinedButton(
         onPressed: () => confirmSignOut(context, ref),
         child: const Text('Sign out'),

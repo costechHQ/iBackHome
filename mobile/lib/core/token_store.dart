@@ -26,6 +26,9 @@ class TokenStore {
     await _s.delete(key: 'refresh');
   }
 
+  /// Forget the install id (after the device key was revoked): a new one is made next time.
+  Future<void> resetDeviceId() => _s.delete(key: 'device_id');
+
   /// A stable id for this install; sent as `X-Device-Id` and used to register the signing key.
   Future<String> deviceId() async {
     var id = await _s.read(key: 'device_id');

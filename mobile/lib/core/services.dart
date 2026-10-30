@@ -76,17 +76,39 @@ class Services {
     unawaited(sync.syncNow());
   }
 
+  /// The server's record of this phone's key (its row id is needed to revoke it).
+  Map<String, dynamic>? device;
+
   /// Registers this install's public key (idempotent: the same device answers 200).
   /// Needed before any capture. Returns the device id the server knows.
+  ///
+  /// If operations revoked the key, this throws `device_revoked`: the app stops capturing.
   Future<String> registerDevice() async {
     final deviceId = await tokens.deviceId();
     final publicKey = await keystore.ensureKey();
-    await api.post<Map<String, dynamic>>(
+    final record = await api.post<Map<String, dynamic>>(
       '/devices',
       body: {'device_id': deviceId, 'public_key': publicKey},
       idempotencyKey: 'device-$deviceId',
     );
+    if (record['revoked_at'] != null) {
+      throw ApiError('device_revoked',
+          'This phone\'s signing key was revoked, so it can no longer capture evidence. Contact operations.');
+    }
+    device = record;
     return deviceId;
+  }
+
+  /// Revokes this phone's key on the server, deletes it from the Keystore and forgets the device
+  /// id, so a new key is made next time. Captures already queued with the old key will be
+  /// rejected by the server: say so before calling.
+  Future<void> revokeThisPhone() async {
+    final pk = device?['id'] as String?;
+    if (pk == null) throw ApiError('device_unknown', 'This phone is not registered yet.');
+    await api.post<Map<String, dynamic>>('/devices/$pk/revoke', idempotencyKey: 'revoke-$pk');
+    await keystore.deleteKey();
+    await tokens.resetDeviceId();
+    device = null;
   }
 }
 
