@@ -7,6 +7,7 @@ import '../theme/ibh_tokens.dart';
 import 'arrival_screen.dart';
 import 'capture_target.dart';
 import 'permissions_screen.dart';
+import 'reports_screen.dart';
 import 'verify_screen.dart';
 import 'widgets.dart';
 
@@ -51,6 +52,16 @@ class ProjectScreen extends ConsumerWidget {
               const Alert('The site has no geofence yet, so captures will be flagged for review.'),
             if (d.project['status'] != 'active')
               Alert('This project is ${d.project['status']}: milestone actions are paused.', tone: ChipTone.info),
+            if (auth.isSupervisor)
+              Padding(
+                padding: const EdgeInsets.only(bottom: IbhSpace.s12),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.description_outlined),
+                  label: const Text('Weekly reports'),
+                  onPressed: () => Navigator.of(context)
+                      .push(MaterialPageRoute<void>(builder: (_) => ReportsScreen(projectId: projectId))),
+                ),
+              ),
             const SizedBox(height: IbhSpace.s16),
             for (final m in d.milestones)
               Card(

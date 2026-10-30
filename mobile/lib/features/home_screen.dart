@@ -6,6 +6,7 @@ import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
 import 'project_screen.dart';
 import 'queue_screen.dart';
+import 'spot_checks_screen.dart';
 import 'vetting_screen.dart';
 import 'widgets.dart';
 
@@ -29,20 +30,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final supervisor = ref.watch(authProvider).isSupervisor;
     final sync = ref.read(servicesProvider).sync;
+    // Supervisors also get spot checks; contractors do not do them.
+    final tabs = <(String, IconData, Widget)>[
+      ('Projects', Icons.home_work_outlined, const VettingGate(child: _ProjectsTab())),
+      if (supervisor) ('Spot checks', Icons.pin_drop_outlined, const VettingGate(child: SpotChecksScreen())),
+      ('Queue', Icons.cloud_upload_outlined, const QueueScreen()),
+      ('Me', Icons.person_outline, const _MeTab()),
+    ];
+    final i = _tab.clamp(0, tabs.length - 1);
     return Scaffold(
-      appBar: AppBar(title: Text(['Projects', 'Sync queue', 'Me'][_tab])),
-      body: [const VettingGate(child: _ProjectsTab()), const QueueScreen(), const _MeTab()][_tab],
+      appBar: AppBar(title: Text(tabs[i].$1)),
+      body: tabs[i].$3,
       bottomNavigationBar: ListenableBuilder(
         listenable: sync,
         builder: (_, _) => NavigationBar(
-          selectedIndex: _tab,
-          onDestinationSelected: (i) => setState(() => _tab = i),
-          destinations: const [
-            NavigationDestination(icon: Icon(Icons.home_work_outlined), label: 'Projects'),
-            NavigationDestination(icon: Icon(Icons.cloud_upload_outlined), label: 'Queue'),
-            NavigationDestination(icon: Icon(Icons.person_outline), label: 'Me'),
-          ],
+          selectedIndex: i,
+          onDestinationSelected: (v) => setState(() => _tab = v),
+          destinations: [for (final t in tabs) NavigationDestination(icon: Icon(t.$2), label: t.$1)],
         ),
       ),
     );
