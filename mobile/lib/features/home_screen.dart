@@ -80,7 +80,7 @@ class _ProjectsTab extends ConsumerWidget {
           if (items.isEmpty)
             const Padding(
               padding: EdgeInsets.all(IbhSpace.s32),
-              child: Center(child: Text('No projects yet. Operations will assign you to one.')),
+              child: Center(child: Text('No projects yet. Operations will assign you to one.', textAlign: TextAlign.center)),
             ),
           for (final p in items)
             Card(

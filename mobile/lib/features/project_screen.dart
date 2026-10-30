@@ -50,8 +50,17 @@ class ProjectScreen extends ConsumerWidget {
             const SizedBox(height: IbhSpace.s8),
             if (d.project['site'] == null)
               const Alert('The site has no geofence yet, so captures will be flagged for review.'),
-            if (d.project['status'] != 'active')
-              Alert('This project is ${d.project['status']}: milestone actions are paused.', tone: ChipTone.info),
+            if (const {'draft', 'boq_review'}.contains(d.project['status']))
+              Alert(
+                auth.isContractor
+                    ? 'Waiting for the bill of quantities to be approved. Submit it on the iBackHome website; '
+                        'the milestones appear here once the client, you and operations have approved it.'
+                    : 'This project is still being set up. Milestones appear once the bill of quantities is approved.',
+                tone: ChipTone.info,
+              )
+            else if (d.project['status'] != 'active')
+              Alert('This project is ${d.project['status']}: claims, verification and approvals are on hold.',
+                  tone: ChipTone.info),
             if (auth.isSupervisor)
               Padding(
                 padding: const EdgeInsets.only(bottom: IbhSpace.s12),

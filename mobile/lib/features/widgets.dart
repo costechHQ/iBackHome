@@ -79,7 +79,7 @@ class ErrorRetry extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(IbhSpace.s24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(e.message, textAlign: TextAlign.center),
+          Text(e.friendlyMessage, textAlign: TextAlign.center),
           if (e.requestId != null)
             Text('Ref ${e.requestId}', style: IbhText.mono.copyWith(fontSize: 11)),
           const SizedBox(height: IbhSpace.s16),
@@ -94,7 +94,7 @@ void showError(BuildContext context, Object error) {
   final e = ApiError.from(error);
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(e.message)));
+    ..showSnackBar(SnackBar(content: Text(e.friendlyMessage)));
 }
 
 class WrongRoleScreen extends ConsumerWidget {

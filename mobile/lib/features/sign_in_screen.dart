@@ -34,7 +34,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       await job();
     } catch (e) {
       final err = ApiError.from(e);
-      setState(() => _error = err.message);
+      setState(() => _error = err.friendlyMessage);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
