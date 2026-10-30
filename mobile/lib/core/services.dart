@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,6 +35,45 @@ class Services {
     final db = await QueueDb.open();
     final keystore = Keystore(Config.keyAlias);
     return Services._(tokens, api, db, keystore, SyncService(api, db), CaptureService(db, keystore), signedOut);
+  }
+
+  /// Sends a write now; if there is no signal, keeps it on the phone and sends it later with the
+  /// same `Idempotency-Key`. Returns true when the server already has it.
+  Future<bool> sendOrQueue({
+    required String kind,
+    required String path,
+    Map<String, dynamic>? body,
+    required String label,
+    String? projectId,
+  }) async {
+    final id = Api.newKey();
+    try {
+      await api.post<Map<String, dynamic>>(path, body: body, idempotencyKey: id);
+      return true;
+    } on ApiError catch (e) {
+      if (!e.isNetwork) rethrow;
+      await queueAction(id: id, kind: kind, path: path, body: body, label: label, projectId: projectId);
+      return false;
+    }
+  }
+
+  Future<void> queueAction({
+    String? id,
+    required String kind,
+    required String path,
+    Map<String, dynamic>? body,
+    required String label,
+    String? projectId,
+  }) async {
+    await db.addAction(QueuedAction(
+      id: id ?? Api.newKey(),
+      kind: kind,
+      path: path,
+      body: jsonEncode(body ?? <String, dynamic>{}),
+      label: label,
+      projectId: projectId,
+    ));
+    unawaited(sync.syncNow());
   }
 
   /// Registers this install's public key (idempotent: the same device answers 200).

@@ -97,7 +97,7 @@ class ProjectScreen extends ConsumerWidget {
                         },
                       ),
                       if (auth.isContractor && m['status'] == 'funded')
-                        FilledButton(onPressed: () => _claim(context, ref, m['id'] as String), child: const Text('Claim')),
+                        FilledButton(onPressed: () => _claim(context, ref, m['id'] as String, m['name'] as String), child: const Text('Claim')),
                       if (auth.isSupervisor && m['status'] == 'claimed')
                         FilledButton(
                           child: const Text('Verify'),
@@ -120,12 +120,23 @@ class ProjectScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _claim(BuildContext context, WidgetRef ref, String milestoneId) async {
+  Future<void> _claim(BuildContext context, WidgetRef ref, String milestoneId, String name) async {
     try {
-      await ref.read(servicesProvider).api.post<Map<String, dynamic>>('/milestones/$milestoneId/claim');
+      final sent = await ref.read(servicesProvider).sendOrQueue(
+            kind: 'claim',
+            path: '/milestones/$milestoneId/claim',
+            label: 'Claim $name',
+            projectId: projectId,
+          );
       ref.invalidate(projectProvider(projectId));
+      if (!sent && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No signal. Your claim is saved and will be sent when you are back online.')));
+      }
     } catch (e) {
+      // A 409 means the milestone is no longer fundable-to-claim (it changed); nothing was done.
       if (context.mounted) showError(context, e);
+      ref.invalidate(projectProvider(projectId));
     }
   }
 }

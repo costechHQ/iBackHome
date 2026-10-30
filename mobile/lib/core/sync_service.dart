@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -56,6 +57,7 @@ class SyncService extends ChangeNotifier {
         if (!await _upload(c)) break; // offline or server busy: keep order, try again later
       }
       await _refreshStatuses();
+      await _sendActions();
     } finally {
       _running = false;
       notifyListeners();
@@ -141,6 +143,71 @@ class SyncService extends ChangeNotifier {
         'reason': reason,
         if (dropKey) 'storage_key': null,
       });
+
+  /// Sends the claims and verifications made without a signal, oldest first, each with its own
+  /// id as the `Idempotency-Key` so a retry never does the work twice.
+  ///
+  /// A verification names its photos by capture id; it waits until every one of them has been
+  /// accepted by the server, then swaps in the server's evidence ids.
+  Future<void> _sendActions() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    for (final a in await _db.actions(openOnly: true)) {
+      if (a.nextTry > now) continue;
+      try {
+        final body = jsonDecode(a.body) as Map<String, dynamic>;
+        if (a.kind == 'verify' && body['decision'] == 'verified') {
+          final resolved = await resolveChecklist(body['checklist'] as List);
+          if (resolved == null) continue; // its photos are still on the way
+          if (resolved.isEmpty) {
+            await _db.updateAction(a.id, {
+              'status': 'failed',
+              'reason': 'A photo you used was rejected by the server. Capture it again and verify once more.',
+            });
+            continue;
+          }
+          body['checklist'] = resolved;
+        }
+        await _api.post<Map<String, dynamic>>(a.path, body: body.isEmpty ? null : body, idempotencyKey: a.id);
+        await _db.updateAction(a.id, {'status': 'done', 'reason': null});
+      } on ApiError catch (e) {
+        if (e.isRetryable || e.status == 401) {
+          await _db.updateAction(a.id, {
+            'attempts': a.attempts + 1,
+            'next_try': now + backoffMs(a.attempts),
+          });
+          if (e.isNetwork) break; // still offline: stop and try again later
+        } else {
+          await _db.updateAction(a.id, {
+            'status': 'failed',
+            'reason': e.status == 409
+                ? 'This changed while you were offline, so nothing was done. ${e.message}'
+                : e.message,
+          });
+        }
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Turns `capture_ids` into the server's `evidence_ids`. Returns null while any capture is
+  /// still waiting, and an empty list when one was rejected.
+  @visibleForTesting
+  Future<List<Map<String, dynamic>>?> resolveChecklist(List<dynamic> checklist) async {
+    final out = <Map<String, dynamic>>[];
+    for (final raw in checklist) {
+      final item = (raw as Map).cast<String, dynamic>();
+      final ids = <String>[];
+      for (final captureId in (item['capture_ids'] as List? ?? const []).cast<String>()) {
+        final c = await _db.byId(captureId);
+        if (c == null) continue;
+        if (c.status == CaptureStatus.rejected || c.status == CaptureStatus.failed) return [];
+        if (c.status != CaptureStatus.accepted || c.evidenceId == null) return null;
+        ids.add(c.evidenceId!);
+      }
+      out.add({'item': item['item'], 'passed': item['passed'], 'evidence_ids': ids});
+    }
+    return out;
+  }
 
   /// Submitted captures are checked in the background on the server; ask how they ended.
   Future<void> _refreshStatuses() async {

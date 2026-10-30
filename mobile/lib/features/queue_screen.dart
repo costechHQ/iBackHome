@@ -21,6 +21,7 @@ class QueueScreen extends ConsumerStatefulWidget {
 class _QueueScreenState extends ConsumerState<QueueScreen> {
   late final Services _s = ref.read(servicesProvider);
   List<QueuedCapture> _items = const [];
+  List<QueuedAction> _actions = const [];
   bool _loaded = false;
 
   @override
@@ -38,9 +39,11 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
 
   Future<void> _load() async {
     final items = await _s.db.all();
+    final actions = await _s.db.actions();
     if (!mounted) return;
     setState(() {
       _items = items;
+      _actions = actions.where((a) => a.status != 'done').toList();
       _loaded = true;
     });
   }
@@ -60,6 +63,23 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
           ),
         ]),
       ),
+      for (final a in _actions)
+        ListTile(
+          leading: Icon(a.status == 'failed' ? Icons.error_outline : Icons.schedule,
+              color: a.status == 'failed' ? IbhColors.badFg : IbhColors.muted),
+          title: Text(a.label),
+          subtitle: Text(a.status == 'failed'
+              ? (a.reason ?? 'Could not be sent.')
+              : 'Waiting to be sent when you have signal${a.kind == 'verify' ? ' and your photos are accepted' : ''}.'),
+          trailing: a.status == 'failed'
+              ? TextButton(
+                  onPressed: () async {
+                    await _s.db.deleteAction(a.id);
+                    await _load();
+                  },
+                  child: const Text('Dismiss'))
+              : null,
+        ),
       Expanded(
         child: _items.isEmpty
             ? const Center(child: Text('Nothing captured on this phone yet.'))
