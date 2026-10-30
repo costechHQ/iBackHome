@@ -201,3 +201,26 @@ class ThreeChecksView extends StatelessWidget {
     ]);
   }
 }
+
+/// Signing out keeps the queued captures on the phone, but they cannot upload until the same
+/// person signs in again. Warn first when some are still waiting (AND-SUPERVISOR-003).
+Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
+  final unsent = await ref.read(servicesProvider).db.unsentCount();
+  if (!context.mounted) return;
+  final go = await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: const Text('Sign out?'),
+      content: Text(unsent == 0
+          ? 'You will need a new code to sign in again.'
+          : '$unsent capture${unsent == 1 ? ' is' : 's are'} still waiting to upload. They stay safe on this '
+              'phone and upload after you sign in again, but they must still reach the server within 72 hours of '
+              'being taken.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Stay signed in')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
+      ],
+    ),
+  );
+  if (go == true) await ref.read(authProvider.notifier).signOut();
+}

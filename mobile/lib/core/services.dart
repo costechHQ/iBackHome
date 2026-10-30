@@ -53,9 +53,13 @@ final servicesProvider = Provider<Services>((_) => throw UnimplementedError('ove
 enum AuthStatus { unknown, signedOut, signedIn }
 
 class AuthState {
-  const AuthState(this.status, {this.me});
+  const AuthState(this.status, {this.me, this.sessionExpired = false});
   final AuthStatus status;
   final Map<String, dynamic>? me;
+
+  /// True when the server ended the session (not when the user signed out): the sign-in screen
+  /// then tells the user their queued captures are safe.
+  final bool sessionExpired;
 
   String? get role => me?['role'] as String?;
   bool get isSupervisor => role == 'supervisor';
@@ -75,7 +79,7 @@ class AuthNotifier extends Notifier<AuthState> {
     return const AuthState(AuthStatus.unknown);
   }
 
-  void _onSignedOut() => state = const AuthState(AuthStatus.signedOut);
+  void _onSignedOut() => state = const AuthState(AuthStatus.signedOut, sessionExpired: true);
 
   /// On launch: use the saved session if there is one.
   Future<void> restore() async {

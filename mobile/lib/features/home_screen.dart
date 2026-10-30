@@ -120,7 +120,7 @@ class _MeTab extends ConsumerWidget {
       ),
       const SizedBox(height: IbhSpace.s32),
       OutlinedButton(
-        onPressed: () => ref.read(authProvider.notifier).signOut(),
+        onPressed: () => confirmSignOut(context, ref),
         child: const Text('Sign out'),
       ),
     ]);

@@ -56,6 +56,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             Image.asset('assets/images/ibackhome-logo-on-light.png', height: 44, alignment: Alignment.centerLeft, semanticLabel: 'iBackHome'),
             const SizedBox(height: IbhSpace.s8),
             const Text('Far from home, never out of sight.', style: IbhText.bodyLg),
+            if (ref.watch(authProvider).sessionExpired) ...[
+              const SizedBox(height: IbhSpace.s16),
+              FutureBuilder<int>(
+                future: ref.read(servicesProvider).db.unsentCount(),
+                builder: (_, snap) => Alert(
+                  'Your session ended. ${(snap.data ?? 0) > 0 ? 'Your ${snap.data} waiting capture${snap.data == 1 ? ' is' : 's are'} safe on this phone and will upload after you sign in.' : 'Sign in again to continue.'}',
+                  tone: ChipTone.info,
+                ),
+              ),
+            ],
             const SizedBox(height: IbhSpace.s40),
             TextField(
               controller: _id,

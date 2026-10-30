@@ -47,7 +47,7 @@ class SyncService extends ChangeNotifier {
 
   /// Never throws; progress is saved per capture.
   Future<void> syncNow({bool force = false}) async {
-    if (_running) return;
+    if (_running || _api.tokens.accessToken == null) return; // nothing to send until signed in
     _running = true;
     notifyListeners();
     try {
