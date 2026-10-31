@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Debug builds only: lets the app reach the local Docker API over plain http. -->
+    <application android:usesCleartextTraffic="true" />
+</manifest>
