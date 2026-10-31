@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ibackhome_mobile/core/api.dart';
-import 'package:ibackhome_mobile/core/places.dart';
 import 'package:ibackhome_mobile/core/queue_db.dart';
 import 'package:ibackhome_mobile/core/services.dart';
 import 'package:ibackhome_mobile/core/token_store.dart';
@@ -113,11 +112,12 @@ void main() {
     await tester.pumpWidget(screen());
     expect(find.text('Ada Obi'), findsOneWidget);
     expect(find.text('+2348030000001'), findsOneWidget);
-    expect(find.textContaining('cannot be changed here'), findsOneWidget);
+    expect(find.textContaining('be changed here'), findsOneWidget);
+    expect(find.text('Nigerian time (WAT), fixed'), findsOneWidget);
   });
 
   testWidgets(
-    'saving sends only name, country and time zone with an Idempotency-Key',
+    'saving sends only the name, with an Idempotency-Key',
     (tester) async {
       await tester.pumpWidget(screen());
       await tester.enterText(find.byType(TextFormField), 'Ada Okafor');
@@ -125,11 +125,7 @@ void main() {
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       final patch = server.seen.singleWhere((r) => r.method == 'PATCH');
-      expect(patch.data, {
-        'full_name': 'Ada Okafor',
-        'country': 'NG',
-        'timezone': 'Africa/Lagos',
-      });
+      expect(patch.data, {'full_name': 'Ada Okafor'});
       expect(patch.headers['Idempotency-Key'], isNotEmpty);
       expect(container.read(authProvider).me?['full_name'], 'Ada Okafor');
       expect(find.textContaining('Saved'), findsOneWidget);
@@ -146,13 +142,5 @@ void main() {
     await tester.pump();
     expect(find.text('Enter your full name.'), findsOneWidget);
     expect(server.seen.where((r) => r.method == 'PATCH'), isEmpty);
-  });
-
-  test('a saved value outside the list is kept as an option', () {
-    expect(withCurrent(profileCountries, 'PT').containsKey('PT'), isTrue);
-    expect(
-      withCurrent(profileTimeZones, 'Africa/Lagos').length,
-      profileTimeZones.length,
-    );
   });
 }

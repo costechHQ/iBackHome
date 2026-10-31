@@ -2,14 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_error.dart';
-import '../core/places.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import '../ui/ibh_app_bar.dart';
+import '../ui/ibh_card.dart';
+import '../ui/states.dart';
 import 'widgets.dart';
 
-/// Your profile: what we hold about you (from `GET /me`) and the three fields you can change
-/// (`PATCH /me`): name, country and time zone. Phone and email are how you sign in, so they are
-/// shown but not edited here.
+/// Your profile: what we hold about you (`GET /me`) and the one thing you can change here, your name
+/// (`PATCH /me`). Phone and email are how you sign in. Time is always Nigerian time (WAT) for
+/// supervisors and contractors, so there is no time-zone or country setting.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -20,8 +22,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _form = GlobalKey<FormState>();
   late final TextEditingController _name;
-  String? _country;
-  late String _zone;
   bool _saving = false;
   String? _error;
   bool _saved = false;
@@ -31,8 +31,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.initState();
     final me = ref.read(authProvider).me ?? const {};
     _name = TextEditingController(text: me['full_name'] as String? ?? '');
-    _country = me['country'] as String?;
-    _zone = me['timezone'] as String? ?? 'UTC';
   }
 
   @override
@@ -49,13 +47,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _saved = false;
     });
     try {
-      await ref
-          .read(authProvider.notifier)
-          .updateProfile(
-            fullName: _name.text.trim(),
-            country: _country,
-            timezone: _zone,
-          );
+      await ref.read(authProvider.notifier).updateProfile(fullName: _name.text.trim());
       if (mounted) setState(() => _saved = true);
     } catch (e) {
       if (mounted) setState(() => _error = ApiError.from(e).message);
@@ -67,86 +59,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final me = ref.watch(authProvider).me ?? const {};
-    final countries = withCurrent(profileCountries, _country);
-    final zones = withCurrent(profileTimeZones, _zone);
     return Scaffold(
-      appBar: AppBar(title: const Text('Your profile')),
+      appBar: const IbhAppBar(title: 'Your profile'),
       body: Form(
         key: _form,
-        child: ListView(
-          padding: const EdgeInsets.all(IbhSpace.s16),
-          children: [
-            if (_error != null) ...[
-              Alert(_error!, tone: ChipTone.bad),
-              const SizedBox(height: IbhSpace.s12),
-            ],
-            if (_saved) ...[
-              const Alert(
-                'Saved. Your details are updated.',
-                tone: ChipTone.ok,
-              ),
-              const SizedBox(height: IbhSpace.s12),
-            ],
-            TextFormField(
-              controller: _name,
-              textCapitalization: TextCapitalization.words,
-              maxLength: 120,
-              decoration: const InputDecoration(labelText: 'Full name'),
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Enter your full name.'
-                  : null,
-            ),
+        child: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
+          if (_error != null) ...[
+            Alert(_error!, tone: ChipTone.bad),
             const SizedBox(height: IbhSpace.s12),
-            DropdownButtonFormField<String>(
-              initialValue: _country,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Country'),
-              items: [
-                for (final e in countries.entries)
-                  DropdownMenuItem(value: e.key, child: Text(e.value)),
-              ],
-              onChanged: (v) => setState(() => _country = v),
-            ),
+          ],
+          if (_saved) ...[
+            const Alert('Saved. Your name is updated.', tone: ChipTone.ok),
             const SizedBox(height: IbhSpace.s12),
-            DropdownButtonFormField<String>(
-              initialValue: _zone,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Time zone'),
-              items: [
-                for (final e in zones.entries)
-                  DropdownMenuItem(value: e.key, child: Text(e.value)),
-              ],
-              onChanged: (v) => setState(() => _zone = v ?? _zone),
-            ),
-            const SizedBox(height: IbhSpace.s16),
-            FilledButton(
-              onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Save'),
-            ),
-            const Divider(height: IbhSpace.s32),
-            const Text('Sign-in and account', style: IbhText.h3),
-            const SizedBox(height: IbhSpace.s8),
+          ],
+          const Text('Full name', style: _label),
+          const SizedBox(height: IbhSpace.s8),
+          TextFormField(
+            controller: _name,
+            textCapitalization: TextCapitalization.words,
+            maxLength: 120,
+            validator: (v) => (v == null || v.trim().isEmpty) ? 'Enter your full name.' : null,
+          ),
+          const Text('Your client, the supervisor and our team see this name.', style: IbhText.small),
+          const IbhSectionLabel('SIGN-IN AND ACCOUNT'),
+          IbhGroup(children: [
             if (me['phone'] != null) _Row('Phone', '${me['phone']}'),
             if (me['email'] != null) _Row('Email', '${me['email']}'),
             _Row('Role', '${me['role']}'),
-            _Row('Account status', '${me['status']}'),
-            const SizedBox(height: IbhSpace.s8),
-            const Text(
-              'Your phone number or email is how you sign in, so it cannot be changed here.',
-              style: IbhText.small,
-            ),
-          ],
-        ),
+            _Row('Account status', me['status'] == 'suspended' ? 'Suspended' : 'Active'),
+            const _Row('Time zone', 'Nigerian time (WAT), fixed'),
+          ]),
+          const SizedBox(height: IbhSpace.s8),
+          Text('Your phone number or email is how you sign in, so it can\'t be changed here.', style: IbhText.small.copyWith(color: IbhColors.muted)),
+        ]),
       ),
+      bottomNavigationBar: BottomActionBar(children: [
+        FilledButton(
+          onPressed: _saving ? null : _save,
+          child: _saving ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: IbhColors.white)) : const Text('Save'),
+        ),
+      ]),
     );
   }
 }
+
+const _label = TextStyle(fontFamily: 'Inter', fontSize: 15, fontWeight: FontWeight.w600, color: IbhColors.ink);
 
 class _Row extends StatelessWidget {
   const _Row(this.label, this.value);
@@ -154,20 +111,9 @@ class _Row extends StatelessWidget {
   final String value;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label),
-        Flexible(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context) => IbhRow(
+        title: label,
+        titleStyle: IbhText.body.copyWith(color: IbhColors.muted),
+        trailing: Flexible(child: Text(value, textAlign: TextAlign.right, style: IbhText.body.copyWith(fontWeight: FontWeight.w700, color: IbhColors.ink))),
+      );
 }
