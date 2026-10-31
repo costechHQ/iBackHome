@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../core/api_error.dart';
+import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
 import 'home_screen.dart';
 import 'widgets.dart';
@@ -70,6 +71,8 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
     await Permission.locationWhenInUse.request();
     await _refresh();
     if (_camera?.isGranted == true && _location?.isGranted == true) {
+      // Pressing "Allow and create key" is the person's decision to set this phone up again.
+      await ref.read(servicesProvider).tokens.setRevokedHere(false);
       ref.invalidate(deviceProvider);
       try {
         await ref.read(deviceProvider.future);
