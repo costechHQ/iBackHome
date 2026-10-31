@@ -36,11 +36,23 @@ class StatusChip extends StatelessWidget {
 enum ChipTone { ok, warn, bad, info, neutral }
 
 ChipTone milestoneTone(String status) => switch (status) {
-      'released' || 'approved' || 'verified' => ChipTone.ok,
-      'claimed' => ChipTone.info,
+      'released' => ChipTone.ok,
+      'verified' || 'approved' => ChipTone.info,
+      'claimed' => ChipTone.warn,
       'disputed' => ChipTone.bad,
-      'funded' => ChipTone.warn,
       _ => ChipTone.neutral,
+    };
+
+/// The chip words from state-to-ui.md (Milestone).
+String milestoneLabel(String status) => switch (status) {
+      'pending' => 'Pending',
+      'funded' => 'Funded',
+      'claimed' => 'Claimed',
+      'verified' => 'Verified',
+      'approved' => 'Approved',
+      'disputed' => 'Disputed',
+      'released' => 'Released',
+      _ => status,
     };
 
 /// An inline alert box (warn / bad / info) with the design system colours.
