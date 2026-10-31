@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -203,24 +205,52 @@ class ThreeChecksView extends StatelessWidget {
 }
 
 /// Signing out keeps the queued captures on the phone, but they cannot upload until the same
-/// person signs in again. Warn first when some are still waiting (AND-SUPERVISOR-003).
+/// person signs in again. With captures still waiting, a bottom sheet says so first and offers
+/// "Upload first" (AND-SUPERVISOR-003); with none, a plain confirmation.
 Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
-  final unsent = await ref.read(servicesProvider).db.unsentCount();
+  final s = ref.read(servicesProvider);
+  final unsent = await s.db.unsentCount();
   if (!context.mounted) return;
-  final go = await showDialog<bool>(
+  if (unsent == 0) {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Sign out?'),
+        content: const Text('You will need a new code to sign in again.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Stay signed in')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
+        ],
+      ),
+    );
+    if (go == true) await ref.read(authProvider.notifier).signOut();
+    return;
+  }
+  final choice = await showModalBottomSheet<String>(
     context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Sign out?'),
-      content: Text(unsent == 0
-          ? 'You will need a new code to sign in again.'
-          : '$unsent capture${unsent == 1 ? ' is' : 's are'} still waiting to upload. They stay safe on this '
-              'phone and upload after you sign in again, but they must still reach the server within 72 hours of '
-              'being taken.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Stay signed in')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
-      ],
+    backgroundColor: IbhColors.white,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(IbhRadius.sheet))),
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(IbhSpace.s16, 0, IbhSpace.s16, IbhSpace.s16),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$unsent capture${unsent == 1 ? '' : 's'} haven\'t uploaded', style: IbhText.h3),
+          const SizedBox(height: IbhSpace.s8),
+          const Text(
+              'If you sign out now they stay on this phone until you sign in again. They must still reach the server within 72 hours of being taken. Upload first if you can.',
+              style: IbhText.body),
+          const SizedBox(height: IbhSpace.s16),
+          FilledButton(onPressed: () => Navigator.pop(ctx, 'upload'), child: const Text('Upload first')),
+          const SizedBox(height: IbhSpace.s8),
+          OutlinedButton(onPressed: () => Navigator.pop(ctx, 'out'), child: const Text('Sign out anyway')),
+        ]),
+      ),
     ),
   );
-  if (go == true) await ref.read(authProvider.notifier).signOut();
+  if (choice == 'upload') {
+    unawaited(s.sync.syncNow(force: true));
+  } else if (choice == 'out') {
+    await ref.read(authProvider.notifier).signOut();
+  }
 }
