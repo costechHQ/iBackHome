@@ -28,9 +28,29 @@ class SyncService extends ChangeNotifier {
 
   bool get running => _running;
 
+  bool _online = true;
+
+  /// False while the phone reports no network. The sync strip and the offline banner read this.
+  bool get online => _online;
+
+  DateTime? _lastSyncedAt;
+
+  /// When a sync run last finished while online (shown as "synced 08:32").
+  DateTime? get lastSyncedAt => _lastSyncedAt;
+
+  void _setOnline(List<ConnectivityResult> r) {
+    final now = r.any((c) => c != ConnectivityResult.none);
+    if (now != _online) {
+      _online = now;
+      notifyListeners();
+    }
+  }
+
   void start() {
+    unawaited(Connectivity().checkConnectivity().then(_setOnline));
     _net = Connectivity().onConnectivityChanged.listen((r) {
-      if (r.any((c) => c != ConnectivityResult.none)) unawaited(syncNow());
+      _setOnline(r);
+      if (_online) unawaited(syncNow());
     });
     _timer = Timer.periodic(const Duration(seconds: 30), (_) => unawaited(syncNow()));
     unawaited(syncNow());
@@ -58,6 +78,7 @@ class SyncService extends ChangeNotifier {
       }
       await _refreshStatuses();
       await _sendActions();
+      if (_online) _lastSyncedAt = DateTime.now();
     } finally {
       _running = false;
       notifyListeners();
