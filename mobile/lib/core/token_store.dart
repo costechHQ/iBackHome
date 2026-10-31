@@ -43,10 +43,21 @@ class TokenStore {
     _access = null;
     await _s.delete('access');
     await _s.delete('refresh');
+    await _s.delete('vetting_approved');
   }
 
   /// Forget the install id (after the device key was revoked): a new one is made next time.
   Future<void> resetDeviceId() => _s.delete('device_id');
+
+  /// The server confirmed a signing key for this phone at least once (so "Set up this phone" is not shown again).
+  Future<bool> deviceEverRegistered() async => await _s.read('device_ever_registered') == '1';
+
+  Future<void> markDeviceRegistered() => _s.write('device_ever_registered', '1');
+
+  /// A supervisor seen approved on this phone: lets the app open offline without re-asking the server.
+  Future<bool> vettingApprovedCached() async => await _s.read('vetting_approved') == '1';
+
+  Future<void> cacheVettingApproved(bool v) => v ? _s.write('vetting_approved', '1') : _s.delete('vetting_approved');
 
   /// True after the person revoked this phone on purpose: it stays unregistered until they set it up again.
   Future<bool> revokedHere() async => await _s.read('revoked_here') == '1';

@@ -112,6 +112,7 @@ class Services {
           'This phone\'s signing key was revoked, so it can no longer capture evidence. Contact operations.');
     }
     device = record;
+    await tokens.markDeviceRegistered();
     return deviceId;
   }
 
