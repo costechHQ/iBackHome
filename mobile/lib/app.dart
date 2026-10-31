@@ -7,7 +7,7 @@ import 'features/payout_screen.dart';
 import 'features/vetting_screen.dart';
 import 'features/sign_in_screen.dart';
 import 'features/widgets.dart';
-import 'theme/ibh_tokens.dart';
+import 'ui/app_theme.dart';
 
 class IbhApp extends ConsumerStatefulWidget {
   const IbhApp({super.key});
@@ -46,7 +46,7 @@ class _IbhAppState extends ConsumerState<IbhApp> with WidgetsBindingObserver {
     return MaterialApp(
       title: 'iBackHome',
       debugShowCheckedModeBanner: false,
-      theme: ibhTheme(),
+      theme: ibhAppTheme(),
       home: switch (auth.status) {
         AuthStatus.unknown => const Scaffold(body: Center(child: CircularProgressIndicator())),
         AuthStatus.signedOut => const SignInScreen(),

@@ -70,6 +70,7 @@ class ProjectScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(projectProvider(projectId));
+    if (data.hasError && isRotatedOff(data.error!)) return const NotOnProjectPage();
     final auth = ref.watch(authProvider);
     final d = data.value;
     final claimed = d?.claimed;

@@ -10,6 +10,7 @@ import '../core/wat.dart';
 import '../theme/ibh_tokens.dart';
 import '../ui/ibh_app_bar.dart';
 import '../ui/ibh_card.dart';
+import '../ui/sheets.dart';
 import '../ui/states.dart';
 import 'capture_target.dart';
 import 'widgets.dart';
@@ -77,18 +78,13 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
   bool get _canVerify => _linked.isNotEmpty && _ready == _linked.length;
 
   Future<void> _verifyConfirm() async {
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Verify ${widget.milestoneName}?'),
-        content: const Text('You are confirming every checklist item. The client is then asked to approve the release. A release needs both of you.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Verify')),
-        ],
-      ),
+    final go = await confirmSheet(
+      context,
+      title: 'Verify ${widget.milestoneName}?',
+      message: 'You are confirming every checklist item. The client is then asked to approve the release. A release needs both of you.',
+      confirmLabel: 'Verify',
     );
-    if (go == true) await _submit('verified');
+    if (go) await _submit('verified');
   }
 
   Future<void> _sendBack() async {
@@ -221,7 +217,7 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
                               borderRadius: BorderRadius.circular(IbhRadius.control),
                               child: c.kind == 'video'
                                   ? const SizedBox(width: 80, height: 80, child: ColoredBox(color: IbhColors.camera, child: Icon(Icons.videocam, color: IbhColors.white)))
-                                  : Image.file(File(c.filePath), width: 80, height: 80, fit: BoxFit.cover),
+                                  : Image.file(File(c.filePath), width: 80, height: 80, fit: BoxFit.cover, errorBuilder: (_, _, _) => const SizedBox(width: 80, height: 80, child: ColoredBox(color: IbhColors.placeholder, child: Icon(Icons.image_not_supported)))),
                             ),
                             if (_linked[item]!.contains(c.id)) const Positioned(right: 4, top: 4, child: Icon(Icons.check_circle, color: IbhColors.okFg)),
                             if (c.status != CaptureStatus.accepted) const Positioned(left: 4, bottom: 4, child: Icon(Icons.schedule, color: IbhColors.white, size: 18)),

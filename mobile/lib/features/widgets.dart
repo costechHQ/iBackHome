@@ -7,6 +7,10 @@ import '../core/api_error.dart';
 import '../core/capture_rules.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import '../ui/ibh_app_bar.dart';
+import '../ui/states.dart';
+import '../ui/sheets.dart';
+import 'queue_screen.dart';
 
 /// Chip colours follow the design system: status colours only in chips and alerts.
 class StatusChip extends StatelessWidget {
@@ -79,7 +83,8 @@ class Alert extends StatelessWidget {
   }
 }
 
-/// Shows a failed load with a retry button.
+/// A failed load: an icon, what happened in plain words, "Try again", and, when the phone cannot reach
+/// the server, a way to the sync queue (the captures and decisions on the phone are safe).
 class ErrorRetry extends StatelessWidget {
   const ErrorRetry(this.error, this.onRetry, {super.key});
 
@@ -90,19 +95,79 @@ class ErrorRetry extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = ApiError.from(error);
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(IbhSpace.s24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(e.friendlyMessage, textAlign: TextAlign.center),
-          if (e.requestId != null)
-            Text('Ref ${e.requestId}', style: IbhText.mono.copyWith(fontSize: 11)),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(color: IbhColors.white, shape: BoxShape.circle),
+            child: Icon(e.isNetwork ? Icons.cloud_off_outlined : Icons.warning_amber_rounded, color: IbhColors.navy900),
+          ),
           const SizedBox(height: IbhSpace.s16),
-          OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+          Text(e.isNetwork ? 'Can\'t reach iBackHome' : 'Something went wrong', textAlign: TextAlign.center, style: IbhText.h3.copyWith(fontSize: 20)),
+          const SizedBox(height: IbhSpace.s8),
+          Text(e.friendlyMessage, textAlign: TextAlign.center, style: IbhText.body),
+          if (e.requestId != null) ...[
+            const SizedBox(height: IbhSpace.s8),
+            Text('Ref ${e.requestId}', style: IbhText.mono.copyWith(fontSize: 11)),
+          ],
+          const SizedBox(height: IbhSpace.s24),
+          FilledButton(onPressed: onRetry, child: const Text('Try again')),
+          if (e.isNetwork) ...[
+            const SizedBox(height: IbhSpace.s8),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const Scaffold(appBar: IbhAppBar(title: 'Sync', subtitle: 'Captures and decisions on this phone'), body: QueueScreen()),
+              )),
+              child: const Text('Open sync queue'),
+            ),
+          ],
         ]),
       ),
     );
   }
 }
+
+/// "You're no longer on this project": the server refused because the supervisor was rotated off it
+/// (`not_project_member`). Captures taken before still upload.
+class NotOnProjectPage extends StatelessWidget {
+  const NotOnProjectPage({super.key, this.projectTitle});
+
+  final String? projectTitle;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: IbhAppBar(title: projectTitle ?? 'Project'),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(IbhSpace.s24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(color: IbhColors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.lock_outline, color: IbhColors.navy900),
+              ),
+              const SizedBox(height: IbhSpace.s16),
+              Text('You\'re no longer on this project', textAlign: TextAlign.center, style: IbhText.h3.copyWith(fontSize: 20)),
+              const SizedBox(height: IbhSpace.s8),
+              Text(
+                'iBackHome rotated you off ${projectTitle ?? 'this project'}. You can\'t capture or verify here. Unsent captures from before still upload.',
+                textAlign: TextAlign.center,
+                style: IbhText.body,
+              ),
+            ]),
+          ),
+        ),
+        bottomNavigationBar: BottomActionBar(children: [
+          FilledButton(onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst), child: const Text('Back to my projects')),
+        ]),
+      );
+}
+
+/// True when the error is the server saying this person is not on the project (403).
+bool isRotatedOff(Object error) => ApiError.from(error).code == 'not_project_member';
 
 void showError(BuildContext context, Object error) {
   final e = ApiError.from(error);
@@ -224,18 +289,8 @@ Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
   final unsent = await s.db.unsentCount();
   if (!context.mounted) return;
   if (unsent == 0) {
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Sign out?'),
-        content: const Text('You will need a new code to sign in again.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Stay signed in')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
-        ],
-      ),
-    );
-    if (go == true) await ref.read(authProvider.notifier).signOut();
+    final go = await confirmSheet(context, title: 'Sign out?', message: 'You will need a new code to sign in again.', confirmLabel: 'Sign out', cancelLabel: 'Stay signed in');
+    if (go) await ref.read(authProvider.notifier).signOut();
     return;
   }
   final choice = await showModalBottomSheet<String>(

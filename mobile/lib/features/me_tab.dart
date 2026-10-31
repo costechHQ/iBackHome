@@ -15,6 +15,7 @@ import 'payout_screen.dart';
 import 'permissions_screen.dart';
 import 'profile_screen.dart';
 import 'queue_screen.dart';
+import 'settings_screen.dart';
 import 'vetting_screen.dart';
 import 'widgets.dart';
 
@@ -80,6 +81,13 @@ class MeTab extends ConsumerWidget {
           subtitle: 'Your name and sign-in details',
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
+        ),
+        IbhRow(
+          leading: const Icon(Icons.settings_outlined),
+          title: 'Settings',
+          subtitle: 'Notifications, devices and data',
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen())),
         ),
         if (auth.isSupervisor && vetting != null && vetting['vetting_status'] == 'approved')
           IbhRow(
@@ -184,39 +192,6 @@ class _PhoneCard extends ConsumerWidget {
             ]),
             const SizedBox(height: IbhSpace.s8),
             Text(id.length > 12 ? 'Key ending ${id.substring(id.length - 4).toUpperCase()}' : id, style: IbhText.mono.copyWith(fontSize: 12)),
-            const SizedBox(height: IbhSpace.s12),
-            OutlinedButton(
-              onPressed: () async {
-                final go = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('Revoke this phone?'),
-                    content: const Text(
-                        'Use this if the phone is lost or replaced. Its signing key stops working at once. Captures still waiting to upload will be rejected by the server. You can set the phone up again with a new key.'),
-                    actions: [
-                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-                      FilledButton(
-                          style: FilledButton.styleFrom(backgroundColor: IbhColors.badFg),
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('Revoke device')),
-                    ],
-                  ),
-                );
-                if (go != true) return;
-                try {
-                  await s.revokeThisPhone();
-                  ref.invalidate(deviceProvider);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(const SnackBar(content: Text('This phone was revoked. Its signing key no longer works.')));
-                  }
-                } catch (e) {
-                  if (context.mounted) showError(context, e);
-                }
-              },
-              child: const Text('Revoke this phone'),
-            ),
           ]),
         );
       },
