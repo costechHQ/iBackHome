@@ -299,6 +299,15 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
             onMoveCorner={(i, c) =>
               update({ pin: shape.pin, corners: shape.corners.map((x, j) => (j === i ? c : x)) })
             }
+            onInsertCorner={(i, c) =>
+              update({
+                pin: shape.pin,
+                corners: [...shape.corners.slice(0, i), c, ...shape.corners.slice(i)],
+              })
+            }
+            onRemoveCorner={(i) =>
+              update({ pin: shape.pin, corners: shape.corners.filter((_, j) => j !== i) })
+            }
             className="h-full w-full"
           />
           {drawing ? (
@@ -378,7 +387,7 @@ export function SiteEditor({ projectId, ops = false }: { projectId: string; ops?
                   <p className="font-semibold text-ink">{drawing ? "Draw the boundary" : "Boundary saved"}</p>
                   <p className="type-small text-slate">
                     {drawing
-                      ? `Choose Boundary, then click the map to add corners. ${shape.corners.length} ${shape.corners.length === 1 ? "corner" : "corners"} so far.`
+                      ? `Choose Boundary, then click the map to add as many corners as the plot has. ${shape.corners.length} ${shape.corners.length === 1 ? "corner" : "corners"} so far. Drag a corner to move it, click a small circle on an edge to add a corner there, double-click a corner to remove it.`
                       : `${p.site ? formatDateTime(p.site.updated_at, timeZone) : ""}${locked ? " · locked" : ops ? " · every change is audited" : " · you can change it until the BoQ is approved"}`}
                   </p>
                 </div>
