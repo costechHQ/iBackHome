@@ -14,6 +14,7 @@ class CaptureTarget {
   const CaptureTarget({
     required this.projectId,
     required this.title,
+    this.subtitle,
     this.milestoneId,
     this.contextRef,
     this.fence,
@@ -23,6 +24,9 @@ class CaptureTarget {
 
   final String projectId;
   final String title;
+
+  /// The line under the title in the app bar (the project name).
+  final String? subtitle;
   final String? milestoneId;
 
   /// e.g. `spot_check:<id>`; kept on the phone, so the right screen can find its photos.
