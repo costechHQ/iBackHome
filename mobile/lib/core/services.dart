@@ -96,6 +96,10 @@ class Services {
   ///
   /// If operations revoked the key, this throws `device_revoked`: the app stops capturing.
   Future<String> registerDevice() async {
+    if (await tokens.revokedHere()) {
+      throw ApiError('device_revoked_here',
+          'You revoked this phone, so it cannot capture evidence. Set it up again to create a new signing key.');
+    }
     final deviceId = await tokens.deviceId();
     final publicKey = await keystore.ensureKey();
     final record = await api.post<Map<String, dynamic>>(
@@ -120,6 +124,7 @@ class Services {
     await api.post<Map<String, dynamic>>('/devices/$pk/revoke', idempotencyKey: 'revoke-$pk');
     await keystore.deleteKey();
     await tokens.resetDeviceId();
+    await tokens.setRevokedHere(true);
     device = null;
   }
 }

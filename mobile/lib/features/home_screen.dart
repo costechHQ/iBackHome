@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_error.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import 'permissions_screen.dart';
 import 'profile_screen.dart';
 import 'project_screen.dart';
 import 'queue_screen.dart';
@@ -75,7 +76,14 @@ class _ProjectsTab extends ConsumerWidget {
               child: Column(children: [
                 Alert('This phone is not registered yet, so you cannot capture. ${ApiError.from(device.error!).message}',
                     tone: ChipTone.bad),
-                TextButton(onPressed: () => ref.invalidate(deviceProvider), child: const Text('Register this phone')),
+                TextButton(
+                    onPressed: () async {
+                      if (ApiError.from(device.error!).code == 'device_revoked_here') {
+                        await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const PermissionsScreen()));
+                      }
+                      ref.invalidate(deviceProvider);
+                    },
+                    child: const Text('Register this phone')),
               ]),
             ),
           if (items.isEmpty)
@@ -137,8 +145,22 @@ class _MeTab extends ConsumerWidget {
       device.when(
         loading: () => const LinearProgressIndicator(),
         error: (e, _) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Alert(ApiError.from(e).message, tone: ChipTone.bad),
-          TextButton(onPressed: () => ref.invalidate(deviceProvider), child: const Text('Try again')),
+          if (ApiError.from(e).code == 'device_revoked_here') ...[
+            const StatusChip('Signing key revoked', tone: ChipTone.bad),
+            const SizedBox(height: IbhSpace.s8),
+            Text(ApiError.from(e).message),
+            const SizedBox(height: IbhSpace.s8),
+            FilledButton(
+              onPressed: () async {
+                await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const PermissionsScreen()));
+                ref.invalidate(deviceProvider);
+              },
+              child: const Text('Set up this phone again'),
+            ),
+          ] else ...[
+            Alert(ApiError.from(e).message, tone: ChipTone.bad),
+            TextButton(onPressed: () => ref.invalidate(deviceProvider), child: const Text('Try again')),
+          ],
         ]),
         data: (id) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const StatusChip('Signing key registered', tone: ChipTone.ok),
@@ -167,6 +189,11 @@ class _MeTab extends ConsumerWidget {
               try {
                 await s.revokeThisPhone();
                 ref.invalidate(deviceProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(const SnackBar(content: Text('This phone was revoked. Its signing key no longer works.')));
+                }
               } catch (e) {
                 if (context.mounted) showError(context, e);
               }
