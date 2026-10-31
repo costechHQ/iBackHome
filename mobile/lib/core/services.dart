@@ -194,6 +194,14 @@ class AuthNotifier extends Notifier<AuthState> {
     await _loadMe();
   }
 
+  /// Saves the person's own name, country and time zone (PATCH /me) and keeps the server's answer.
+  /// Phone and email are sign-in identifiers and are not changed here.
+  Future<void> updateProfile({required String fullName, String? country, required String timezone}) async {
+    final me = await _s.api.patch<Map<String, dynamic>>('/me',
+        body: {'full_name': fullName, 'country': ?country, 'timezone': timezone});
+    state = AuthState(AuthStatus.signedIn, me: me);
+  }
+
   Future<void> signOut() async {
     await _s.tokens.clear();
     state = const AuthState(AuthStatus.signedOut);

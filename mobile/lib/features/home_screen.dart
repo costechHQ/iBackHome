@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_error.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import 'profile_screen.dart';
 import 'project_screen.dart';
 import 'queue_screen.dart';
 import 'spot_checks_screen.dart';
@@ -114,6 +115,12 @@ class _MeTab extends ConsumerWidget {
       Text('${me['phone'] ?? me['email'] ?? ''}'),
       const SizedBox(height: IbhSpace.s8),
       StatusChip('${me['role']}', tone: ChipTone.info),
+      const SizedBox(height: IbhSpace.s8),
+      OutlinedButton(
+        onPressed: () =>
+            Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
+        child: const Text('View and edit profile'),
+      ),
       if (auth.isSupervisor) ...[
         const SizedBox(height: IbhSpace.s8),
         ref.watch(vettingProvider).maybeWhen(

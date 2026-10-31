@@ -111,13 +111,17 @@ export function OpsSidebar({
           );
         })}
       </nav>
-      <div className="flex items-center gap-3 border-t border-navy-700 px-4.5 py-4">
+      <Link
+        href="/ops/profile"
+        aria-label={`${name}, your profile`}
+        className="flex items-center gap-3 border-t border-navy-700 px-4.5 py-4 hover:bg-navy-800"
+      >
         <Avatar name={name} size={32} className="bg-navy-700 text-white" />
         <div className="flex flex-col">
           <span className="type-small font-semibold text-white">{name}</span>
-          <span className="type-caption tracking-normal text-x-on-navy-muted">Operations</span>
+          <span className="type-caption tracking-normal text-x-on-navy-muted">Operations · Your profile</span>
         </div>
-      </div>
+      </Link>
     </aside>
   );
 }
