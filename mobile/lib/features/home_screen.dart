@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/api_error.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import '../ui/ibh_app_bar.dart';
+import '../ui/sync_strip.dart';
 import 'permissions_screen.dart';
 import 'profile_screen.dart';
 import 'project_screen.dart';
@@ -32,29 +34,110 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final supervisor = ref.watch(authProvider).isSupervisor;
-    final sync = ref.read(servicesProvider).sync;
-    // Supervisors also get spot checks; contractors do not do them.
-    final tabs = <(String, IconData, Widget)>[
-      ('Projects', Icons.home_work_outlined, const VettingGate(child: _ProjectsTab())),
-      if (supervisor) ('Spot checks', Icons.pin_drop_outlined, const VettingGate(child: SpotChecksScreen())),
-      ('Queue', Icons.cloud_upload_outlined, const QueueScreen()),
-      ('Me', Icons.person_outline, const _MeTab()),
+    final auth = ref.watch(authProvider);
+    final supervisor = auth.isSupervisor;
+    final name = auth.me?['full_name'] as String?;
+    final role = supervisor ? 'supervisor' : 'contractor';
+    // Supervisors also get spot checks; contractors do not do them. (Contractor tabs follow the
+    // design, Projects / Orders / Alerts / Account, once those screens exist.)
+    final tabs = <_Tab>[
+      _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const VettingGate(child: _ProjectsTab()), strip: true),
+      if (supervisor)
+        _Tab('Spot checks', Icons.fact_check_outlined, Icons.fact_check, 'Unannounced visits', const VettingGate(child: SpotChecksScreen())),
+      _Tab('Sync', Icons.cloud_upload_outlined, Icons.cloud_upload, null, const QueueScreen(), strip: true, badge: true),
+      _Tab('Me', Icons.person_outline, Icons.person, supervisor ? 'Supervisor account' : 'Contractor account', const _MeTab()),
     ];
     final i = _tab.clamp(0, tabs.length - 1);
+    final t = tabs[i];
     return Scaffold(
-      appBar: AppBar(title: Text(tabs[i].$1)),
-      body: tabs[i].$3,
-      bottomNavigationBar: ListenableBuilder(
-        listenable: sync,
-        builder: (_, _) => NavigationBar(
-          selectedIndex: i,
-          onDestinationSelected: (v) => setState(() => _tab = v),
-          destinations: [for (final t in tabs) NavigationDestination(icon: Icon(t.$2), label: t.$1)],
+      appBar: IbhAppBar(title: t.label, subtitle: t.subtitle, leading: IbhBarLeading.logo),
+      body: Column(children: [
+        if (t.strip) const SyncStrip(),
+        Expanded(child: t.body),
+      ]),
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          backgroundColor: IbhColors.white,
+          indicatorColor: IbhColors.accentTint,
+          height: 72,
+          labelTextStyle: WidgetStateProperty.resolveWith((s) => TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: s.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
+                color: s.contains(WidgetState.selected) ? IbhColors.navy900 : IbhColors.muted,
+              )),
+          iconTheme: WidgetStateProperty.resolveWith(
+              (s) => IconThemeData(color: s.contains(WidgetState.selected) ? IbhColors.navy900 : IbhColors.muted)),
+        ),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(border: Border(top: BorderSide(color: IbhColors.line))),
+          child: NavigationBar(
+            selectedIndex: i,
+            onDestinationSelected: (v) => setState(() => _tab = v),
+            destinations: [
+              for (final tab in tabs)
+                NavigationDestination(
+                  icon: tab.badge ? _SyncBadge(Icon(tab.icon)) : Icon(tab.icon),
+                  selectedIcon: tab.badge ? _SyncBadge(Icon(tab.selectedIcon)) : Icon(tab.selectedIcon),
+                  label: tab.label,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _Tab {
+  const _Tab(this.label, this.icon, this.selectedIcon, this.subtitle, this.body, {this.strip = false, this.badge = false});
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String? subtitle;
+  final Widget body;
+  final bool strip;
+  final bool badge;
+}
+
+/// The Sync tab's icon with the number of captures still waiting to upload.
+class _SyncBadge extends ConsumerStatefulWidget {
+  const _SyncBadge(this.icon);
+  final Icon icon;
+
+  @override
+  ConsumerState<_SyncBadge> createState() => _SyncBadgeState();
+}
+
+class _SyncBadgeState extends ConsumerState<_SyncBadge> {
+  late final Services _s = ref.read(servicesProvider);
+  int _waiting = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _s.sync.addListener(_load);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _s.sync.removeListener(_load);
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final n = await _s.db.unsentCount();
+    if (mounted) setState(() => _waiting = n);
+  }
+
+  @override
+  Widget build(BuildContext context) => Badge(
+        isLabelVisible: _waiting > 0,
+        label: Text('$_waiting'),
+        backgroundColor: IbhColors.navy900,
+        child: widget.icon,
+      );
 }
 
 class _ProjectsTab extends ConsumerWidget {
