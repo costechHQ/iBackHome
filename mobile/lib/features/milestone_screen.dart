@@ -8,6 +8,7 @@ import '../core/wat.dart';
 import '../theme/ibh_tokens.dart';
 import '../ui/ibh_app_bar.dart';
 import '../ui/ibh_card.dart';
+import '../ui/sheets.dart';
 import '../ui/states.dart';
 import 'capture_target.dart';
 import 'project_screen.dart';
@@ -54,18 +55,13 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
   }
 
   Future<void> _claim(String name) async {
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Claim $name?'),
-        content: const Text('The supervisor will be asked to visit the site and check the work. You can add photos before or after.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Claim milestone')),
-        ],
-      ),
+    final go = await confirmSheet(
+      context,
+      title: 'Claim $name?',
+      message: 'The supervisor will be asked to visit the site and check the work. You can add photos before or after.',
+      confirmLabel: 'Claim milestone',
     );
-    if (go != true || !mounted) return;
+    if (!go || !mounted) return;
     setState(() => _busy = true);
     try {
       final sent = await _s.sendOrQueue(
@@ -99,10 +95,12 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
     final auth = ref.watch(authProvider);
     return data.when(
       loading: () => const Scaffold(appBar: IbhAppBar(title: 'Milestone'), body: SkeletonList(rows: 3)),
-      error: (e, _) => Scaffold(
-        appBar: const IbhAppBar(title: 'Milestone'),
-        body: ErrorRetry(e, () => ref.invalidate(projectProvider(widget.projectId))),
-      ),
+      error: (e, _) => isRotatedOff(e)
+          ? const NotOnProjectPage()
+          : Scaffold(
+              appBar: const IbhAppBar(title: 'Milestone'),
+              body: ErrorRetry(e, () => ref.invalidate(projectProvider(widget.projectId))),
+            ),
       data: (d) {
         final m = d.milestones.where((x) => x['id'] == widget.milestoneId).firstOrNull;
         if (m == null) {

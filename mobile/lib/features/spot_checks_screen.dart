@@ -8,6 +8,7 @@ import '../theme/ibh_tokens.dart';
 import '../ui/forms.dart';
 import '../ui/ibh_app_bar.dart';
 import '../ui/ibh_card.dart';
+import '../ui/sheets.dart';
 import '../ui/states.dart';
 import 'arrival_screen.dart';
 import 'capture_target.dart';
@@ -55,9 +56,9 @@ class SpotChecksScreen extends ConsumerWidget {
               SizedBox(
                 height: 420,
                 child: EmptyState(
-                  icon: Icons.fact_check_outlined,
-                  title: 'No spot checks right now',
-                  message: 'iBackHome will message you when one is due.',
+                  icon: Icons.event_outlined,
+                  title: 'No spot checks',
+                  message: 'Unannounced checks appear here when iBackHome assigns one.',
                 ),
               ),
             ]);
@@ -182,6 +183,14 @@ class _SpotCheckScreenState extends ConsumerState<SpotCheckScreen> {
       );
 
   Future<void> _submit() async {
+    final go = await confirmSheet(
+      context,
+      title: 'Submit spot check findings?',
+      message: "They go to iBackHome only. You can't edit them afterwards.",
+      confirmLabel: 'Submit findings',
+      cancelLabel: 'Keep editing',
+    );
+    if (!go || !mounted) return;
     setState(() => _busy = true);
     try {
       await ref.read(servicesProvider).api.post<Map<String, dynamic>>(

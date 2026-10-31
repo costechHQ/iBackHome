@@ -42,11 +42,12 @@ class PermissionsScreen extends ConsumerStatefulWidget {
   ConsumerState<PermissionsScreen> createState() => _PermissionsScreenState();
 }
 
-class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
+class _PermissionsScreenState extends ConsumerState<PermissionsScreen> with WidgetsBindingObserver {
   PermissionStatus? _camera;
   PermissionStatus? _location;
   bool _gps = true;
   bool _busy = false;
+  bool _requested = false; // the person has pressed Allow: a missing permission now shows its own page
   bool _ready = false; // the key is registered: show "Capture key ready"
   String? _keyError;
 
@@ -56,7 +57,20 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Back from the phone's settings: look again at what is allowed.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refresh();
   }
 
   Future<void> _refresh() async {
@@ -73,7 +87,10 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   }
 
   Future<void> _allow() async {
-    setState(() => _busy = true);
+    setState(() {
+      _busy = true;
+      _requested = true;
+    });
     await Permission.camera.request();
     await Permission.locationWhenInUse.request();
     await _refresh();
@@ -105,7 +122,39 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   Widget build(BuildContext context) {
     if (_ready) return _allSet();
     if (_camera == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_requested && !_permissionsOk) return _deniedPage();
     return _permissionsOk ? _keyStep() : _permissionStep();
+  }
+
+  /// "Camera is off for iBackHome" / "Location is off for iBackHome": what is missing, why capture needs it,
+  /// and a button to the phone's settings (AND-SUPERVISOR-016).
+  Widget _deniedPage() {
+    final camera = _camera?.isGranted != true;
+    final (icon, title, message) = camera
+        ? (Icons.photo_camera_outlined, 'Camera is off for iBackHome', 'Photos and video are taken only inside the app, so capture needs the camera. Turn on Camera for iBackHome.')
+        : !_gps
+            ? (Icons.location_disabled, 'Location services are off', 'Every capture needs your exact location to prove it was taken on site. Turn on GPS in the phone settings.')
+            : (Icons.place_outlined, 'Location is off for iBackHome', 'Every capture needs your exact location to prove it was taken on site. Turn on 201CPrecise location201D for iBackHome.');
+    return Scaffold(
+      backgroundColor: IbhColors.mist,
+      appBar: const IbhAppBar(title: 'Set up this phone', leading: IbhBarLeading.close),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(IbhSpace.s24),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 56, height: 56, decoration: const BoxDecoration(color: IbhColors.white, shape: BoxShape.circle), child: Icon(icon, color: IbhColors.navy900)),
+            const SizedBox(height: IbhSpace.s16),
+            Text(title, textAlign: TextAlign.center, style: IbhText.h3.copyWith(fontSize: 20)),
+            const SizedBox(height: IbhSpace.s8),
+            Text(message, textAlign: TextAlign.center, style: IbhText.body),
+          ]),
+        ),
+      ),
+      bottomNavigationBar: BottomActionBar(children: [
+        FilledButton(onPressed: camera || _gps ? openAppSettings : Geolocator.openLocationSettings, child: const Text('Open phone settings')),
+        OutlinedButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Not now')),
+      ]),
+    );
   }
 
   Widget _permissionStep() => Scaffold(

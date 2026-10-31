@@ -9,6 +9,7 @@ import '../core/services.dart';
 import '../core/wat.dart';
 import '../theme/ibh_tokens.dart';
 import '../ui/ibh_card.dart';
+import '../ui/sheets.dart';
 import '../ui/states.dart';
 import 'widgets.dart';
 
@@ -101,10 +102,27 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
         showDragHandle: true,
         backgroundColor: IbhColors.white,
         shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(IbhRadius.sheet))),
-        builder: (_) => _CaptureSheet(c, onRetry: () {
-          Navigator.of(context).pop();
-          _s.sync.syncNow(force: true);
-        }),
+        builder: (sheetContext) => _CaptureSheet(
+          c,
+          onRetry: () {
+            Navigator.of(sheetContext).pop();
+            _s.sync.syncNow(force: true);
+          },
+          onDelete: () async {
+            final go = await confirmSheet(
+              sheetContext,
+              title: 'Delete this capture?',
+              message: "${c.evidenceId == null ? 'It' : 'EV-${c.evidenceId!.substring(0, 4).toUpperCase()}'} hasn't uploaded yet. If you delete it, it's gone for good and won't count. You'd need to take it again on site.",
+              confirmLabel: 'Delete capture',
+              cancelLabel: 'Keep it',
+              destructive: true,
+            );
+            if (!go) return;
+            await _s.db.discard(c);
+            if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+            await _load();
+          },
+        ),
       );
 }
 
@@ -204,9 +222,10 @@ class _ActionRow extends StatelessWidget {
 }
 
 class _CaptureSheet extends StatelessWidget {
-  const _CaptureSheet(this.c, {required this.onRetry});
+  const _CaptureSheet(this.c, {required this.onRetry, required this.onDelete});
   final QueuedCapture c;
   final VoidCallback onRetry;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -254,6 +273,12 @@ class _CaptureSheet extends StatelessWidget {
           if (c.status == CaptureStatus.queued || c.status == CaptureStatus.failed) ...[
             const SizedBox(height: IbhSpace.s16),
             OutlinedButton(onPressed: onRetry, child: const Text('Retry now')),
+            const SizedBox(height: IbhSpace.s8),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: IbhColors.badFg, minimumSize: const Size.fromHeight(48)),
+              onPressed: onDelete,
+              child: const Text('Delete capture', style: TextStyle(fontWeight: FontWeight.w700)),
+            ),
           ],
         ]),
       ),

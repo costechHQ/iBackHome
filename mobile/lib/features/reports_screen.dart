@@ -6,6 +6,7 @@ import '../theme/ibh_tokens.dart';
 import '../ui/ibh_app_bar.dart';
 import '../ui/ibh_card.dart';
 import '../ui/markdown_lite.dart';
+import '../ui/sheets.dart';
 import '../ui/states.dart';
 import 'widgets.dart';
 
@@ -86,18 +87,14 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
   bool _busy = false;
 
   Future<void> _review() async {
-    final go = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Mark this report reviewed?'),
-        content: const Text('The client gets it by WhatsApp and email, labelled AI-generated and reviewed by you. Check every sentence against what you saw first.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep reading')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Mark reviewed')),
-        ],
-      ),
+    final go = await confirmSheet(
+      context,
+      title: 'Mark this report reviewed?',
+      message: 'The client gets it by WhatsApp and email, labelled AI-generated and reviewed by you. Check every sentence against what you saw first.',
+      confirmLabel: 'Mark reviewed',
+      cancelLabel: 'Keep reading',
     );
-    if (go != true || !mounted) return;
+    if (!go || !mounted) return;
     setState(() => _busy = true);
     try {
       await ref.read(servicesProvider).api.post<Map<String, dynamic>>(
