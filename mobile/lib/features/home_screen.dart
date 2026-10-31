@@ -6,6 +6,7 @@ import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
 import '../ui/ibh_app_bar.dart';
 import '../ui/sync_strip.dart';
+import 'payout_screen.dart';
 import 'permissions_screen.dart';
 import 'profile_screen.dart';
 import 'project_screen.dart';
@@ -41,9 +42,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Supervisors also get spot checks; contractors do not do them. (Contractor tabs follow the
     // design, Projects / Orders / Alerts / Account, once those screens exist.)
     final tabs = <_Tab>[
-      _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const VettingGate(child: _ProjectsTab()), strip: true),
+      _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const _ProjectsTab(), strip: true),
       if (supervisor)
-        _Tab('Spot checks', Icons.fact_check_outlined, Icons.fact_check, 'Unannounced visits', const VettingGate(child: SpotChecksScreen())),
+        _Tab('Spot checks', Icons.fact_check_outlined, Icons.fact_check, 'Unannounced visits', const SpotChecksScreen()),
       _Tab('Sync', Icons.cloud_upload_outlined, Icons.cloud_upload, null, const QueueScreen(), strip: true, badge: true),
       _Tab('Me', Icons.person_outline, Icons.person, supervisor ? 'Supervisor account' : 'Contractor account', const _MeTab()),
     ];
@@ -212,6 +213,13 @@ class _MeTab extends ConsumerWidget {
             Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ProfileScreen())),
         child: const Text('View and edit profile'),
       ),
+      if (auth.isContractor) ...[
+        const SizedBox(height: IbhSpace.s8),
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const PayoutScreen())),
+          child: const Text('Payout account'),
+        ),
+      ],
       if (auth.isSupervisor) ...[
         const SizedBox(height: IbhSpace.s8),
         ref.watch(vettingProvider).maybeWhen(
