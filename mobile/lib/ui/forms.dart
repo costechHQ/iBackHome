@@ -166,3 +166,70 @@ class IconBadge extends StatelessWidget {
         child: Icon(icon, color: ok ? IbhColors.okFg : IbhColors.navy900),
       );
 }
+
+/// A row of equal buttons where one is selected (navy, white text): "Yes | Partly | No".
+class ChoiceRow<T> extends StatelessWidget {
+  const ChoiceRow({super.key, required this.options, required this.value, required this.onChanged});
+
+  final Map<T, String> options;
+  final T? value;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Row(children: [
+        for (final e in options.entries) ...[
+          if (e.key != options.keys.first) const SizedBox(width: IbhSpace.s8),
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: value == e.key,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(IbhRadius.control),
+                onTap: () => onChanged(e.key),
+                child: Container(
+                  height: 48,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: value == e.key ? IbhColors.navy900 : IbhColors.white,
+                    borderRadius: BorderRadius.circular(IbhRadius.control),
+                    border: Border.all(color: value == e.key ? IbhColors.navy900 : IbhColors.lineStrong),
+                  ),
+                  child: Text(e.value, style: TextStyle(fontWeight: FontWeight.w700, color: value == e.key ? IbhColors.white : IbhColors.ink)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ]);
+}
+
+/// "− 7 +": a count with big buttons, kept between [min] and [max].
+class CountStepper extends StatelessWidget {
+  const CountStepper({super.key, required this.value, required this.onChanged, this.min = 0, this.max = 9999, this.label = 'count'});
+
+  final int value;
+  final ValueChanged<int> onChanged;
+  final int min;
+  final int max;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        decoration: BoxDecoration(color: IbhColors.mist, borderRadius: BorderRadius.circular(IbhRadius.control), border: Border.all(color: IbhColors.lineStrong)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          IconButton(
+            tooltip: 'Decrease $label',
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: const Icon(Icons.remove),
+            onPressed: value > min ? () => onChanged(value - 1) : null,
+          ),
+          SizedBox(width: 56, child: Text('$value', textAlign: TextAlign.center, style: IbhText.h3)),
+          IconButton(
+            tooltip: 'Increase $label',
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            icon: const Icon(Icons.add),
+            onPressed: value < max ? () => onChanged(value + 1) : null,
+          ),
+        ]),
+      );
+}

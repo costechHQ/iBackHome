@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config.dart';
 import '../core/geo.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
@@ -9,6 +10,7 @@ import '../ui/ibh_card.dart';
 import '../ui/states.dart';
 import 'arrival_screen.dart';
 import 'capture_target.dart';
+import 'delivery_screen.dart';
 import 'milestone_screen.dart';
 import 'permissions_screen.dart';
 import 'projects_tab.dart';
@@ -109,8 +111,16 @@ class ProjectScreen extends ConsumerWidget {
                     subtitle: 'Read the AI draft and mark it reviewed',
                     leading: const Icon(Icons.description_outlined),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ReportsScreen(projectId: projectId))),
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ReportsScreen(projectId: projectId, projectTitle: d.project['title'] as String?))),
                   ),
+                  if (Config.mocks)
+                    IbhRow(
+                      title: 'Deliveries to confirm',
+                      subtitle: 'Sample orders (the orders list route is missing)',
+                      leading: const Icon(Icons.local_shipping_outlined),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => DeliveriesScreen(projectId: projectId, projectTitle: d.project['title'] as String?))),
+                    ),
                 ]),
               ),
             if (d.milestones.isEmpty)
