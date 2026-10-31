@@ -9,7 +9,8 @@ import '../ui/sync_strip.dart';
 import 'payout_screen.dart';
 import 'permissions_screen.dart';
 import 'profile_screen.dart';
-import 'project_screen.dart';
+import 'projects_tab.dart';
+
 import 'queue_screen.dart';
 import 'spot_checks_screen.dart';
 import 'vetting_screen.dart';
@@ -42,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Supervisors also get spot checks; contractors do not do them. (Contractor tabs follow the
     // design, Projects / Orders / Alerts / Account, once those screens exist.)
     final tabs = <_Tab>[
-      _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const _ProjectsTab(), strip: true),
+      _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const ProjectsTab(), strip: true),
       if (supervisor)
         _Tab('Spot checks', Icons.fact_check_outlined, Icons.fact_check, 'Unannounced visits', const SpotChecksScreen()),
       _Tab('Sync', Icons.cloud_upload_outlined, Icons.cloud_upload, null, const QueueScreen(), strip: true, badge: true),
@@ -139,58 +140,6 @@ class _SyncBadgeState extends ConsumerState<_SyncBadge> {
         backgroundColor: IbhColors.navy900,
         child: widget.icon,
       );
-}
-
-class _ProjectsTab extends ConsumerWidget {
-  const _ProjectsTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final projects = ref.watch(projectsProvider);
-    final device = ref.watch(deviceProvider);
-    return RefreshIndicator(
-      onRefresh: () async => ref.refresh(projectsProvider.future),
-      child: projects.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorRetry(e, () => ref.invalidate(projectsProvider)),
-        data: (items) => ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
-          if (device.hasError)
-            Padding(
-              padding: const EdgeInsets.only(bottom: IbhSpace.s12),
-              child: Column(children: [
-                Alert('This phone is not registered yet, so you cannot capture. ${ApiError.from(device.error!).message}',
-                    tone: ChipTone.bad),
-                TextButton(
-                    onPressed: () async {
-                      if (ApiError.from(device.error!).code == 'device_revoked_here') {
-                        await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const PermissionsScreen()));
-                      }
-                      ref.invalidate(deviceProvider);
-                    },
-                    child: const Text('Register this phone')),
-              ]),
-            ),
-          if (items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(IbhSpace.s32),
-              child: Center(child: Text('No projects yet. Operations will assign you to one.', textAlign: TextAlign.center)),
-            ),
-          for (final p in items)
-            Card(
-              child: ListTile(
-                minVerticalPadding: IbhSpace.s12,
-                title: Text(p['title'] as String, style: IbhText.h3.copyWith(fontSize: 16)),
-                subtitle: Text(p['address'] as String),
-                trailing: StatusChip(p['status'] as String,
-                    tone: p['status'] == 'active' ? ChipTone.ok : ChipTone.neutral),
-                onTap: () => Navigator.of(context)
-                    .push(MaterialPageRoute<void>(builder: (_) => ProjectScreen(projectId: p['id'] as String))),
-              ),
-            ),
-        ]),
-      ),
-    );
-  }
 }
 
 class _MeTab extends ConsumerWidget {

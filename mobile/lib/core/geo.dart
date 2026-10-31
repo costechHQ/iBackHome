@@ -32,6 +32,15 @@ class Geo {
     return best;
   }
 
+  /// Metres from the point to the nearest fence edge, whether the point is inside or outside.
+  static double distanceToEdge(List<List<double>> ring, double lat, double lon) {
+    var best = double.infinity;
+    for (var i = 0; i < ring.length - 1; i++) {
+      best = math.min(best, _segmentMeters(ring[i], ring[i + 1], lat, lon));
+    }
+    return best;
+  }
+
   static double _segmentMeters(List<double> a, List<double> b, double lat, double lon) {
     // Local flat-earth projection around the point: fine for a building plot.
     final k = math.cos(lat * math.pi / 180);
