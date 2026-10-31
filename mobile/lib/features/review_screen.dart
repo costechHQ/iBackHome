@@ -38,7 +38,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   }
 
   Future<void> _save() async {
-    await ref.read(servicesProvider).db.save(widget.capture.id, note: _note.text, checklistItem: _item);
+    await ref.read(servicesProvider).db.save(widget.capture.id, note: _note.text, checklistItem: _item ?? widget.target.fixedItem);
     if (mounted) Navigator.of(context).pop(true);
   }
 
