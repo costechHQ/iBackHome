@@ -4,7 +4,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../core/api_error.dart';
+import '../core/services.dart';
+import '../core/wat.dart';
 import '../theme/ibh_tokens.dart';
+import '../ui/forms.dart';
+import '../ui/ibh_app_bar.dart';
+import '../ui/ibh_card.dart';
+import '../ui/states.dart';
 import 'home_screen.dart';
 import 'widgets.dart';
 
@@ -27,7 +33,8 @@ Future<bool> ensureCaptureReady(BuildContext context, WidgetRef ref) async {
   return ok == true;
 }
 
-/// AND-SUPERVISOR-002: camera and location permission, then the signing key in the Keystore.
+/// AND-SUPERVISOR-002: "Set up this phone", in two steps: camera and location permission, then
+/// the signing key in the Keystore; then "Capture key ready".
 class PermissionsScreen extends ConsumerStatefulWidget {
   const PermissionsScreen({super.key});
 
@@ -35,17 +42,35 @@ class PermissionsScreen extends ConsumerStatefulWidget {
   ConsumerState<PermissionsScreen> createState() => _PermissionsScreenState();
 }
 
-class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
+class _PermissionsScreenState extends ConsumerState<PermissionsScreen> with WidgetsBindingObserver {
   PermissionStatus? _camera;
   PermissionStatus? _location;
   bool _gps = true;
   bool _busy = false;
+  bool _requested = false; // the person has pressed Allow: a missing permission now shows its own page
+  bool _ready = false; // the key is registered: show "Capture key ready"
   String? _keyError;
+
+  bool get _permissionsOk => _camera?.isGranted == true && _location?.isGranted == true;
+  bool get _denied => _camera?.isPermanentlyDenied == true || _location?.isPermanentlyDenied == true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _refresh();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Back from the phone's settings: look again at what is allowed.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refresh();
   }
 
   Future<void> _refresh() async {
@@ -64,69 +89,209 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   Future<void> _allow() async {
     setState(() {
       _busy = true;
-      _keyError = null;
+      _requested = true;
     });
     await Permission.camera.request();
     await Permission.locationWhenInUse.request();
     await _refresh();
-    if (_camera?.isGranted == true && _location?.isGranted == true) {
-      ref.invalidate(deviceProvider);
-      try {
-        await ref.read(deviceProvider.future);
-      } catch (e) {
-        _keyError = ApiError.from(e).message;
-      }
-    }
-    if (!mounted) return;
-    setState(() => _busy = false);
-    if (await captureReady(ref) && mounted) Navigator.of(context).pop(true);
+    if (mounted) setState(() => _busy = false);
   }
 
-  Widget _row(String title, String detail, bool ok) => ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(ok ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: ok ? IbhColors.okFg : IbhColors.muted),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(detail),
-        trailing: StatusChip(ok ? 'Ready' : 'Needed', tone: ok ? ChipTone.ok : ChipTone.warn),
-      );
+  Future<void> _createKey() async {
+    setState(() {
+      _busy = true;
+      _keyError = null;
+    });
+    // Pressing "Create my capture key" is the person's decision to set this phone up (again).
+    await ref.read(servicesProvider).tokens.setRevokedHere(false);
+    ref.invalidate(deviceProvider);
+    try {
+      await ref.read(deviceProvider.future);
+      if (mounted) setState(() => _ready = true);
+    } catch (e) {
+      if (mounted) setState(() => _keyError = ApiError.from(e).friendlyMessage);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _spinner() =>
+      const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: IbhColors.white));
 
   @override
   Widget build(BuildContext context) {
-    final cam = _camera?.isGranted == true;
-    final loc = _location?.isGranted == true;
-    final denied = _camera?.isPermanentlyDenied == true || _location?.isPermanentlyDenied == true;
-    final device = ref.watch(deviceProvider);
+    if (_ready) return _allSet();
+    if (_camera == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_requested && !_permissionsOk) return _deniedPage();
+    return _permissionsOk ? _keyStep() : _permissionStep();
+  }
+
+  /// "Camera is off for iBackHome" / "Location is off for iBackHome": what is missing, why capture needs it,
+  /// and a button to the phone's settings (AND-SUPERVISOR-016).
+  Widget _deniedPage() {
+    final camera = _camera?.isGranted != true;
+    final (icon, title, message) = camera
+        ? (Icons.photo_camera_outlined, 'Camera is off for iBackHome', 'Photos and video are taken only inside the app, so capture needs the camera. Turn on Camera for iBackHome.')
+        : !_gps
+            ? (Icons.location_disabled, 'Location services are off', 'Every capture needs your exact location to prove it was taken on site. Turn on GPS in the phone settings.')
+            : (Icons.place_outlined, 'Location is off for iBackHome', 'Every capture needs your exact location to prove it was taken on site. Turn on 201CPrecise location201D for iBackHome.');
     return Scaffold(
-      appBar: AppBar(title: const Text('Set up this phone')),
-      body: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
-        const Text(
-            'To prove what you see on site, iBackHome needs the camera and your location, and a signing key '
-            'that stays inside this phone.',
-            style: IbhText.body),
-        const SizedBox(height: IbhSpace.s16),
-        _row('Camera', 'Photos and video are taken in the app only. There is no gallery upload.', cam),
-        _row('Location', 'Stamps each capture with where you were.', loc),
-        if (!_gps) const Alert('Location services are off. Turn on GPS in the phone settings.', tone: ChipTone.bad),
-        _row('Signing key', 'Created in the Android Keystore. It never leaves this phone.', device.hasValue),
-        if (_keyError != null || (device.hasError && cam && loc))
-          Alert('The key could not be registered. ${_keyError ?? ApiError.from(device.error!).message}',
-              tone: ChipTone.bad),
-        if (denied)
-          const Alert('A permission was turned off for good. Open the phone settings for iBackHome and allow it.',
-              tone: ChipTone.bad),
-        const SizedBox(height: IbhSpace.s24),
-        FilledButton(
-          onPressed: _busy ? null : _allow,
-          child: _busy
-              ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Allow and create key'),
+      backgroundColor: IbhColors.mist,
+      appBar: const IbhAppBar(title: 'Set up this phone', leading: IbhBarLeading.close),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(IbhSpace.s24),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 56, height: 56, decoration: const BoxDecoration(color: IbhColors.white, shape: BoxShape.circle), child: Icon(icon, color: IbhColors.navy900)),
+            const SizedBox(height: IbhSpace.s16),
+            Text(title, textAlign: TextAlign.center, style: IbhText.h3.copyWith(fontSize: 20)),
+            const SizedBox(height: IbhSpace.s8),
+            Text(message, textAlign: TextAlign.center, style: IbhText.body),
+          ]),
         ),
-        if (denied) ...[
-          const SizedBox(height: IbhSpace.s8),
-          OutlinedButton(onPressed: openAppSettings, child: const Text('Open phone settings')),
-        ],
+      ),
+      bottomNavigationBar: BottomActionBar(children: [
+        FilledButton(onPressed: camera || _gps ? openAppSettings : Geolocator.openLocationSettings, child: const Text('Open phone settings')),
+        OutlinedButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Not now')),
       ]),
     );
   }
+
+  Widget _permissionStep() => Scaffold(
+        backgroundColor: IbhColors.white,
+        appBar: const IbhAppBar(title: 'Set up this phone', trailingText: '1 of 2'),
+        body: Column(children: [
+          const StepProgress(step: 1, of: 2),
+          Expanded(
+            child: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
+              Text('Allow what the camera needs', style: IbhText.h2.copyWith(fontSize: 26)),
+              const SizedBox(height: IbhSpace.s12),
+              const Text('Android will ask you next.', style: IbhText.bodyLg),
+              const SizedBox(height: IbhSpace.s16),
+              _need(Icons.photo_camera_outlined, 'Camera', 'Photos and video are taken only inside the app.', _camera?.isGranted == true),
+              _need(Icons.place_outlined, 'Precise location', 'Proves each capture is inside the site. Mock or fake locations are blocked.', _location?.isGranted == true),
+              if (!_gps)
+                const Padding(
+                  padding: EdgeInsets.only(top: IbhSpace.s12),
+                  child: Alert('Location services are off. Turn on GPS in the phone settings.', tone: ChipTone.bad),
+                ),
+              if (_denied)
+                const Padding(
+                  padding: EdgeInsets.only(top: IbhSpace.s12),
+                  child: Alert('A permission was turned off for good. Open the phone settings for iBackHome and allow it.', tone: ChipTone.bad),
+                ),
+            ]),
+          ),
+        ]),
+        bottomNavigationBar: BottomActionBar(children: [
+          FilledButton(onPressed: _busy ? null : (_denied ? openAppSettings : _allow), child: _busy ? _spinner() : Text(_denied ? 'Open phone settings' : 'Allow')),
+        ]),
+      );
+
+  Widget _need(IconData icon, String title, String detail, bool ok) => Container(
+        padding: const EdgeInsets.symmetric(vertical: IbhSpace.s12),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: IbhColors.line))),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: IbhColors.mist, borderRadius: BorderRadius.circular(IbhRadius.control)),
+            child: Icon(icon, size: 20),
+          ),
+          const SizedBox(width: IbhSpace.s12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: IbhText.body.copyWith(fontWeight: FontWeight.w700, color: IbhColors.ink)),
+              Text(detail, style: IbhText.small),
+            ]),
+          ),
+          if (ok) const Padding(padding: EdgeInsets.only(left: 8), child: StatusChip('Allowed', tone: ChipTone.ok)),
+        ]),
+      );
+
+  Widget _keyStep() => Scaffold(
+        backgroundColor: IbhColors.white,
+        appBar: const IbhAppBar(title: 'Set up this phone', trailingText: '2 of 2'),
+        body: Column(children: [
+          const StepProgress(step: 2, of: 2),
+          Expanded(
+            child: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
+              const Align(alignment: Alignment.centerLeft, child: IconBadge(Icons.vpn_key_outlined)),
+              const SizedBox(height: IbhSpace.s16),
+              Text('Your secure capture key', style: IbhText.h2.copyWith(fontSize: 26)),
+              const SizedBox(height: IbhSpace.s12),
+              const Text('This phone gets its own key. It signs every photo and video you take, so nobody can fake or change them.', style: IbhText.bodyLg),
+              const SizedBox(height: IbhSpace.s16),
+              Container(
+                padding: const EdgeInsets.all(IbhSpace.s16),
+                decoration: BoxDecoration(color: IbhColors.mist, borderRadius: BorderRadius.circular(IbhRadius.card)),
+                child: const Column(children: [
+                  _Point(Icons.smartphone, 'Created on this phone. The private part never leaves it.'),
+                  _Point(Icons.lock_outline, 'Signs each capture with the time and place it was taken.'),
+                  _Point(Icons.cancel_outlined, 'Captures signed by an unknown or revoked key are rejected.'),
+                  _Point(Icons.sync, 'New phone? Sign in there and create a new key; revoke the old one in Settings.'),
+                ]),
+              ),
+              if (_keyError != null) ...[
+                const SizedBox(height: IbhSpace.s12),
+                Alert('The key could not be registered. $_keyError', tone: ChipTone.bad),
+              ],
+            ]),
+          ),
+        ]),
+        bottomNavigationBar: BottomActionBar(children: [
+          FilledButton(onPressed: _busy ? null : _createKey, child: _busy ? _spinner() : const Text('Create my capture key')),
+        ]),
+      );
+
+  Widget _allSet() {
+    final device = ref.read(servicesProvider).device;
+    final id = (device?['device_id'] as String?) ?? '';
+    final created = device?['registered_at'] as String?;
+    return Scaffold(
+      backgroundColor: IbhColors.white,
+      appBar: const IbhAppBar(title: 'All set', leading: IbhBarLeading.none),
+      body: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
+        const Align(alignment: Alignment.centerLeft, child: IconBadge(Icons.check_circle_outline, ok: true)),
+        const SizedBox(height: IbhSpace.s16),
+        Text('Capture key ready', style: IbhText.h2.copyWith(fontSize: 26)),
+        const SizedBox(height: IbhSpace.s12),
+        const Text('This phone can now take evidence for iBackHome.', style: IbhText.bodyLg),
+        const SizedBox(height: IbhSpace.s16),
+        IbhCard(
+          child: Column(children: [
+            _kv('Key', id.length >= 4 ? 'ending ${id.substring(id.length - 4).toUpperCase()}' : 'registered', mono: true),
+            if (created != null) _kv('Created', watDayTime(DateTime.parse(created))),
+          ]),
+        ),
+      ]),
+      bottomNavigationBar: BottomActionBar(children: [
+        FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Go to my sites')),
+      ]),
+    );
+  }
+
+  Widget _kv(String k, String v, {bool mono = false}) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text(k, style: IbhText.body.copyWith(color: IbhColors.muted)),
+          Flexible(child: Text(v, textAlign: TextAlign.right, style: (mono ? IbhText.mono : IbhText.body).copyWith(fontWeight: FontWeight.w700, color: IbhColors.ink))),
+        ]),
+      );
+}
+
+class _Point extends StatelessWidget {
+  const _Point(this.icon, this.text);
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, size: 20),
+          const SizedBox(width: IbhSpace.s12),
+          Expanded(child: Text(text, style: IbhText.body)),
+        ]),
+      );
 }

@@ -93,7 +93,7 @@ void main() {
     expect(sent.path, '/auth/otp/request');
     expect(sent.data, {'identifier': '08030000002', 'channel': 'whatsapp'});
     expect(sent.headers['Idempotency-Key'], isNotEmpty);
-    expect(find.text('6-digit code'), findsOneWidget);
+    expect(find.text('Enter your code'), findsOneWidget);
   });
 
   testWidgets('a channel the server cannot use shows the designed message', (tester) async {
@@ -117,13 +117,15 @@ void main() {
     });
     await tester.pumpWidget(widget);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Email'));
+    await tester.pump();
     await tester.enterText(find.byType(TextField).first, 'client@example.com');
     await tester.pump();
     await tester.tap(find.text('Send code'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).last, '123456');
     await tester.pump();
-    await tester.tap(find.text('Sign in'));
+    await tester.tap(find.text('Verify'));
     await tester.pumpAndSettle();
     expect(find.text('This app is for supervisors and contractors.'), findsOneWidget);
   });

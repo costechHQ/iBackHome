@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,6 +7,10 @@ import '../core/api_error.dart';
 import '../core/capture_rules.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
+import '../ui/ibh_app_bar.dart';
+import '../ui/states.dart';
+import '../ui/sheets.dart';
+import 'queue_screen.dart';
 
 /// Chip colours follow the design system: status colours only in chips and alerts.
 class StatusChip extends StatelessWidget {
@@ -34,11 +40,23 @@ class StatusChip extends StatelessWidget {
 enum ChipTone { ok, warn, bad, info, neutral }
 
 ChipTone milestoneTone(String status) => switch (status) {
-      'released' || 'approved' || 'verified' => ChipTone.ok,
-      'claimed' => ChipTone.info,
+      'released' => ChipTone.ok,
+      'verified' || 'approved' => ChipTone.info,
+      'claimed' => ChipTone.warn,
       'disputed' => ChipTone.bad,
-      'funded' => ChipTone.warn,
       _ => ChipTone.neutral,
+    };
+
+/// The chip words from state-to-ui.md (Milestone).
+String milestoneLabel(String status) => switch (status) {
+      'pending' => 'Pending',
+      'funded' => 'Funded',
+      'claimed' => 'Claimed',
+      'verified' => 'Verified',
+      'approved' => 'Approved',
+      'disputed' => 'Disputed',
+      'released' => 'Released',
+      _ => status,
     };
 
 /// An inline alert box (warn / bad / info) with the design system colours.
@@ -65,7 +83,8 @@ class Alert extends StatelessWidget {
   }
 }
 
-/// Shows a failed load with a retry button.
+/// A failed load: an icon, what happened in plain words, "Try again", and, when the phone cannot reach
+/// the server, a way to the sync queue (the captures and decisions on the phone are safe).
 class ErrorRetry extends StatelessWidget {
   const ErrorRetry(this.error, this.onRetry, {super.key});
 
@@ -76,19 +95,79 @@ class ErrorRetry extends StatelessWidget {
   Widget build(BuildContext context) {
     final e = ApiError.from(error);
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(IbhSpace.s24),
         child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(e.friendlyMessage, textAlign: TextAlign.center),
-          if (e.requestId != null)
-            Text('Ref ${e.requestId}', style: IbhText.mono.copyWith(fontSize: 11)),
+          Container(
+            width: 56,
+            height: 56,
+            decoration: const BoxDecoration(color: IbhColors.white, shape: BoxShape.circle),
+            child: Icon(e.isNetwork ? Icons.cloud_off_outlined : Icons.warning_amber_rounded, color: IbhColors.navy900),
+          ),
           const SizedBox(height: IbhSpace.s16),
-          OutlinedButton(onPressed: onRetry, child: const Text('Try again')),
+          Text(e.isNetwork ? 'Can\'t reach iBackHome' : 'Something went wrong', textAlign: TextAlign.center, style: IbhText.h3.copyWith(fontSize: 20)),
+          const SizedBox(height: IbhSpace.s8),
+          Text(e.friendlyMessage, textAlign: TextAlign.center, style: IbhText.body),
+          if (e.requestId != null) ...[
+            const SizedBox(height: IbhSpace.s8),
+            Text('Ref ${e.requestId}', style: IbhText.mono.copyWith(fontSize: 11)),
+          ],
+          const SizedBox(height: IbhSpace.s24),
+          FilledButton(onPressed: onRetry, child: const Text('Try again')),
+          if (e.isNetwork) ...[
+            const SizedBox(height: IbhSpace.s8),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => const Scaffold(appBar: IbhAppBar(title: 'Sync', subtitle: 'Captures and decisions on this phone'), body: QueueScreen()),
+              )),
+              child: const Text('Open sync queue'),
+            ),
+          ],
         ]),
       ),
     );
   }
 }
+
+/// "You're no longer on this project": the server refused because the supervisor was rotated off it
+/// (`not_project_member`). Captures taken before still upload.
+class NotOnProjectPage extends StatelessWidget {
+  const NotOnProjectPage({super.key, this.projectTitle});
+
+  final String? projectTitle;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        appBar: IbhAppBar(title: projectTitle ?? 'Project'),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(IbhSpace.s24),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: const BoxDecoration(color: IbhColors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.lock_outline, color: IbhColors.navy900),
+              ),
+              const SizedBox(height: IbhSpace.s16),
+              Text('You\'re no longer on this project', textAlign: TextAlign.center, style: IbhText.h3.copyWith(fontSize: 20)),
+              const SizedBox(height: IbhSpace.s8),
+              Text(
+                'iBackHome rotated you off ${projectTitle ?? 'this project'}. You can\'t capture or verify here. Unsent captures from before still upload.',
+                textAlign: TextAlign.center,
+                style: IbhText.body,
+              ),
+            ]),
+          ),
+        ),
+        bottomNavigationBar: BottomActionBar(children: [
+          FilledButton(onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst), child: const Text('Back to my projects')),
+        ]),
+      );
+}
+
+/// True when the error is the server saying this person is not on the project (403).
+bool isRotatedOff(Object error) => ApiError.from(error).code == 'not_project_member';
 
 void showError(BuildContext context, Object error) {
   final e = ApiError.from(error);
@@ -203,24 +282,42 @@ class ThreeChecksView extends StatelessWidget {
 }
 
 /// Signing out keeps the queued captures on the phone, but they cannot upload until the same
-/// person signs in again. Warn first when some are still waiting (AND-SUPERVISOR-003).
+/// person signs in again. With captures still waiting, a bottom sheet says so first and offers
+/// "Upload first" (AND-SUPERVISOR-003); with none, a plain confirmation.
 Future<void> confirmSignOut(BuildContext context, WidgetRef ref) async {
-  final unsent = await ref.read(servicesProvider).db.unsentCount();
+  final s = ref.read(servicesProvider);
+  final unsent = await s.db.unsentCount();
   if (!context.mounted) return;
-  final go = await showDialog<bool>(
+  if (unsent == 0) {
+    final go = await confirmSheet(context, title: 'Sign out?', message: 'You will need a new code to sign in again.', confirmLabel: 'Sign out', cancelLabel: 'Stay signed in');
+    if (go) await ref.read(authProvider.notifier).signOut();
+    return;
+  }
+  final choice = await showModalBottomSheet<String>(
     context: context,
-    builder: (_) => AlertDialog(
-      title: const Text('Sign out?'),
-      content: Text(unsent == 0
-          ? 'You will need a new code to sign in again.'
-          : '$unsent capture${unsent == 1 ? ' is' : 's are'} still waiting to upload. They stay safe on this '
-              'phone and upload after you sign in again, but they must still reach the server within 72 hours of '
-              'being taken.'),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Stay signed in')),
-        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Sign out')),
-      ],
+    backgroundColor: IbhColors.white,
+    showDragHandle: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(IbhRadius.sheet))),
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(IbhSpace.s16, 0, IbhSpace.s16, IbhSpace.s16),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$unsent capture${unsent == 1 ? '' : 's'} haven\'t uploaded', style: IbhText.h3),
+          const SizedBox(height: IbhSpace.s8),
+          const Text(
+              'If you sign out now they stay on this phone until you sign in again. They must still reach the server within 72 hours of being taken. Upload first if you can.',
+              style: IbhText.body),
+          const SizedBox(height: IbhSpace.s16),
+          FilledButton(onPressed: () => Navigator.pop(ctx, 'upload'), child: const Text('Upload first')),
+          const SizedBox(height: IbhSpace.s8),
+          OutlinedButton(onPressed: () => Navigator.pop(ctx, 'out'), child: const Text('Sign out anyway')),
+        ]),
+      ),
     ),
   );
-  if (go == true) await ref.read(authProvider.notifier).signOut();
+  if (choice == 'upload') {
+    unawaited(s.sync.syncNow(force: true));
+  } else if (choice == 'out') {
+    await ref.read(authProvider.notifier).signOut();
+  }
 }

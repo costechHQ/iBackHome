@@ -96,6 +96,10 @@ class Services {
   ///
   /// If operations revoked the key, this throws `device_revoked`: the app stops capturing.
   Future<String> registerDevice() async {
+    if (await tokens.revokedHere()) {
+      throw ApiError('device_revoked_here',
+          'You revoked this phone, so it cannot capture evidence. Set it up again to create a new signing key.');
+    }
     final deviceId = await tokens.deviceId();
     final publicKey = await keystore.ensureKey();
     final record = await api.post<Map<String, dynamic>>(
@@ -108,6 +112,7 @@ class Services {
           'This phone\'s signing key was revoked, so it can no longer capture evidence. Contact operations.');
     }
     device = record;
+    await tokens.markDeviceRegistered();
     return deviceId;
   }
 
@@ -120,6 +125,7 @@ class Services {
     await api.post<Map<String, dynamic>>('/devices/$pk/revoke', idempotencyKey: 'revoke-$pk');
     await keystore.deleteKey();
     await tokens.resetDeviceId();
+    await tokens.setRevokedHere(true);
     device = null;
   }
 }
@@ -192,6 +198,13 @@ class AuthNotifier extends Notifier<AuthState> {
     await _s.api.post<Map<String, dynamic>>('/me/consent',
         body: {'terms_version': c['terms_version'], 'privacy_version': c['privacy_version']});
     await _loadMe();
+  }
+
+  /// Saves the person's own name (PATCH /me) and keeps the server's answer. Phone and email are sign-in
+  /// identifiers and are not changed here; time is always Nigerian time for these roles.
+  Future<void> updateProfile({required String fullName}) async {
+    final me = await _s.api.patch<Map<String, dynamic>>('/me', body: {'full_name': fullName});
+    state = AuthState(AuthStatus.signedIn, me: me);
   }
 
   Future<void> signOut() async {

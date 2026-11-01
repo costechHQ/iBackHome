@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/api_error.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
-import 'project_screen.dart';
+import '../ui/ibh_app_bar.dart';
+import '../ui/sync_strip.dart';
+import 'alerts_screen.dart';
+import 'me_tab.dart';
+import 'orders_screen.dart';
+import 'projects_tab.dart';
+
 import 'queue_screen.dart';
 import 'spot_checks_screen.dart';
-import 'vetting_screen.dart';
-import 'widgets.dart';
 
 final projectsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final page = await ref.read(servicesProvider).api.get<Map<String, dynamic>>('/projects', query: {'limit': 50});
@@ -30,151 +33,136 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final supervisor = ref.watch(authProvider).isSupervisor;
-    final sync = ref.read(servicesProvider).sync;
-    // Supervisors also get spot checks; contractors do not do them.
-    final tabs = <(String, IconData, Widget)>[
-      ('Projects', Icons.home_work_outlined, const VettingGate(child: _ProjectsTab())),
-      if (supervisor) ('Spot checks', Icons.pin_drop_outlined, const VettingGate(child: SpotChecksScreen())),
-      ('Queue', Icons.cloud_upload_outlined, const QueueScreen()),
-      ('Me', Icons.person_outline, const _MeTab()),
-    ];
+    final auth = ref.watch(authProvider);
+    final supervisor = auth.isSupervisor;
+    final name = auth.me?['full_name'] as String?;
+    final role = supervisor ? 'supervisor' : 'contractor';
+    // Supervisor: Projects, Spot checks, Sync, Me. Contractor: Projects, Orders, Alerts, Account (the
+    // contractor's sync status is in Account; their captures upload by themselves).
+    final tabs = supervisor
+        ? <_Tab>[
+            _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const ProjectsTab(), strip: true),
+            _Tab('Spot checks', Icons.fact_check_outlined, Icons.fact_check, 'Unannounced visits', const SpotChecksScreen()),
+            _Tab('Sync', Icons.cloud_upload_outlined, Icons.cloud_upload, null, const QueueScreen(), strip: true, badge: _Badge.sync),
+            _Tab('Me', Icons.person_outline, Icons.person, 'Supervisor account', const MeTab()),
+          ]
+        : <_Tab>[
+            _Tab('Projects', Icons.home_outlined, Icons.home, name == null ? role : '$name · $role', const ProjectsTab(), strip: true),
+            _Tab('Orders', Icons.inventory_2_outlined, Icons.inventory_2, 'Material orders', const OrdersTab()),
+            _Tab('Alerts', Icons.notifications_outlined, Icons.notifications, null, const AlertsTab(), badge: _Badge.alerts),
+            _Tab('Account', Icons.person_outline, Icons.person, 'Contractor account', const MeTab()),
+          ];
     final i = _tab.clamp(0, tabs.length - 1);
+    final t = tabs[i];
     return Scaffold(
-      appBar: AppBar(title: Text(tabs[i].$1)),
-      body: tabs[i].$3,
-      bottomNavigationBar: ListenableBuilder(
-        listenable: sync,
-        builder: (_, _) => NavigationBar(
-          selectedIndex: i,
-          onDestinationSelected: (v) => setState(() => _tab = v),
-          destinations: [for (final t in tabs) NavigationDestination(icon: Icon(t.$2), label: t.$1)],
+      appBar: IbhAppBar(title: t.label, subtitle: t.subtitle, leading: IbhBarLeading.logo),
+      body: Column(children: [
+        if (t.strip) const SyncStrip(),
+        Expanded(child: t.body),
+      ]),
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          backgroundColor: IbhColors.white,
+          indicatorColor: IbhColors.accentTint,
+          height: 72,
+          labelTextStyle: WidgetStateProperty.resolveWith((s) => TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                fontWeight: s.contains(WidgetState.selected) ? FontWeight.w700 : FontWeight.w500,
+                color: s.contains(WidgetState.selected) ? IbhColors.navy900 : IbhColors.muted,
+              )),
+          iconTheme: WidgetStateProperty.resolveWith(
+              (s) => IconThemeData(color: s.contains(WidgetState.selected) ? IbhColors.navy900 : IbhColors.muted)),
+        ),
+        child: DecoratedBox(
+          decoration: const BoxDecoration(border: Border(top: BorderSide(color: IbhColors.line))),
+          child: NavigationBar(
+            selectedIndex: i,
+            onDestinationSelected: (v) => setState(() => _tab = v),
+            destinations: [
+              for (final tab in tabs)
+                NavigationDestination(
+                  icon: _withBadge(tab.badge, Icon(tab.icon)),
+                  selectedIcon: _withBadge(tab.badge, Icon(tab.selectedIcon)),
+                  label: tab.label,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _ProjectsTab extends ConsumerWidget {
-  const _ProjectsTab();
+/// The icon with its count: captures waiting (Sync) or unread alerts (Alerts).
+Widget _withBadge(_Badge b, Icon icon) => switch (b) {
+      _Badge.sync => _SyncBadge(icon),
+      _Badge.alerts => _AlertsBadge(icon),
+      _Badge.none => icon,
+    };
+
+/// Unread alerts on the Alerts tab (sample data until the feed route exists).
+class _AlertsBadge extends ConsumerWidget {
+  const _AlertsBadge(this.icon);
+  final Icon icon;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final projects = ref.watch(projectsProvider);
-    final device = ref.watch(deviceProvider);
-    return RefreshIndicator(
-      onRefresh: () async => ref.refresh(projectsProvider.future),
-      child: projects.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorRetry(e, () => ref.invalidate(projectsProvider)),
-        data: (items) => ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
-          if (device.hasError)
-            Padding(
-              padding: const EdgeInsets.only(bottom: IbhSpace.s12),
-              child: Column(children: [
-                Alert('This phone is not registered yet, so you cannot capture. ${ApiError.from(device.error!).message}',
-                    tone: ChipTone.bad),
-                TextButton(onPressed: () => ref.invalidate(deviceProvider), child: const Text('Register this phone')),
-              ]),
-            ),
-          if (items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(IbhSpace.s32),
-              child: Center(child: Text('No projects yet. Operations will assign you to one.', textAlign: TextAlign.center)),
-            ),
-          for (final p in items)
-            Card(
-              child: ListTile(
-                minVerticalPadding: IbhSpace.s12,
-                title: Text(p['title'] as String, style: IbhText.h3.copyWith(fontSize: 16)),
-                subtitle: Text(p['address'] as String),
-                trailing: StatusChip(p['status'] as String,
-                    tone: p['status'] == 'active' ? ChipTone.ok : ChipTone.neutral),
-                onTap: () => Navigator.of(context)
-                    .push(MaterialPageRoute<void>(builder: (_) => ProjectScreen(projectId: p['id'] as String))),
-              ),
-            ),
-        ]),
-      ),
-    );
+    final unread = (ref.watch(alertsProvider).value ?? const []).where((a) => a['unread'] == true).length;
+    return Badge(isLabelVisible: unread > 0, label: Text('$unread'), backgroundColor: IbhColors.navy900, child: icon);
   }
 }
 
-class _MeTab extends ConsumerWidget {
-  const _MeTab();
+class _Tab {
+  const _Tab(this.label, this.icon, this.selectedIcon, this.subtitle, this.body, {this.strip = false, this.badge = _Badge.none});
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final String? subtitle;
+  final Widget body;
+  final bool strip;
+  final _Badge badge;
+}
+
+enum _Badge { none, sync, alerts }
+
+/// The Sync tab's icon with the number of captures still waiting to upload.
+class _SyncBadge extends ConsumerStatefulWidget {
+  const _SyncBadge(this.icon);
+  final Icon icon;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authProvider);
-    final device = ref.watch(deviceProvider);
-    final me = auth.me ?? const {};
-    final s = ref.read(servicesProvider);
-    return ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
-      Text('${me['full_name'] ?? 'Your account'}', style: IbhText.h3),
-      Text('${me['phone'] ?? me['email'] ?? ''}'),
-      const SizedBox(height: IbhSpace.s8),
-      StatusChip('${me['role']}', tone: ChipTone.info),
-      if (auth.isSupervisor) ...[
-        const SizedBox(height: IbhSpace.s8),
-        ref.watch(vettingProvider).maybeWhen(
-              data: (p) => p == null
-                  ? const StatusChip('Not applied for vetting', tone: ChipTone.warn)
-                  : StatusChip('Vetting: ${p['vetting_status']}',
-                      tone: p['vetting_status'] == 'approved' ? ChipTone.ok : ChipTone.warn),
-              orElse: () => const SizedBox.shrink(),
-            ),
-      ],
-      const Divider(height: IbhSpace.s32),
-      const Text('This phone', style: IbhText.h3),
-      const SizedBox(height: IbhSpace.s8),
-      device.when(
-        loading: () => const LinearProgressIndicator(),
-        error: (e, _) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Alert(ApiError.from(e).message, tone: ChipTone.bad),
-          TextButton(onPressed: () => ref.invalidate(deviceProvider), child: const Text('Try again')),
-        ]),
-        data: (id) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const StatusChip('Signing key registered', tone: ChipTone.ok),
-          const SizedBox(height: IbhSpace.s8),
-          Text(id, style: IbhText.mono.copyWith(fontSize: 11)),
-          const SizedBox(height: IbhSpace.s12),
-          OutlinedButton(
-            onPressed: () async {
-              final go = await showDialog<bool>(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: const Text('Revoke this phone?'),
-                  content: const Text('Use this if the phone is lost or replaced. Its signing key stops working at '
-                      'once. Captures still waiting to upload will be rejected by the server. You can set the phone '
-                      'up again with a new key.'),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                    FilledButton(
-                        style: FilledButton.styleFrom(backgroundColor: IbhColors.badFg),
-                        onPressed: () => Navigator.pop(context, true),
-                        child: const Text('Revoke')),
-                  ],
-                ),
-              );
-              if (go != true) return;
-              try {
-                await s.revokeThisPhone();
-                ref.invalidate(deviceProvider);
-              } catch (e) {
-                if (context.mounted) showError(context, e);
-              }
-            },
-            child: const Text('Revoke this phone'),
-          ),
-        ]),
-      ),
-      const Divider(height: IbhSpace.s32),
-      const Text('Held by a licensed escrow partner, never by iBackHome.', style: IbhText.small),
-      const SizedBox(height: IbhSpace.s24),
-      OutlinedButton(
-        onPressed: () => confirmSignOut(context, ref),
-        child: const Text('Sign out'),
-      ),
-    ]);
-  }
+  ConsumerState<_SyncBadge> createState() => _SyncBadgeState();
 }
+
+class _SyncBadgeState extends ConsumerState<_SyncBadge> {
+  late final Services _s = ref.read(servicesProvider);
+  int _waiting = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _s.sync.addListener(_load);
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _s.sync.removeListener(_load);
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final n = await _s.db.unsentCount();
+    if (mounted) setState(() => _waiting = n);
+  }
+
+  @override
+  Widget build(BuildContext context) => Badge(
+        isLabelVisible: _waiting > 0,
+        label: Text('$_waiting'),
+        backgroundColor: IbhColors.navy900,
+        child: widget.icon,
+      );
+}
+
