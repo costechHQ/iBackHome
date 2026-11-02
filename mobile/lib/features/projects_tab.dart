@@ -41,8 +41,8 @@ Map<String, dynamic>? _firstWhere(List<Map<String, dynamic>> ms, String status) 
 
 /// Shown while the list on screen is the last saved copy because there is no signal. Pull down to
 /// refresh once back online; captures and milestone actions still queue on the phone meanwhile.
-class _SavedNote extends ConsumerWidget {
-  const _SavedNote();
+class SavedNote extends ConsumerWidget {
+  const SavedNote({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => ValueListenableBuilder<DateTime?>(
@@ -99,7 +99,7 @@ class ProjectsTab extends ConsumerWidget {
           }
           final ms = {for (final p in items) p['id'] as String: ref.watch(projectMilestonesProvider(p['id'] as String)).value};
           return ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
-            const _SavedNote(),
+            const SavedNote(),
             if (device.hasError) _DeviceAlert(device.error!),
             if (!supervisor) ...[
               Padding(

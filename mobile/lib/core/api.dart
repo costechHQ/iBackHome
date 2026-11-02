@@ -110,6 +110,10 @@ class Api {
         return res.data as T;
       });
 
+  Future<void> delete(String path) => _run(() async {
+        await dio.delete<dynamic>(path, options: Options(headers: {'Idempotency-Key': newKey()}));
+      });
+
   Future<T> _run<T>(Future<T> Function() call) async {
     try {
       return await call();

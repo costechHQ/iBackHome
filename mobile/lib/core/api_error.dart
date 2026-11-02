@@ -35,6 +35,7 @@ class ApiError implements Exception {
       case 'project_not_active':
         return 'This project is paused, so milestone actions are on hold.';
       case 'device_revoked':
+      case 'nin_not_configured': // a 503 whose own wording ("We can't take a NIN right now") is the useful one
         return message;
     }
     if (status == 429) return 'Too many tries. Wait a little and try again.';

@@ -27,6 +27,8 @@ class VerifyScreen extends ConsumerStatefulWidget {
     required this.milestoneId,
     required this.milestoneName,
     this.projectTitle,
+    this.contractorName,
+    this.checklist = defaultChecklist,
     this.sequence,
   });
 
@@ -34,6 +36,12 @@ class VerifyScreen extends ConsumerStatefulWidget {
   final String milestoneId;
   final String milestoneName;
   final String? projectTitle;
+
+  /// The contractor's name when the server has one: "Send back to Engr. Obi" instead of "to contractor".
+  final String? contractorName;
+
+  /// What this milestone is checked against (ops' template for it, from the server).
+  final List<String> checklist;
   final int? sequence;
 
   @override
@@ -41,11 +49,13 @@ class VerifyScreen extends ConsumerStatefulWidget {
 }
 
 class _VerifyScreenState extends ConsumerState<VerifyScreen> {
+  String get _sendBackLabel => widget.contractorName == null ? 'Send back to contractor' : 'Send back to ${widget.contractorName}';
+
   final _notes = TextEditingController();
   List<QueuedCapture> _photos = const [];
 
   /// Checklist item text -> ids of this phone's captures that show it.
-  final Map<String, Set<String>> _linked = {for (final i in defaultChecklist) i: <String>{}};
+  late final Map<String, Set<String>> _linked = {for (final i in widget.checklist) i: <String>{}};
   bool _loaded = false;
   bool _busy = false;
   String? _conflict;
@@ -105,7 +115,7 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
             const SizedBox(height: IbhSpace.s12),
             TextField(controller: reason, maxLines: 4, autofocus: true, textCapitalization: TextCapitalization.sentences, onChanged: (_) => setSheet(() {})),
             const SizedBox(height: IbhSpace.s16),
-            FilledButton(onPressed: reason.text.trim().isEmpty ? null : () => Navigator.pop(ctx, true), child: const Text('Send back to contractor')),
+            FilledButton(onPressed: reason.text.trim().isEmpty ? null : () => Navigator.pop(ctx, true), child: Text(_sendBackLabel)),
           ]),
         ),
       ),
@@ -263,7 +273,7 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
             ]),
       bottomNavigationBar: BottomActionBar(children: [
         FilledButton(onPressed: _busy || !_canVerify ? null : _verifyConfirm, child: Text('Verify ${widget.milestoneName}')),
-        OutlinedButton(onPressed: _busy ? null : _sendBack, child: const Text('Send back to contractor')),
+        OutlinedButton(onPressed: _busy ? null : _sendBack, child: Text(_sendBackLabel)),
       ]),
     );
   }

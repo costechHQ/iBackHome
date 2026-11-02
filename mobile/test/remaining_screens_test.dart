@@ -116,7 +116,7 @@ void main() {
       await t.pump();
     }
 
-    testWidgets('a draft report can be read and marked reviewed, but not edited', (tester) async {
+    testWidgets('a draft report can be read and marked reviewed, and its text cannot be edited', (tester) async {
       await tester.pumpWidget(await host(tester, {'POST /reports/r1/review': (200, {'status': 'reviewed'})},
           ReportScreen(report: _draftReport, projectId: 'p1', projectTitle: 'Chioma\'s bungalow')));
       await tester.pumpAndSettle();
@@ -125,12 +125,14 @@ void main() {
       expect(find.text('Needs your review'), findsOneWidget);
       expect(find.text('EV-2246'), findsOneWidget);
       expect(find.textContaining('Held by a licensed escrow partner'), findsOneWidget);
-      expect(find.text('Edit'), findsNothing); // review-only
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsNothing); // the AI's text is read-only; only the note is yours to write
+      expect(find.text('Add a note'), findsOneWidget);
 
       await tester.tap(find.text('Mark reviewed'));
       await tester.pumpAndSettle();
-      expect(find.text('Mark this report reviewed?'), findsOneWidget);
+      expect(find.text('Mark the report reviewed?'), findsOneWidget);
+      expect(find.textContaining('Your note: none'), findsOneWidget);
+      expect(find.textContaining('Evidence cited: 1'), findsOneWidget);
       expect(server.seen.where((r) => r.method == 'POST'), isEmpty); // nothing sent until confirmed
       await tester.tap(find.text('Mark reviewed').last);
       await tester.pumpAndSettle();
@@ -139,11 +141,84 @@ void main() {
       expect(post.headers['Idempotency-Key'], isNotEmpty);
     });
 
-    testWidgets('a report that is already reviewed has no review button', (tester) async {
-      await tester.pumpWidget(await host(tester, {}, ReportScreen(report: {..._draftReport, 'status': 'reviewed'}, projectId: 'p1')));
+    testWidgets('a report that is already reviewed has no buttons and names who reviewed it', (tester) async {
+      await tester.pumpWidget(await host(tester, {}, ReportScreen(
+        report: {
+          ..._draftReport,
+          'status': 'reviewed',
+          'reviewed_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'},
+          'supervisor_note': 'Rework started Thursday.',
+          'note_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'},
+        },
+        projectId: 'p1',
+      )));
       await tester.pumpAndSettle();
       expect(find.text('Reviewed'), findsOneWidget);
+      expect(find.text('Reviewed by Chidi Nnaji'), findsOneWidget);
+      expect(find.text('Note from Chidi Nnaji'), findsOneWidget);
+      expect(find.text('Rework started Thursday.'), findsOneWidget);
       expect(find.text('Mark reviewed'), findsNothing);
+      expect(find.text('Add a note'), findsNothing);
+      expect(find.text('Edit note'), findsNothing);
+    });
+
+    testWidgets('a note is saved with a PATCH, shown under your name, and counted in the review sheet', (tester) async {
+      final saved = {..._draftReport, 'supervisor_note': 'Rework started Thursday.', 'note_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'}, 'reviewed_by': null};
+      await tester.pumpWidget(await host(tester, {'PATCH /reports/r1': (200, saved)},
+          ReportScreen(report: {..._draftReport, 'supervisor_note': null, 'note_by': null, 'reviewed_by': null}, projectId: 'p1')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Note from'), findsNothing);
+
+      await tester.tap(find.text('Add a note'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('You can\'t edit them'), findsOneWidget); // the lock notice
+      await tester.enterText(find.byType(TextField), 'Rework started Thursday.');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      final patch = server.seen.singleWhere((r) => r.method == 'PATCH');
+      expect(patch.path, '/reports/r1');
+      expect(patch.data, {'supervisor_note': 'Rework started Thursday.'});
+      // Back on the report: the note shows under the writer's name, and the button now edits it.
+      expect(find.text('Note from Chidi Nnaji'), findsOneWidget);
+      expect(find.text('Rework started Thursday.'), findsOneWidget);
+      expect(find.text('Edit note'), findsOneWidget);
+
+      await tester.tap(find.text('Mark reviewed'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Your note: added'), findsOneWidget);
+    });
+
+    testWidgets('saving an empty note removes it', (tester) async {
+      final removed = {..._draftReport, 'supervisor_note': null, 'note_by': null, 'reviewed_by': null};
+      await tester.pumpWidget(await host(tester, {'PATCH /reports/r1': (200, removed)},
+          ReportScreen(report: {..._draftReport, 'supervisor_note': 'Old note.', 'note_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'}, 'reviewed_by': null}, projectId: 'p1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Old note.'), findsOneWidget);
+
+      await tester.tap(find.text('Edit note'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(server.seen.singleWhere((r) => r.method == 'PATCH').data, {'supervisor_note': ''});
+      expect(find.text('Old note.'), findsNothing);
+      expect(find.text('Add a note'), findsOneWidget);
+    });
+
+    testWidgets('a note that the server refuses leaves the report as it was and says why', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'PATCH /reports/r1': (409, {'error': {'code': 'report_locked', 'message': 'A reviewed report can\'t be changed.'}}),
+      }, ReportScreen(report: {..._draftReport, 'supervisor_note': null, 'note_by': null, 'reviewed_by': null}, projectId: 'p1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add a note'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Too late.');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('can\'t be changed'), findsOneWidget);
+      expect(find.text('Add a note'), findsOneWidget); // still on the note screen
     });
 
     testWidgets('spot checks: assigned and done are grouped, with the do-not-tell notice', (tester) async {
@@ -162,48 +237,232 @@ void main() {
       expect(find.text('Submitted'), findsOneWidget);
     });
 
-    testWidgets('orders show sample orders clearly labelled, with money from whole kobo', (tester) async {
-      await tester.pumpWidget(await host(tester, {}, const Scaffold(body: OrdersTab())));
+    Map<String, Object?> order(String id, String status, {String supplier = 'Ugwu Building Materials', int total = 34950000, List<Map<String, Object?>>? items, Map<String, Object?>? delivery, String created = '2026-12-15T14:22:00Z'}) => {
+          'id': id,
+          'project_id': 'p1',
+          'supplier_id': 's1',
+          'requested_by': 'u1',
+          'supplier': {'id': 's1', 'name': supplier},
+          'items': items ??
+              [
+                {'item': 'Cement, 50 kg bag', 'unit': 'bag', 'quantity': '120', 'unit_price_minor': 1030000},
+                {'item': 'Sharp sand', 'unit': 'tonne', 'quantity': '20', 'unit_price_minor': 2150000},
+              ],
+          'total_minor': total,
+          'currency': 'NGN',
+          'status': status,
+          'approved_by': null,
+          'approved_at': status == 'requested' ? null : '2026-12-16T09:00:00Z',
+          'created_at': created,
+          'delivery': delivery,
+        };
+
+    testWidgets('orders show the contractor\'s real orders, newest first, with money from whole kobo', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /projects': (200, {'items': [{'id': 'p1', 'title': 'Chioma\'s bungalow'}], 'next_cursor': null}),
+        'GET /projects/p1/orders': (200, {
+          'items': [
+            order('0141aaaa-0000-0000-0000-000000000000', 'requested', total: 34950000, created: '2027-01-07T10:00:00Z'),
+            order('0127bbbb-0000-0000-0000-000000000000', 'paid', supplier: 'Obinna Building Materials', total: 312000000, created: '2026-11-12T09:00:00Z',
+                delivery: {'id': 'd1', 'order_id': 'x', 'confirmed_by': 'u2', 'quantities': <Object>[], 'evidence_ids': <Object>[], 'confirmed_at': '2026-11-20T12:00:00Z'}),
+          ],
+          'next_cursor': null,
+        }),
+      }, const Scaffold(body: OrdersTab())));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Sample orders'), findsOneWidget);
+      expect(find.textContaining('Sample'), findsNothing);
+      expect(find.text('Ugwu Building Materials'), findsOneWidget);
+      expect(find.text('Obinna Building Materials'), findsOneWidget);
+      expect(find.text('Cement, 50 kg bag +1 more'), findsNWidgets(2));
+      expect(find.textContaining('O-0141 · Chioma\'s bungalow · sent'), findsOneWidget);
+      expect(find.textContaining('O-0127 · Chioma\'s bungalow · delivered'), findsOneWidget); // delivered date, not sent
       expect(find.text('₦349,500'), findsOneWidget);
+      expect(find.text('₦3,120,000'), findsOneWidget);
       expect(find.text('Waiting for the client'), findsOneWidget);
       expect(find.text('Paid'), findsOneWidget);
       expect(find.text('Request materials'), findsOneWidget);
+      // Newest first: the January order is listed above the November one.
+      expect(tester.getTopLeft(find.text('Ugwu Building Materials')).dy, lessThan(tester.getTopLeft(find.text('Obinna Building Materials')).dy));
     });
 
-    testWidgets('alerts show sample alerts clearly labelled, with the unread one marked', (tester) async {
-      await tester.pumpWidget(await host(tester, {}, const Scaffold(body: AlertsTab())));
+    testWidgets('orders gathers every project and says so when there are none', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /projects': (200, {'items': [{'id': 'p1', 'title': 'One'}], 'next_cursor': null}),
+        'GET /projects/p1/orders': (200, {'items': <Object>[], 'next_cursor': null}),
+      }, const Scaffold(body: OrdersTab())));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Sample alerts'), findsOneWidget);
-      expect(find.textContaining('(unread)'), findsOneWidget); // not by the blue dot alone
+      expect(find.text('No orders yet'), findsOneWidget);
     });
+
+    testWidgets('deliveries lists only approved orders, to be counted', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /projects/p1/orders': (200, {
+          'items': [
+            order('0141aaaa-0000-0000-0000-000000000000', 'approved'),
+            order('0150bbbb-0000-0000-0000-000000000000', 'requested', supplier: 'Not yet approved'),
+            order('0160cccc-0000-0000-0000-000000000000', 'paid', supplier: 'Already paid'),
+          ],
+          'next_cursor': null,
+        }),
+      }, const DeliveriesScreen(projectId: 'p1', projectTitle: 'Chioma\'s bungalow')));
+      await tester.pumpAndSettle();
+      expect(find.text('Ugwu Building Materials'), findsOneWidget);
+      expect(find.text('Not yet approved'), findsNothing);
+      expect(find.text('Already paid'), findsNothing);
+      expect(find.textContaining('O-0141'), findsOneWidget);
+    });
+
+    testWidgets('deliveries with nothing approved says so', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /projects/p1/orders': (200, {'items': <Object>[], 'next_cursor': null}),
+      }, const DeliveriesScreen(projectId: 'p1')));
+      await tester.pumpAndSettle();
+      expect(find.text('No deliveries to confirm'), findsOneWidget);
+    });
+
+    Map<String, Object?> alert(String id, String title, String text, {String? readAt}) =>
+        {'id': id, 'template': 'milestone.verified', 'title': title, 'text': text, 'created_at': '2026-11-01T09:00:00Z', 'read_at': readAt};
+
+    testWidgets('alerts show what the server sent, with the unread one marked (not by the dot alone)', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {
+          'items': [
+            alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.'),
+            alert('n2', 'Milestone funded', 'You can start work.', readAt: '2026-11-01T10:00:00Z'),
+          ],
+          'next_cursor': null,
+          'unread_count': 1,
+        }),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Sample alerts'), findsNothing);
+      expect(find.text('Foundation was verified by the supervisor.'), findsOneWidget);
+      expect(find.text('You can start work.'), findsOneWidget);
+      expect(find.textContaining('(unread)'), findsOneWidget);
+    });
+
+    testWidgets('opening an unread alert marks it read with an Idempotency-Key and reads the list again', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {
+          'items': [alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.')],
+          'next_cursor': null,
+          'unread_count': 1,
+        }),
+        'POST /me/notifications/n1/read': (200, alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.', readAt: '2026-11-02T08:00:00Z')),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('(unread)'), findsOneWidget);
+
+      server.routes['GET /me/notifications'] = (200, {
+        'items': [alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.', readAt: '2026-11-02T08:00:00Z')],
+        'next_cursor': null,
+        'unread_count': 0,
+      });
+      await tester.tap(find.text('Foundation was verified by the supervisor.'));
+      await tester.pumpAndSettle();
+
+      final post = server.seen.singleWhere((r) => r.method == 'POST');
+      expect(post.path, '/me/notifications/n1/read');
+      expect(post.headers['Idempotency-Key'], 'read-n1');
+      expect(find.textContaining('(unread)'), findsNothing);
+    });
+
+    testWidgets('a read alert sends nothing when it is tapped', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {
+          'items': [alert('n2', 'Milestone funded', 'You can start work.', readAt: '2026-11-01T10:00:00Z')],
+          'next_cursor': null,
+          'unread_count': 0,
+        }),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('You can start work.'));
+      await tester.pumpAndSettle();
+      expect(server.seen.where((r) => r.method == 'POST'), isEmpty);
+    });
+
+    testWidgets('no alerts yet says so', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {'items': <Object>[], 'next_cursor': null, 'unread_count': 0}),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      expect(find.text('No alerts yet'), findsOneWidget);
+    });
+
+    final cementAndSand = [
+      {'item': 'Cement, 50 kg bag', 'unit': 'bag', 'quantity': '140', 'unit_price_minor': 1030000},
+      {'item': 'Sharp sand', 'unit': 'tonne', 'quantity': '2.5', 'unit_price_minor': 2150000},
+    ];
 
     testWidgets('delivery: the count step needs a photo for every line before it confirms', (tester) async {
-      final order = {
-        '_mock': true,
-        'id': 'o1',
-        'project_id': 'p1',
-        'display_ref': 'O-0141',
-        'supplier': 'Sample Building Materials',
-        'milestone': 'Plastering',
-        'total_minor': 217200000,
-        'currency': 'NGN',
-        'items': [
-          {'item': 'Cement, 50 kg bag', 'unit': 'bag', 'quantity': '140', 'unit_price_minor': 1030000},
-          {'item': 'Sharp sand', 'unit': 'tonne', 'quantity': '20', 'unit_price_minor': 2150000},
-        ],
-      };
-      await tester.pumpWidget(await host(tester, {}, CountDeliveryScreen(order: order)));
+      await tester.pumpWidget(await host(tester, {}, CountDeliveryScreen(order: order('o1', 'approved', items: cementAndSand))));
       await real(tester);
       expect(find.text('2 photos still needed'), findsOneWidget);
       expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Confirm delivery')).onPressed, isNull);
 
-      // The counts start at what was ordered and move one at a time.
+      // A whole-number line starts at what was ordered and moves one at a time.
       expect(find.text('140'), findsOneWidget);
       await tester.tap(find.byTooltip('Decrease Cement, 50 kg bag'));
       await tester.pump();
       expect(find.text('139'), findsOneWidget);
+      // A line ordered in decimals (2.5 tonnes) is a decimal field, starting at the ordered 2.5.
+      expect(find.widgetWithText(TextFormField, '2.5'), findsOneWidget);
+      expect(find.text('of 2.5 ordered'), findsOneWidget);
+    });
+
+    testWidgets('delivery: a count that is not a number stops the confirm', (tester) async {
+      await tester.pumpWidget(await host(tester, {}, CountDeliveryScreen(order: order('o1', 'approved', items: cementAndSand))));
+      await real(tester);
+      await tester.enterText(find.widgetWithText(TextFormField, '2.5'), '2.5555');
+      await tester.pump();
+      expect(find.text('Enter a number like 2.5'), findsOneWidget);
+    });
+
+    testWidgets('delivery: confirming posts the counts as a list, with the photo evidence ids and one idempotency key', (tester) async {
+      // Two accepted photos from this phone, one per line, saved against this delivery.
+      await tester.runAsync(() async {
+        for (final (i, item) in ['Cement, 50 kg bag', 'Sharp sand'].indexed) {
+          await db.insert(QueuedCapture(
+            id: 'c$i',
+            projectId: 'p1',
+            kind: 'photo',
+            filePath: '/tmp/c$i.jpg',
+            sha256: 'a' * 64,
+            capturedAt: DateTime.now().toUtc(),
+            gpsTime: DateTime.now().toUtc(),
+            lat: 6.45,
+            lon: 7.5,
+            accuracyM: 8,
+            deviceId: 'd',
+            signature: 's',
+            status: CaptureStatus.accepted,
+            evidenceId: 'e000000$i-0000-0000-0000-000000000000',
+            checklistItem: item,
+            contextRef: 'delivery:o1',
+          ));
+        }
+      });
+      await tester.pumpWidget(await host(tester, {
+        'POST /orders/o1/delivery': (201, {'id': 'd1', 'order_id': 'o1', 'confirmed_by': 'u2', 'quantities': <Object>[], 'evidence_ids': <Object>[], 'confirmed_at': '2026-12-18T12:00:00Z'}),
+      }, CountDeliveryScreen(order: order('o1', 'approved', items: cementAndSand))));
+      await real(tester);
+      await tester.tap(find.byTooltip('Decrease Cement, 50 kg bag')); // 140 -> 139, sent exactly as counted
+      await tester.enterText(find.widgetWithText(TextFormField, '2.5'), '2.25');
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Confirm delivery'));
+      await tester.pumpAndSettle();
+
+      final post = server.seen.singleWhere((r) => r.method == 'POST');
+      expect(post.path, '/orders/o1/delivery');
+      expect(post.headers['Idempotency-Key'], 'delivery-o1');
+      expect(post.data, {
+        'quantities': [
+          {'item': 'Cement, 50 kg bag', 'quantity': '139'},
+          {'item': 'Sharp sand', 'quantity': '2.25'},
+        ],
+        'evidence_ids': ['e0000000-0000-0000-0000-000000000000', 'e0000001-0000-0000-0000-000000000000'],
+      });
+      expect(find.text('Delivery confirmed'), findsOneWidget);
     });
   });
 }

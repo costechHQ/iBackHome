@@ -127,7 +127,8 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
   Widget _supervisor(ProjectData d, Map<String, dynamic> m) {
     final name = '${m['name']}';
     final claimedAt = m['claimed_at'] as String?;
-    final captured = defaultChecklist.where((item) => _mine.any((c) => c.checklistItem == item)).length;
+    final checklist = milestoneChecklist(m);
+    final captured = checklist.where((item) => _mine.any((c) => c.checklistItem == item)).length;
     final active = d.project['status'] == 'active';
     final canAct = active && m['status'] == 'claimed';
     return Scaffold(
@@ -137,13 +138,13 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
       ),
       body: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
         Row(children: [
-          Expanded(child: Text('$captured of ${defaultChecklist.length} captured', style: IbhText.h3.copyWith(fontSize: 18))),
+          Expanded(child: Text('$captured of ${checklist.length} captured', style: IbhText.h3.copyWith(fontSize: 18))),
           _chip(m),
         ]),
         const SizedBox(height: IbhSpace.s12),
         ?_sentBack(m),
         IbhGroup(children: [
-          for (var i = 0; i < defaultChecklist.length; i++) _ChecklistRow(i + 1, defaultChecklist[i], _mine.where((c) => c.checklistItem == defaultChecklist[i]).length),
+          for (var i = 0; i < checklist.length; i++) _ChecklistRow(i + 1, checklist[i], _mine.where((c) => c.checklistItem == checklist[i]).length),
         ]),
         const SizedBox(height: IbhSpace.s12),
         Text(
@@ -159,7 +160,7 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
               OutlinedButton(
                 onPressed: () async {
                   final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
-                      builder: (_) => VerifyScreen(projectId: widget.projectId, milestoneId: m['id'] as String, milestoneName: name, projectTitle: '${d.project['title']}', sequence: m['sequence'] as int)));
+                      builder: (_) => VerifyScreen(projectId: widget.projectId, milestoneId: m['id'] as String, milestoneName: name, projectTitle: '${d.project['title']}', contractorName: d.contractorName, checklist: checklist, sequence: m['sequence'] as int)));
                   if (done == true) {
                     ref.invalidate(projectProvider(widget.projectId));
                     ref.invalidate(projectMilestonesProvider(widget.projectId));
@@ -196,7 +197,7 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
         ?_sentBack(m),
         const IbhSectionLabel('WHAT THE SUPERVISOR WILL CAPTURE'),
         IbhGroup(children: [
-          for (var i = 0; i < defaultChecklist.length; i++) _ChecklistRow(i + 1, defaultChecklist[i], 0, simple: true),
+          for (final (i, item) in milestoneChecklist(m).indexed) _ChecklistRow(i + 1, item, 0, simple: true),
         ]),
         const SizedBox(height: IbhSpace.s16),
         OutlinedButton.icon(

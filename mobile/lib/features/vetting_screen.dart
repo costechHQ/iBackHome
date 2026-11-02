@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_error.dart';
@@ -255,8 +256,9 @@ class _Relative {
   final String relationship;
 }
 
-/// AND-SUPERVISOR-001: Start, then five steps, then submit. The NIN step explains the check but
-/// collects nothing: the application route has no NIN field, and operations verify it.
+/// AND-SUPERVISOR-001: Start, then five steps, then submit. The NIN step collects the 11-digit number, hidden as
+/// it is typed. It goes to the server with the application (write-only), where it is kept encrypted only until
+/// operations decide; only its last four digits stay. The app never stores it: it is cleared once sent.
 class ApplicationFlow extends ConsumerStatefulWidget {
   const ApplicationFlow({super.key, this.startAtForm = false, this.registrationBody, this.registrationNo});
 
@@ -274,6 +276,8 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
   late int _step = widget.startAtForm ? 1 : 0;
   late String _body = _registrationBodies.contains(widget.registrationBody) ? widget.registrationBody! : 'COREN';
   late final _number = TextEditingController(text: widget.registrationNo ?? '');
+  final _ninText = TextEditingController();
+  bool _showNin = false;
   final _g = [_Guarantor(), _Guarantor()];
   bool? _hasRelatives; // null until answered
   final List<_Relative> _relatives = [];
@@ -283,6 +287,7 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
   @override
   void dispose() {
     _number.dispose();
+    _ninText.dispose();
     for (final g in _g) {
       g.dispose();
     }
@@ -290,6 +295,12 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
   }
 
   bool get _step1ok => _number.text.trim().length >= 2;
+
+  /// A NIN is exactly 11 digits.
+  bool get _ninOk => RegExp(r'^\d{11}$').hasMatch(_ninText.text);
+
+  /// `•••••••8901`: only the last four digits ever show, even on the review step.
+  String get _maskedNin => _ninText.text.length < 4 ? '' : '•••••••${_ninText.text.substring(_ninText.text.length - 4)}';
   bool get _step3ok => _g.every((g) => g.valid);
   bool get _step4ok => _hasRelatives == false || (_hasRelatives == true && _relatives.isNotEmpty);
 
@@ -317,6 +328,7 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
         body: {
           'registration_body': _body,
           'registration_no': _number.text.trim(),
+          'nin': _ninText.text,
           'guarantor_1': _g[0].asText,
           'guarantor_2': _g[1].asText,
           'related_contractors': [
@@ -325,6 +337,7 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
           ],
         },
       );
+      _ninText.clear(); // sent: the app keeps no copy
       ref.invalidate(vettingProvider);
       if (mounted && Navigator.of(context).canPop()) Navigator.of(context).pop();
     } catch (e) {
@@ -339,7 +352,7 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
     if (_step == 0) return _start();
     final (title, body, next, label) = switch (_step) {
       1 => ('Application', _registration(), _step1ok, 'Continue'),
-      2 => ('Application', _nin(), true, 'Continue'),
+      2 => ('Application', _nin(), _ninOk, 'Continue'),
       3 => ('Application', _guarantors(), _step3ok, 'Continue'),
       4 => ('Application', _relativesStep(), _step4ok, 'Continue'),
       _ => ('Application', _review(), !_busy, 'Submit application'),
@@ -413,14 +426,39 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
   Widget _nin() => ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
         Text('Your NIN', style: IbhText.h2.copyWith(fontSize: 26)),
         const SizedBox(height: IbhSpace.s8),
-        const Text('Our team checks your National Identification Number as part of vetting.', style: IbhText.bodyLg),
+        const Text('So we can confirm who you are.', style: IbhText.bodyLg),
+        const SizedBox(height: IbhSpace.s16),
+        const Text('National Identification Number', style: _label),
+        const SizedBox(height: IbhSpace.s8),
+        TextField(
+          controller: _ninText,
+          obscureText: !_showNin,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11)],
+          // A NIN is personal data: no suggestions, no autofill, no spell-check history.
+          enableSuggestions: false,
+          autocorrect: false,
+          autofillHints: const [],
+          style: IbhText.mono.copyWith(fontSize: 17, letterSpacing: 2),
+          decoration: InputDecoration(
+            suffixIcon: IconButton(
+              tooltip: _showNin ? 'Hide NIN' : 'Show NIN',
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: Icon(_showNin ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+              onPressed: () => setState(() => _showNin = !_showNin),
+            ),
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: IbhSpace.s4),
+        Text('11 digits. Hidden as you type.', style: IbhText.small.copyWith(color: IbhColors.muted)),
         const SizedBox(height: IbhSpace.s16),
         const IbhCard(
           child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Icon(Icons.lock_outline, size: 20),
             SizedBox(width: IbhSpace.s12),
             Expanded(
-              child: Text('The app doesn\'t collect your NIN. After the check, only its last four digits are kept.', style: IbhText.body),
+              child: Text('Used only to confirm your identity. Never shown to clients or contractors. After the check, only its last four digits are kept.', style: IbhText.body),
             ),
           ]),
         ),
@@ -581,7 +619,7 @@ class _ApplicationFlowState extends ConsumerState<ApplicationFlow> {
       const SizedBox(height: IbhSpace.s16),
       IbhGroup(children: [
         row('$_body · ${_number.text.trim()}', 'Professional registration', 1),
-        row('NIN', 'Checked by our team', 2),
+        row('NIN · $_maskedNin', 'Checked by our team', 2),
         row('${_g[0].name.text.trim()} · ${_g[1].name.text.trim()}', 'Guarantors', 3),
         row(_hasRelatives == true ? '${_relatives.length} relative${_relatives.length == 1 ? '' : 's'} declared' : 'No relatives declared',
             _hasRelatives == true ? _relatives.map((r) => '${_maskPhone(r.phone)} · ${r.relationship}').join(', ') : 'Contractors in your family', 4),
