@@ -43,6 +43,13 @@ class Rendered:
     params: tuple[str, ...] = ()  # placeholder values, in order (WhatsApp template parameters)
     whatsapp_template: str | None = None
     whatsapp_button: str | None = None  # value for a copy-code button (login codes)
+    # Ids the app uses to open the exact screen a push is about, as (name, id) pairs: see LINK_KEYS.
+    link: tuple[tuple[str, str], ...] = ()
+
+
+# Ids in a notify() `data` that go to the app with a push, so "every push opens the exact screen it's
+# about" (design: AND-SUPERVISOR-014). Only ids: never names, amounts or anything a lock screen shows.
+LINK_KEYS = ("project_id", "milestone_id", "report_id", "spot_check_id", "order_id")
 
 
 @dataclass(frozen=True)
@@ -87,6 +94,7 @@ class Template:
             params=tuple(str(data[k]) for k in names),
             whatsapp_template=self.whatsapp_template,
             whatsapp_button=str(data[self.whatsapp_button_param]) if self.whatsapp_button_param else None,
+            link=tuple((k, str(data[k])) for k in LINK_KEYS if data.get(k)),
         )
 
 

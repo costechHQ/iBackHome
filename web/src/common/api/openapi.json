@@ -327,6 +327,97 @@
         }
       }
     },
+    "/api/v1/me/notification-preferences": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Get My Preferences",
+        "description": "Your push settings. Until you change them: push on, previews shown.",
+        "operationId": "get_my_preferences_api_v1_me_notification_preferences_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Set My Preferences",
+        "description": "Save both push settings. Spot-check SMS is not one of them: it cannot be turned off.",
+        "operationId": "set_my_preferences_api_v1_me_notification_preferences_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/webhooks/stripe": {
       "post": {
         "tags": [
@@ -1458,6 +1549,131 @@
                 }
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/push-tokens": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Register Push Token",
+        "description": "Save this phone's Firebase token so push can reach it (a supervisor's or contractor's own device).\n\nA new token for the same device replaces the old one. 404 device_not_found, 403 not_device_owner,\n409 device_revoked.",
+        "operationId": "register_push_token_api_v1_me_push_tokens_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTokenOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/push-tokens/{device_pk}": {
+      "delete": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Remove Push Token",
+        "description": "Forget this phone's token (sign-out). Deleting twice is fine.",
+        "operationId": "remove_push_token_api_v1_me_push_tokens__device_pk__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_pk",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Device Pk"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -6334,6 +6550,43 @@
         ],
         "title": "Pin"
       },
+      "PreferencesIn": {
+        "properties": {
+          "push_enabled": {
+            "type": "boolean",
+            "title": "Push Enabled"
+          },
+          "hide_previews": {
+            "type": "boolean",
+            "title": "Hide Previews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "push_enabled",
+          "hide_previews"
+        ],
+        "title": "PreferencesIn",
+        "description": "Both settings, always (a PUT replaces them). Spot-check SMS is not a setting: it stays on."
+      },
+      "PreferencesOut": {
+        "properties": {
+          "push_enabled": {
+            "type": "boolean",
+            "title": "Push Enabled"
+          },
+          "hide_previews": {
+            "type": "boolean",
+            "title": "Hide Previews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "push_enabled",
+          "hide_previews"
+        ],
+        "title": "PreferencesOut"
+      },
       "ProjectCreate": {
         "properties": {
           "title": {
@@ -6741,6 +6994,42 @@
           "supervisor_id"
         ],
         "title": "ProjectSupervisorOut"
+      },
+      "PushTokenIn": {
+        "properties": {
+          "device_pk": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Device Pk"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 20,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_pk",
+          "token"
+        ],
+        "title": "PushTokenIn",
+        "description": "This phone's Firebase token. `device_pk` is the id `POST /devices` returned."
+      },
+      "PushTokenOut": {
+        "properties": {
+          "device_pk": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Device Pk"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_pk"
+        ],
+        "title": "PushTokenOut"
       },
       "QuoteCheckIn": {
         "properties": {

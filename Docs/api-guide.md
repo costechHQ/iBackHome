@@ -173,6 +173,13 @@ await session.commit()                        # the caller commits
 - `POST /me/notifications/{id}/read` marks one read (twice keeps the first time). An id that isn't the caller's is 404 `notification_not_found`, the same as one that doesn't exist.
 - A message that failed on every channel is listed too, since the feed may be the only place it can be read. Login codes never appear. A template that is no longer registered shows a generic line instead of its data.
 
+**Push (for the Flutter app).** Push goes only to supervisors and contractors who registered a phone; everyone else falls through to the next channel.
+
+- After `POST /devices`, send the Firebase token: `POST /me/push-tokens` `{device_pk, token}` (`device_pk` is the `id` that `POST /devices` returned). Send it again whenever Firebase refreshes the token (a new token for the same device replaces the old one). On sign-out call `DELETE /me/push-tokens/{device_pk}`. Revoking a device drops its token by itself. A token that Firebase reports as unregistered is dropped on the next send, so nothing keeps trying it.
+- `GET` / `PUT /me/notification-preferences` hold the two settings in the app's Settings screen: `push_enabled` (default `true`) and `hide_previews` (default `false`). A PUT replaces both. With push off the person is reached on the next channel; with previews hidden the lock screen shows only "You have a new update from iBackHome." Spot-check SMS is not a setting: it cannot be turned off.
+- Each push carries a `data` map for opening the exact screen: `template` plus whichever of `project_id`, `milestone_id`, `report_id`, `spot_check_id`, `order_id` the message was sent with. These are ids only; names and amounts never go in `data`. A feature gets its push to open the right screen by passing those ids in the `data` it gives `notify()`.
+- Needs `FCM_PROJECT_ID` and `FCM_SERVICE_ACCOUNT_JSON` (below) and the Android app built with the Firebase project's `google-services.json`.
+
 **Environment variables** (empty means that channel is off):
 
 | Variable | Example |

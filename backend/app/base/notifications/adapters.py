@@ -45,6 +45,10 @@ class SendError(Exception):
     """The provider refused the message or could not be reached."""
 
 
+class TokenGone(SendError):
+    """The push token is no longer valid (the app was uninstalled or reinstalled): forget it."""
+
+
 class Adapter(Protocol):
     async def send(self, to: str, message: Rendered) -> str: ...
 
@@ -128,6 +132,20 @@ class TermiiSmsAdapter:
 FCM_SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 
 
+def _token_is_dead(response: httpx.Response) -> bool:
+    """FCM says UNREGISTERED (404) when an app was uninstalled or its token replaced. Nothing else counts:
+    a bad key or an outage must not delete a good token."""
+    if response.status_code != 404:
+        return False
+    try:
+        error = response.json().get("error", {})
+    except ValueError:
+        return False
+    if error.get("status") == "NOT_FOUND":
+        return True
+    return any(d.get("errorCode") == "UNREGISTERED" for d in error.get("details", []) if isinstance(d, dict))
+
+
 class FcmPushAdapter:
     """Sends to one device push token. Signs in to Google with the service account (OAuth 2)."""
 
@@ -188,13 +206,16 @@ class FcmPushAdapter:
                         "message": {
                             "token": to,
                             "notification": {"title": message.title, "body": message.text},
-                            "data": {"template": message.template},
+                            # Data values must be strings. The ids let the app open the exact screen.
+                            "data": {"template": message.template, **dict(message.link)},
                         }
                     },
                 )
             except httpx.HTTPError as exc:
                 raise SendError(f"push: {exc.__class__.__name__}") from exc
         if response.status_code >= 400:
+            if _token_is_dead(response):
+                raise TokenGone("push: the device token is no longer registered")
             raise SendError(f"push: FCM answered {response.status_code}")
         return str(response.json().get("name", ""))
 
