@@ -13,11 +13,12 @@ from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from fastapi import Request
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
 from app.base.users.models import User
+from app.core import pagination
 from app.core.errors import AppError
 from app.features.evidence import service as evidence
 from app.features.projects import service as projects
@@ -131,6 +132,58 @@ async def get_order(session: AsyncSession, order_id: uuid.UUID, *, lock: bool = 
     if order is None:
         raise AppError("order_not_found", "Order not found.", 404)
     return order
+
+
+async def read_order(session: AsyncSession, user: User, order_id: uuid.UUID) -> MaterialOrder:
+    """One order, for anyone on its project (client, contractor, assigned supervisor, ops).
+
+    - 404 order_not_found
+    - 403 not_project_member
+    """
+    order = await get_order(session, order_id)
+    await projects.require_project_member(session, user, order.project_id)
+    return order
+
+
+async def list_orders(
+    session: AsyncSession,
+    user: User,
+    project_id: uuid.UUID,
+    *,
+    cursor: str | None = None,
+    limit: int = pagination.DEFAULT_LIMIT,
+) -> tuple[list[MaterialOrder], str | None]:
+    """A project's orders, newest first, for anyone on the project: (page, next cursor).
+
+    - 404 project_not_found
+    - 403 not_project_member
+    """
+    await projects.require_project_member(session, user, project_id)
+    query = select(MaterialOrder).where(MaterialOrder.project_id == project_id)
+    if cursor is not None:
+        at, row_id = pagination.decode_cursor(cursor)
+        query = query.where(tuple_(MaterialOrder.created_at, MaterialOrder.id) < tuple_(at, row_id))
+    rows = list(
+        await session.scalars(
+            query.order_by(MaterialOrder.created_at.desc(), MaterialOrder.id.desc()).limit(limit + 1)
+        )
+    )
+    return pagination.page(rows, limit, lambda o: (o.created_at, o.id))
+
+
+async def suppliers_and_deliveries(
+    session: AsyncSession, orders: list[MaterialOrder]
+) -> tuple[dict[uuid.UUID, Supplier], dict[uuid.UUID, Delivery]]:
+    """The suppliers and deliveries of these orders, by supplier id and by order id (two queries, not N)."""
+    if not orders:
+        return {}, {}
+    supplier_rows = await session.scalars(
+        select(Supplier).where(Supplier.id.in_({o.supplier_id for o in orders}))
+    )
+    delivery_rows = await session.scalars(
+        select(Delivery).where(Delivery.order_id.in_([o.id for o in orders]))
+    )
+    return {s.id: s for s in supplier_rows}, {d.order_id: d for d in delivery_rows}
 
 
 async def approve_order(
