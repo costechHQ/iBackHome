@@ -116,7 +116,7 @@ void main() {
       await t.pump();
     }
 
-    testWidgets('a draft report can be read and marked reviewed, but not edited', (tester) async {
+    testWidgets('a draft report can be read and marked reviewed, and its text cannot be edited', (tester) async {
       await tester.pumpWidget(await host(tester, {'POST /reports/r1/review': (200, {'status': 'reviewed'})},
           ReportScreen(report: _draftReport, projectId: 'p1', projectTitle: 'Chioma\'s bungalow')));
       await tester.pumpAndSettle();
@@ -125,12 +125,14 @@ void main() {
       expect(find.text('Needs your review'), findsOneWidget);
       expect(find.text('EV-2246'), findsOneWidget);
       expect(find.textContaining('Held by a licensed escrow partner'), findsOneWidget);
-      expect(find.text('Edit'), findsNothing); // review-only
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsNothing); // the AI's text is read-only; only the note is yours to write
+      expect(find.text('Add a note'), findsOneWidget);
 
       await tester.tap(find.text('Mark reviewed'));
       await tester.pumpAndSettle();
-      expect(find.text('Mark this report reviewed?'), findsOneWidget);
+      expect(find.text('Mark the report reviewed?'), findsOneWidget);
+      expect(find.textContaining('Your note: none'), findsOneWidget);
+      expect(find.textContaining('Evidence cited: 1'), findsOneWidget);
       expect(server.seen.where((r) => r.method == 'POST'), isEmpty); // nothing sent until confirmed
       await tester.tap(find.text('Mark reviewed').last);
       await tester.pumpAndSettle();
@@ -139,11 +141,84 @@ void main() {
       expect(post.headers['Idempotency-Key'], isNotEmpty);
     });
 
-    testWidgets('a report that is already reviewed has no review button', (tester) async {
-      await tester.pumpWidget(await host(tester, {}, ReportScreen(report: {..._draftReport, 'status': 'reviewed'}, projectId: 'p1')));
+    testWidgets('a report that is already reviewed has no buttons and names who reviewed it', (tester) async {
+      await tester.pumpWidget(await host(tester, {}, ReportScreen(
+        report: {
+          ..._draftReport,
+          'status': 'reviewed',
+          'reviewed_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'},
+          'supervisor_note': 'Rework started Thursday.',
+          'note_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'},
+        },
+        projectId: 'p1',
+      )));
       await tester.pumpAndSettle();
       expect(find.text('Reviewed'), findsOneWidget);
+      expect(find.text('Reviewed by Chidi Nnaji'), findsOneWidget);
+      expect(find.text('Note from Chidi Nnaji'), findsOneWidget);
+      expect(find.text('Rework started Thursday.'), findsOneWidget);
       expect(find.text('Mark reviewed'), findsNothing);
+      expect(find.text('Add a note'), findsNothing);
+      expect(find.text('Edit note'), findsNothing);
+    });
+
+    testWidgets('a note is saved with a PATCH, shown under your name, and counted in the review sheet', (tester) async {
+      final saved = {..._draftReport, 'supervisor_note': 'Rework started Thursday.', 'note_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'}, 'reviewed_by': null};
+      await tester.pumpWidget(await host(tester, {'PATCH /reports/r1': (200, saved)},
+          ReportScreen(report: {..._draftReport, 'supervisor_note': null, 'note_by': null, 'reviewed_by': null}, projectId: 'p1')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Note from'), findsNothing);
+
+      await tester.tap(find.text('Add a note'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('You can\'t edit them'), findsOneWidget); // the lock notice
+      await tester.enterText(find.byType(TextField), 'Rework started Thursday.');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      final patch = server.seen.singleWhere((r) => r.method == 'PATCH');
+      expect(patch.path, '/reports/r1');
+      expect(patch.data, {'supervisor_note': 'Rework started Thursday.'});
+      // Back on the report: the note shows under the writer's name, and the button now edits it.
+      expect(find.text('Note from Chidi Nnaji'), findsOneWidget);
+      expect(find.text('Rework started Thursday.'), findsOneWidget);
+      expect(find.text('Edit note'), findsOneWidget);
+
+      await tester.tap(find.text('Mark reviewed'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Your note: added'), findsOneWidget);
+    });
+
+    testWidgets('saving an empty note removes it', (tester) async {
+      final removed = {..._draftReport, 'supervisor_note': null, 'note_by': null, 'reviewed_by': null};
+      await tester.pumpWidget(await host(tester, {'PATCH /reports/r1': (200, removed)},
+          ReportScreen(report: {..._draftReport, 'supervisor_note': 'Old note.', 'note_by': {'id': 'u1', 'full_name': 'Chidi Nnaji'}, 'reviewed_by': null}, projectId: 'p1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Old note.'), findsOneWidget);
+
+      await tester.tap(find.text('Edit note'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), '');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(server.seen.singleWhere((r) => r.method == 'PATCH').data, {'supervisor_note': ''});
+      expect(find.text('Old note.'), findsNothing);
+      expect(find.text('Add a note'), findsOneWidget);
+    });
+
+    testWidgets('a note that the server refuses leaves the report as it was and says why', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'PATCH /reports/r1': (409, {'error': {'code': 'report_locked', 'message': 'A reviewed report can\'t be changed.'}}),
+      }, ReportScreen(report: {..._draftReport, 'supervisor_note': null, 'note_by': null, 'reviewed_by': null}, projectId: 'p1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add a note'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Too late.');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('can\'t be changed'), findsOneWidget);
+      expect(find.text('Add a note'), findsOneWidget); // still on the note screen
     });
 
     testWidgets('spot checks: assigned and done are grouped, with the do-not-tell notice', (tester) async {
