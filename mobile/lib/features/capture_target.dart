@@ -14,6 +14,8 @@ class CaptureTarget {
   const CaptureTarget({
     required this.projectId,
     required this.title,
+    this.subtitle,
+    this.fixedItem,
     this.milestoneId,
     this.contextRef,
     this.fence,
@@ -23,6 +25,12 @@ class CaptureTarget {
 
   final String projectId;
   final String title;
+
+  /// The line under the title in the app bar (the project name).
+  final String? subtitle;
+
+  /// A capture that always belongs to one checklist line (a delivery line), so the review step does not ask.
+  final String? fixedItem;
   final String? milestoneId;
 
   /// e.g. `spot_check:<id>`; kept on the phone, so the right screen can find its photos.

@@ -1,20 +1,18 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { api, call } from "@/common/api/client";
 import { useProjectsWithMilestones } from "@/common/api/queries";
-import { useWrite } from "@/common/api/use-write";
 import { countryByIso } from "@/common/countries";
 import { ServerErrorContent } from "@/common/layout/system-pages";
-import { Alert } from "@/common/ui/alert";
 import { Button } from "@/common/ui/button";
-import { TextField } from "@/common/ui/field";
 import { Loading, Skeleton } from "@/common/ui/skeleton";
 import { ToneChip } from "@/common/ui/status-chip";
 import { Avatar, Card, CardLabel } from "@/common/ui/surfaces";
+
+import { ProfileForm } from "@/features/profile/profile-form";
 
 import { usePayoutRecipient } from "./account";
 import { trackRecord } from "./track-record";
@@ -32,57 +30,6 @@ function Stat({ value, label }: { value: number; label: string }) {
       <p className="ibh-tabular type-h2 text-ink">{value}</p>
       <p className="type-small text-slate">{label}</p>
     </div>
-  );
-}
-
-function EditName({ name, onDone }: { name: string; onDone: () => void }) {
-  const router = useRouter();
-  const [value, setValue] = useState(name);
-  const [problem, setProblem] = useState<string | null>(null);
-  const save = useWrite(
-    (body: { full_name: string }, key: string) =>
-      call(api().PATCH("/api/v1/me", { body, headers: { "Idempotency-Key": key } })),
-    {
-      onSuccess: () => {
-        router.refresh(); // the top bar shows the name from the server
-        onDone();
-      },
-    },
-  );
-  return (
-    <form
-      noValidate
-      className="flex flex-col gap-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (!value.trim()) return setProblem("Enter your full name.");
-        setProblem(null);
-        save.mutate({ full_name: value.trim() });
-      }}
-    >
-      {save.error ? (
-        <Alert tone="bad" title="That didn’t save">
-          Nothing was changed. Try again.
-        </Alert>
-      ) : null}
-      <TextField
-        label="Full name"
-        autoComplete="name"
-        value={value}
-        maxLength={120}
-        onChange={(e) => setValue(e.target.value)}
-        error={problem}
-        help="Your client, the supervisor and our team see this name."
-      />
-      <div className="flex flex-wrap gap-3">
-        <Button type="submit" loading={save.isPending}>
-          Save
-        </Button>
-        <Button type="button" variant="secondary" onClick={onDone}>
-          Cancel
-        </Button>
-      </div>
-    </form>
   );
 }
 
@@ -114,7 +61,7 @@ export function ContractorProfile() {
         <h1 className="sr-only">Your profile</h1>
         <Card className="flex flex-col gap-4 p-6">
           {editing ? (
-            <EditName name={person.full_name ?? ""} onDone={() => setEditing(false)} />
+            <ProfileForm me={person} onDone={() => setEditing(false)} />
           ) : (
             <div className="flex flex-wrap items-start gap-5">
               <Avatar name={person.full_name} size={40} />
