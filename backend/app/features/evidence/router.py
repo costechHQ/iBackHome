@@ -15,6 +15,7 @@ from app.features.evidence import service
 from app.features.evidence.schemas import (
     DecisionIn,
     DeviceIn,
+    DeviceListItem,
     DeviceOut,
     EvidenceIn,
     EvidenceOut,
@@ -28,6 +29,12 @@ router = APIRouter(tags=["evidence"])
 
 DeviceOwner = Annotated[User, Depends(users.require_role("supervisor", "contractor"))]
 OpsUser = Annotated[User, Depends(users.require_role("ops"))]
+
+
+@router.get("/devices", response_model=list[DeviceListItem])
+async def list_my_devices(session: SessionDep, actor: DeviceOwner) -> list[DeviceListItem]:
+    """The caller's own registered phones, newest first (a supervisor's or contractor's Settings)."""
+    return [DeviceListItem.model_validate(d) for d in await service.list_devices(session, actor.id)]
 
 
 @router.post("/devices", status_code=201, response_model=DeviceOut)
