@@ -2954,6 +2954,82 @@
         }
       }
     },
+    "/api/v1/reports/{report_id}": {
+      "patch": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Set Report Note",
+        "description": "Add, change or remove your note on a draft report (the project's supervisor or ops).\n\nThe note is shown under your name and goes out with the report. The AI's text is never changed.",
+        "operationId": "set_report_note_api_v1_reports__report_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportNoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/reports/{report_id}/review": {
       "post": {
         "tags": [
@@ -6522,6 +6598,33 @@
         ],
         "title": "PayoutRecipientOut"
       },
+      "PersonRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "title": "PersonRef",
+        "description": "A person named on a report: the id and name only (no phone or email)."
+      },
       "Pin": {
         "properties": {
           "lat": {
@@ -7232,6 +7335,25 @@
         ],
         "title": "RefreshIn"
       },
+      "ReportNoteIn": {
+        "properties": {
+          "supervisor_note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Note"
+          }
+        },
+        "type": "object",
+        "title": "ReportNoteIn",
+        "description": "The note to the client. An empty or blank note removes it."
+      },
       "ReportOut": {
         "properties": {
           "id": {
@@ -7256,6 +7378,37 @@
           "body_md": {
             "type": "string",
             "title": "Body Md"
+          },
+          "supervisor_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Note"
+          },
+          "note_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "evidence_ids": {
             "items": {
@@ -7306,6 +7459,9 @@
           "week_start",
           "status",
           "body_md",
+          "supervisor_note",
+          "note_by",
+          "reviewed_by",
           "evidence_ids",
           "pdf_url",
           "sent_at",
