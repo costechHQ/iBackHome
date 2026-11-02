@@ -104,6 +104,7 @@ Future<void> startVisit(BuildContext context, WidgetRef ref, ProjectData d, Map<
         subtitle: d.project['title'] as String?,
         fence: d.fence,
         asContractor: asContractor,
+        checklist: milestoneChecklist(m),
       ),
     ),
   ));
