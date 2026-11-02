@@ -3,7 +3,7 @@
 import uuid
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.base.users import service as users
@@ -20,6 +20,8 @@ from app.features.evidence.schemas import (
     EvidenceOut,
     GalleryItem,
     GalleryPage,
+    PushTokenIn,
+    PushTokenOut,
     UploadUrlOut,
     UploadUrlRequest,
 )
@@ -64,6 +66,35 @@ async def revoke_device(
     await remember(session, key, scope, 200, out)
     await session.commit()
     return JSONResponse(status_code=200, content=out)
+
+
+@router.post("/me/push-tokens", response_model=PushTokenOut)
+async def register_push_token(
+    body: PushTokenIn, session: SessionDep, actor: DeviceOwner, key: IdempotencyKeyDep
+) -> JSONResponse:
+    """Save this phone's Firebase token so push can reach it (a supervisor's or contractor's own device).
+
+    A new token for the same device replaces the old one. 404 device_not_found, 403 not_device_owner,
+    409 device_revoked.
+    """
+    scope = f"POST /me/push-tokens {actor.id}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    device = await service.register_push_token(session, actor, body.device_pk, body.token)
+    out = PushTokenOut(device_pk=device.id).model_dump(mode="json")
+    await remember(session, key, scope, 200, out)
+    await session.commit()
+    return JSONResponse(status_code=200, content=out)
+
+
+@router.delete("/me/push-tokens/{device_pk}", status_code=204)
+async def remove_push_token(
+    device_pk: uuid.UUID, session: SessionDep, actor: DeviceOwner, key: IdempotencyKeyDep
+) -> Response:
+    """Forget this phone's token (sign-out). Deleting twice is fine."""
+    await service.remove_push_token(session, actor, device_pk)
+    await session.commit()
+    return Response(status_code=204)
 
 
 @router.post("/evidence/upload-url", response_model=UploadUrlOut)

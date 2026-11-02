@@ -145,6 +145,8 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `audit_log` | base/audit | actor → users, action, object_type, object_id, before (JSONB), after (JSONB), ip, device_id, at — insert only |
 | `idempotency_keys` | core | key, scope, status_code, response (the saved response a retried write replays) |
 | `notifications` | base/notifications | user → users (nullable: login codes go to a raw phone or email), channel (`whatsapp`, `push`, `sms`, `email`: the one that delivered, or the last tried), template, payload (JSONB; never a login code; may hold the send key `_key`), recipient (the phone or email used), status (`sent`, `failed`), provider_ref, attempts, error (why channels failed), sent_at, read_at (set when the user marks it read in the in-app feed) |
+| `push_tokens` | base/notifications | user → users, device_pk (the evidence device id, unique: one token per app install; no foreign key, notifications is a base module), token. Saved by `POST /me/push-tokens`, dropped when the device is revoked or the token is dead |
+| `notification_preferences` | base/notifications | user → users (unique), push_enabled (default true), hide_previews (default false). No row means the defaults. Spot-check SMS is not a setting: it stays on |
 
 **Indexes that matter**: GiST on `sites.geofence`; unique on `payment_events (provider, event_id)`; btree on `evidence.phash` plus a BK-tree or prefix index for near-match search (see evidence integrity); `ledger_entries (ref_type, ref_id)`.
 
@@ -433,6 +435,9 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | GET, POST | `/me/consent` | signed in | Current terms and privacy versions; agree to them (older versions: 409 `consent_version_outdated`) |
 | GET | `/me/notifications` | signed in | The user's own notifications, newest first (`?cursor=&limit=`): id, template, title, text, created_at, read_at, plus `unread_count`. Never the raw payload; login codes never appear |
 | POST | `/me/notifications/{id}/read` | signed in | Mark one of the user's own notifications read (twice keeps the first time; someone else's id is 404 `notification_not_found`) |
+| GET, PUT | `/me/notification-preferences` | signed in | Push settings: `push_enabled`, `hide_previews` (a PUT replaces both). With previews hidden a lock screen shows only a generic line; the ids that open the right screen still go |
+| POST | `/me/push-tokens` | supervisor, contractor | Save this phone's Firebase token `{device_pk, token}` (a new token for the same device replaces the old one; 403 `not_device_owner`, 409 `device_revoked`). Push reaches only these two roles |
+| DELETE | `/me/push-tokens/{device_pk}` | the device's owner | Forget this phone's token (sign-out); twice is fine |
 | POST | `/projects` | client | Create project, invite contractor |
 | GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |

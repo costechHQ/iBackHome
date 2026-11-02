@@ -78,6 +78,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get My Preferences
+         * @description Your push settings. Until you change them: push on, previews shown.
+         */
+        get: operations["get_my_preferences_api_v1_me_notification_preferences_get"];
+        /**
+         * Set My Preferences
+         * @description Save both push settings. Spot-check SMS is not one of them: it cannot be turned off.
+         */
+        put: operations["set_my_preferences_api_v1_me_notification_preferences_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/webhooks/stripe": {
         parameters: {
             query?: never;
@@ -433,6 +457,49 @@ export interface paths {
         /** Revoke Device */
         post: operations["revoke_device_api_v1_devices__device_pk__revoke_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/push-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register Push Token
+         * @description Save this phone's Firebase token so push can reach it (a supervisor's or contractor's own device).
+         *
+         *     A new token for the same device replaces the old one. 404 device_not_found, 403 not_device_owner,
+         *     409 device_revoked.
+         */
+        post: operations["register_push_token_api_v1_me_push_tokens_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/push-tokens/{device_pk}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Push Token
+         * @description Forget this phone's token (sign-out). Deleting twice is fine.
+         */
+        delete: operations["remove_push_token_api_v1_me_push_tokens__device_pk__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2242,6 +2309,23 @@ export interface components {
              */
             lon: number;
         };
+        /**
+         * PreferencesIn
+         * @description Both settings, always (a PUT replaces them). Spot-check SMS is not a setting: it stays on.
+         */
+        PreferencesIn: {
+            /** Push Enabled */
+            push_enabled: boolean;
+            /** Hide Previews */
+            hide_previews: boolean;
+        };
+        /** PreferencesOut */
+        PreferencesOut: {
+            /** Push Enabled */
+            push_enabled: boolean;
+            /** Hide Previews */
+            hide_previews: boolean;
+        };
         /** ProjectCreate */
         ProjectCreate: {
             /**
@@ -2402,6 +2486,27 @@ export interface components {
              * Format: uuid
              */
             supervisor_id: string;
+        };
+        /**
+         * PushTokenIn
+         * @description This phone's Firebase token. `device_pk` is the id `POST /devices` returned.
+         */
+        PushTokenIn: {
+            /**
+             * Device Pk
+             * Format: uuid
+             */
+            device_pk: string;
+            /** Token */
+            token: string;
+        };
+        /** PushTokenOut */
+        PushTokenOut: {
+            /**
+             * Device Pk
+             * Format: uuid
+             */
+            device_pk: string;
         };
         /**
          * QuoteCheckIn
@@ -3141,6 +3246,61 @@ export interface operations {
             };
         };
     };
+    get_my_preferences_api_v1_me_notification_preferences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesOut"];
+                };
+            };
+        };
+    };
+    set_my_preferences_api_v1_me_notification_preferences_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreferencesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PreferencesOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     stripe_webhook_api_v1_webhooks_stripe_post: {
         parameters: {
             query?: never;
@@ -3764,6 +3924,72 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DeviceOut"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_push_token_api_v1_me_push_tokens_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushTokenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushTokenOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_push_token_api_v1_me_push_tokens__device_pk__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                device_pk: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

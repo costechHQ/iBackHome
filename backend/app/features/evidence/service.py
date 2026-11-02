@@ -15,6 +15,7 @@ from sqlalchemy import select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
+from app.base.notifications import service as notifications
 from app.base.users.models import User
 from app.core import pagination
 from app.core.errors import AppError
@@ -76,6 +77,7 @@ async def revoke_device(
         before = audit.snapshot(device)
         device.revoked_at = datetime.now(UTC)
         await session.flush()
+        await notifications.forget_push_token(session, device.id)  # a revoked phone gets no more push
         await audit.record(
             session,
             actor.id,
@@ -87,6 +89,33 @@ async def revoke_device(
             request=request,
         )
     return device
+
+
+async def _own_device(session: AsyncSession, actor: User, device_pk: uuid.UUID) -> Device:
+    device = await session.get(Device, device_pk)
+    if device is None:
+        raise AppError("device_not_found", "This device does not exist.", 404)
+    if device.user_id != actor.id:
+        raise AppError("not_device_owner", "This is not your device.", 403)
+    return device
+
+
+async def register_push_token(session: AsyncSession, actor: User, device_pk: uuid.UUID, token: str) -> Device:
+    """Save this phone's Firebase token so push can reach it. Sending a new token replaces the old one.
+
+    The device must be the caller's own and not revoked (a revoked phone can't receive push).
+    """
+    device = await _own_device(session, actor, device_pk)
+    if device.revoked_at is not None:
+        raise AppError("device_revoked", "This device was revoked, so it can't receive push.", 409)
+    await notifications.save_push_token(session, actor.id, device.id, token)
+    return device
+
+
+async def remove_push_token(session: AsyncSession, actor: User, device_pk: uuid.UUID) -> None:
+    """Forget this phone's token (sign-out). A phone with no saved token is fine."""
+    device = await _own_device(session, actor, device_pk)
+    await notifications.forget_push_token(session, device.id)
 
 
 async def get_device(session: AsyncSession, device_id: str) -> Device | None:
