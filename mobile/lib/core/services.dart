@@ -154,6 +154,18 @@ class Services {
     return deviceId;
   }
 
+  /// This person's registered phones (`GET /devices`), newest first, including revoked ones. Read live
+  /// and never saved: a security list must not be shown from an old copy.
+  Future<List<Map<String, dynamic>>> listDevices() async {
+    final rows = await api.get<List<dynamic>>('/devices');
+    return rows.cast<Map<String, dynamic>>();
+  }
+
+  /// Revokes another phone of this person (an old or lost one). This phone's own key is untouched.
+  Future<void> revokeOtherDevice(String pk) async {
+    await api.post<Map<String, dynamic>>('/devices/$pk/revoke', idempotencyKey: 'revoke-$pk');
+  }
+
   /// Revokes this phone's key on the server, deletes it from the Keystore and forgets the device
   /// id, so a new key is made next time. Captures already queued with the old key will be
   /// rejected by the server: say so before calling.
