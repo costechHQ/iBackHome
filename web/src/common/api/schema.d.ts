@@ -1053,13 +1053,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Orders
+         * @description A project's material orders, newest first, with each supplier's name and its delivery count if any.
+         *
+         *     For the project's client, contractor, assigned supervisor, and ops.
+         */
+        get: operations["list_orders_api_v1_projects__project_id__orders_get"];
         put?: never;
         /**
          * Request Order
          * @description Contractor: request materials from a supplier. The total is worked out by the server.
          */
         post: operations["request_order_api_v1_projects__project_id__orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order
+         * @description One order with its supplier's name and its delivery count if any (same people as the list).
+         */
+        get: operations["get_order_api_v1_orders__order_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2132,6 +2158,53 @@ export interface components {
             /** Disputes */
             disputes: components["schemas"]["DisputeItem"][];
         };
+        /**
+         * OrderDetail
+         * @description An order as the project's members read it: with the supplier's name and, once counted, its delivery.
+         */
+        OrderDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Requested By
+             * Format: uuid
+             */
+            requested_by: string;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Total Minor */
+            total_minor: number;
+            /** Currency */
+            currency: string;
+            /** Status */
+            status: string;
+            /** Approved By */
+            approved_by: string | null;
+            /** Approved At */
+            approved_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            supplier: components["schemas"]["SupplierRef"];
+            delivery?: components["schemas"]["DeliveryOut"] | null;
+        };
         /** OrderItem */
         OrderItem: {
             /** Item */
@@ -2184,6 +2257,13 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** OrderPage */
+        OrderPage: {
+            /** Items */
+            items: components["schemas"]["OrderDetail"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /** OrderRequest */
         OrderRequest: {
@@ -2865,6 +2945,19 @@ export interface components {
             rejection_reason: string | null;
             /** Rating */
             rating: string | null;
+        };
+        /**
+         * SupplierRef
+         * @description Who the order is with: the id and name only (never the owner, address or payout code).
+         */
+        SupplierRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** TokenPair */
         TokenPair: {
@@ -4922,6 +5015,40 @@ export interface operations {
             };
         };
     };
+    list_orders_api_v1_projects__project_id__orders_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     request_order_api_v1_projects__project_id__orders_post: {
         parameters: {
             query?: never;
@@ -4946,6 +5073,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
                 };
             };
             /** @description Validation Error */

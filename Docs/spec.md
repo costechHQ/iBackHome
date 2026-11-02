@@ -459,6 +459,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/projects/{id}/funding` | client | Create Stripe checkout for a milestone amount |
 | GET | `/projects/{id}/ledger` | client, ops | Funding, releases and payouts |
 | GET | `/price-index` | signed in | Current material prices |
+| GET | `/projects/{id}/orders` | parties, ops | The project's orders, newest first (`?cursor=&limit=`): each with `supplier` `{id, name}` and its `delivery` (quantities, evidence_ids, confirmed_by, confirmed_at) once counted. Non-members: 403 `not_project_member` |
+| GET | `/orders/{id}` | parties, ops | One order, same shape (404 `order_not_found`) |
 | POST | `/projects/{id}/orders` | contractor | Request materials |
 | POST | `/orders/{id}/approve` | client | Approve order |
 | POST | `/orders/{id}/delivery` | supervisor | Confirm delivery with quantities + evidence |

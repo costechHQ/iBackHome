@@ -65,3 +65,22 @@ class DeliveryOut(BaseModel):
     quantities: list[dict[str, object]]
     evidence_ids: list[str]
     confirmed_at: datetime
+
+
+class SupplierRef(BaseModel):
+    """Who the order is with: the id and name only (never the owner, address or payout code)."""
+
+    id: uuid.UUID
+    name: str
+
+
+class OrderDetail(OrderOut):
+    """An order as the project's members read it: with the supplier's name and, once counted, its delivery."""
+
+    supplier: SupplierRef
+    delivery: DeliveryOut | None = None
+
+
+class OrderPage(BaseModel):
+    items: list[OrderDetail]
+    next_cursor: str | None
