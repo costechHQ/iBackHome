@@ -14,7 +14,7 @@ import 'queue_screen.dart';
 import 'spot_checks_screen.dart';
 
 final projectsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-  final page = await ref.read(servicesProvider).api.get<Map<String, dynamic>>('/projects', query: {'limit': 50});
+  final page = await ref.read(servicesProvider).cachedGet<Map<String, dynamic>>('/projects', query: {'limit': 50});
   return (page['items'] as List).cast<Map<String, dynamic>>();
 });
 

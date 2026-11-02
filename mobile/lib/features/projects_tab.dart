@@ -14,7 +14,7 @@ import 'widgets.dart';
 
 /// A project's milestones, newest data from the server (`GET /projects/{id}/milestones`).
 final projectMilestonesProvider = FutureProvider.autoDispose.family<List<Map<String, dynamic>>, String>((ref, id) async {
-  final ms = await ref.read(servicesProvider).api.get<List<dynamic>>('/projects/$id/milestones');
+  final ms = await ref.read(servicesProvider).cachedGet<List<dynamic>>('/projects/$id/milestones');
   return ms.cast<Map<String, dynamic>>()..sort((a, b) => (a['sequence'] as int).compareTo(b['sequence'] as int));
 });
 
@@ -37,6 +37,26 @@ Map<String, dynamic>? _firstWhere(List<Map<String, dynamic>> ms, String status) 
     if (m['status'] == status) return m;
   }
   return null;
+}
+
+/// Shown while the list on screen is the last saved copy because there is no signal. Pull down to
+/// refresh once back online; captures and milestone actions still queue on the phone meanwhile.
+class _SavedNote extends ConsumerWidget {
+  const _SavedNote();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => ValueListenableBuilder<DateTime?>(
+        valueListenable: ref.read(servicesProvider).staleSince,
+        builder: (context, saved, _) => saved == null
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(bottom: IbhSpace.s12),
+                child: Alert(
+                  'You\'re offline. This is what was saved on ${watDayTime(saved)}. Pull down to refresh when you have signal.',
+                  tone: ChipTone.warn,
+                ),
+              ),
+      );
 }
 
 /// AND-SUPERVISOR-004 and AND-CONTRACTOR-002: the project list. A supervisor sees today's visit first;
@@ -79,6 +99,7 @@ class ProjectsTab extends ConsumerWidget {
           }
           final ms = {for (final p in items) p['id'] as String: ref.watch(projectMilestonesProvider(p['id'] as String)).value};
           return ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
+            const _SavedNote(),
             if (device.hasError) _DeviceAlert(device.error!),
             if (!supervisor) ...[
               Padding(

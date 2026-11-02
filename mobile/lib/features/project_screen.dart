@@ -36,9 +36,9 @@ class ProjectData {
 }
 
 final projectProvider = FutureProvider.autoDispose.family<ProjectData, String>((ref, id) async {
-  final api = ref.read(servicesProvider).api;
-  final project = await api.get<Map<String, dynamic>>('/projects/$id');
-  final ms = await api.get<List<dynamic>>('/projects/$id/milestones');
+  final api = ref.read(servicesProvider);
+  final project = await api.cachedGet<Map<String, dynamic>>('/projects/$id');
+  final ms = await api.cachedGet<List<dynamic>>('/projects/$id/milestones');
   final list = ms.cast<Map<String, dynamic>>()..sort((a, b) => (a['sequence'] as int).compareTo(b['sequence'] as int));
   return ProjectData(project, list);
 });
