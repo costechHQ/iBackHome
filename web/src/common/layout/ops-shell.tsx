@@ -113,7 +113,6 @@ export function OpsSidebar({
       </nav>
       <Link
         href="/ops/profile"
-        aria-label={`${name}, your profile`}
         className="flex items-center gap-3 border-t border-navy-700 px-4.5 py-4 hover:bg-navy-800"
       >
         <Avatar name={name} size={32} className="bg-navy-700 text-white" />
