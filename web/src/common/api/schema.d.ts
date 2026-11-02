@@ -874,6 +874,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Report Note
+         * @description Add, change or remove your note on a draft report (the project's supervisor or ops).
+         *
+         *     The note is shown under your name and goes out with the report. The AI's text is never changed.
+         */
+        patch: operations["set_report_note_api_v1_reports__report_id__patch"];
+        trace?: never;
+    };
     "/api/v1/reports/{report_id}/review": {
         parameters: {
             query?: never;
@@ -2296,6 +2318,19 @@ export interface components {
              */
             created_at: string;
         };
+        /**
+         * PersonRef
+         * @description A person named on a report: the id and name only (no phone or email).
+         */
+        PersonRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Full Name */
+            full_name: string | null;
+        };
         /** Pin */
         Pin: {
             /**
@@ -2599,6 +2634,14 @@ export interface components {
             /** Refresh Token */
             refresh_token: string;
         };
+        /**
+         * ReportNoteIn
+         * @description The note to the client. An empty or blank note removes it.
+         */
+        ReportNoteIn: {
+            /** Supervisor Note */
+            supervisor_note?: string | null;
+        };
         /** ReportOut */
         ReportOut: {
             /**
@@ -2620,6 +2663,10 @@ export interface components {
             status: string;
             /** Body Md */
             body_md: string;
+            /** Supervisor Note */
+            supervisor_note: string | null;
+            note_by: components["schemas"]["PersonRef"] | null;
+            reviewed_by: components["schemas"]["PersonRef"] | null;
             /** Evidence Ids */
             evidence_ids: string[];
             /** Pdf Url */
@@ -4621,6 +4668,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReportOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_report_note_api_v1_reports__report_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportNoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportOut"];
                 };
             };
             /** @description Validation Error */

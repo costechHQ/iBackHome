@@ -31,6 +31,9 @@ th, td { border: 1px solid #ccc; padding: 3pt 5pt; text-align: left; font-size: 
 th { background: #eef5f1; }
 footer { margin-top: 18pt; border-top: 1px solid #ccc; padding-top: 6pt; font-size: 8pt; color: #555; }
 footer code { font-size: 7.5pt; }
+header .label { margin-top: 4pt; font-size: 9pt; font-weight: bold; color: #1f6f50; }
+.note { margin-top: 14pt; padding: 8pt 10pt; border-left: 3px solid #1f6f50; background: #f4f8f6; }
+.note .by { font-weight: bold; font-size: 9.5pt; margin-bottom: 3pt; }
 """
 
 
@@ -46,7 +49,30 @@ def markdown_to_html(body_md: str) -> str:
     return rendered
 
 
-def report_html(body_md: str, *, title: str, week_start: date, evidence_ids: Sequence[uuid.UUID]) -> str:
+def _label(reviewed_by: str | None) -> str:
+    """The two labels the client always sees: the words are the AI's, and who checked them."""
+    return "AI-generated" + (f" · Reviewed by {html.escape(reviewed_by)}" if reviewed_by else "")
+
+
+def _note_html(note: str | None, note_by: str | None) -> str:
+    """The reviewer's note, as plain text under their own name (never Markdown or HTML)."""
+    if not note:
+        return ""
+    who = html.escape(note_by) if note_by else "Your supervisor"
+    text = html.escape(note).replace("\n", "<br>")
+    return f"<div class='note'><div class='by'>Note from {who}</div>{text}</div>"
+
+
+def report_html(
+    body_md: str,
+    *,
+    title: str,
+    week_start: date,
+    evidence_ids: Sequence[uuid.UUID],
+    note: str | None = None,
+    note_by: str | None = None,
+    reviewed_by: str | None = None,
+) -> str:
     week_end = week_start + timedelta(days=6)
     week = f"Week of {week_start:%d %b %Y} – {week_end:%d %b %Y}"
     cited = ", ".join(f"<code>{e}</code>" for e in evidence_ids) or "none"
@@ -54,8 +80,9 @@ def report_html(body_md: str, *, title: str, week_start: date, evidence_ids: Seq
         "<!doctype html><html><head><meta charset='utf-8'>"
         f"<style>{_STYLE}</style></head><body>"
         "<header><div class='brand'>iBACKHOME · WEEKLY REPORT</div>"
-        f"<h1>{html.escape(title)}</h1><div class='week'>{week}</div></header>"
-        f"<main>{markdown_to_html(body_md)}</main>"
+        f"<h1>{html.escape(title)}</h1><div class='week'>{week}</div>"
+        f"<div class='label'>{_label(reviewed_by)}</div></header>"
+        f"<main>{markdown_to_html(body_md)}{_note_html(note, note_by)}</main>"
         f"<footer>Evidence cited: {cited}<br>"
         "Money figures come from the escrow ledger. Photos are verified on site by your supervisor.</footer>"
         "</body></html>"
@@ -82,12 +109,29 @@ def _refusing_fetcher() -> Any:
     return RefuseAll()
 
 
-def render_pdf(body_md: str, *, title: str, week_start: date, evidence_ids: Sequence[uuid.UUID]) -> bytes:
+def render_pdf(
+    body_md: str,
+    *,
+    title: str,
+    week_start: date,
+    evidence_ids: Sequence[uuid.UUID],
+    note: str | None = None,
+    note_by: str | None = None,
+    reviewed_by: str | None = None,
+) -> bytes:
     """The report as PDF bytes. Raises OSError where WeasyPrint's system libraries are missing."""
     import weasyprint
 
     document = weasyprint.HTML(
-        string=report_html(body_md, title=title, week_start=week_start, evidence_ids=evidence_ids),
+        string=report_html(
+            body_md,
+            title=title,
+            week_start=week_start,
+            evidence_ids=evidence_ids,
+            note=note,
+            note_by=note_by,
+            reviewed_by=reviewed_by,
+        ),
         url_fetcher=_refusing_fetcher(),
     )
     pdf: bytes = document.write_pdf()

@@ -140,7 +140,7 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `material_orders` | suppliers | project → projects, supplier → suppliers, requested_by → users, items (JSONB; quantity as a decimal string), total_minor (computed by the server), currency, status (`requested`, `approved`, `delivered`, `paid`, `cancelled`), approved_by → users, approved_at |
 | `deliveries` | suppliers | order → material_orders, confirmed_by → users, quantities (JSONB), evidence_ids, confirmed_at |
 | `spot_checks` | supervision | project → projects, supervisor → users, scheduled_by → users, scheduled_for, completed_at, findings |
-| `reports` | reports | project → projects, week_start (a Monday; one report per project per week), body_md, pdf_key, evidence_ids, status (`draft`, `reviewed`, `sent`), sent_at |
+| `reports` | reports | project → projects, week_start (a Monday; one report per project per week), body_md (the AI draft, never edited), supervisor_note and note_by (the reviewer's own words under their name, added while a draft), reviewed_by, pdf_key, evidence_ids, status (`draft`, `reviewed`, `sent`), sent_at |
 | `agent_runs` | agents | agent, user → users (empty for scheduled runs), input (JSONB: system prompt, prompt, tools), tool_calls (JSONB), output, model (exact version), status (`succeeded`, `failed`), error, duration_ms, created_at |
 | `audit_log` | base/audit | actor → users, action, object_type, object_id, before (JSONB), after (JSONB), ip, device_id, at — insert only |
 | `idempotency_keys` | core | key, scope, status_code, response (the saved response a retried write replays) |
@@ -467,7 +467,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/orders/{id}/approve` | client | Approve order |
 | POST | `/orders/{id}/delivery` | supervisor | Confirm delivery with quantities + evidence |
 | POST | `/quotes/check` | client, contractor, ops | Run quote checker on a quote or BoQ |
-| GET | `/projects/{id}/reports` | parties, ops | Weekly reports |
+| GET | `/projects/{id}/reports` | parties, ops | Weekly reports, each with `supervisor_note`, `note_by` and `reviewed_by` as `{id, full_name}` |
+| PATCH | `/reports/{id}` | supervisor (assigned), ops | Add, change or remove your note to the client on a draft (`{supervisor_note}`, max 2000, blank removes it). Shown under your name and sent with the report; the AI text is never changed. 409 `report_locked` once reviewed |
 | POST | `/reports/{id}/review` | supervisor (assigned), ops | Mark draft reviewed; queues send |
 | GET | `/ops/queue` | ops | Vetting, flagged evidence, disputes |
 | PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting; view own profile |
