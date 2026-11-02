@@ -371,7 +371,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List My Devices
+         * @description The caller's own registered phones, newest first (a supervisor's or contractor's Settings).
+         */
+        get: operations["list_my_devices_api_v1_devices_get"];
         put?: never;
         /** Register Device */
         post: operations["register_device_api_v1_devices_post"];
@@ -1417,6 +1421,26 @@ export interface components {
             device_id: string;
             /** Public Key */
             public_key: string;
+        };
+        /**
+         * DeviceListItem
+         * @description One of the caller's own phones. No public key or user id: the list is only for the owner.
+         */
+        DeviceListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Device Id */
+            device_id: string;
+            /**
+             * Registered At
+             * Format: date-time
+             */
+            registered_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
         };
         /** DeviceOut */
         DeviceOut: {
@@ -3566,6 +3590,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_devices_api_v1_devices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceListItem"][];
                 };
             };
         };

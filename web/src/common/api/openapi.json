@@ -1209,6 +1209,35 @@
       }
     },
     "/api/v1/devices": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "List My Devices",
+        "description": "The caller's own registered phones, newest first (a supervisor's or contractor's Settings).",
+        "operationId": "list_my_devices_api_v1_devices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceListItem"
+                  },
+                  "title": "Response List My Devices Api V1 Devices Get"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evidence"
@@ -4488,6 +4517,45 @@
           "public_key"
         ],
         "title": "DeviceIn"
+      },
+      "DeviceListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "registered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registered At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "device_id",
+          "registered_at",
+          "revoked_at"
+        ],
+        "title": "DeviceListItem",
+        "description": "One of the caller's own phones. No public key or user id: the list is only for the owner."
       },
       "DeviceOut": {
         "properties": {
