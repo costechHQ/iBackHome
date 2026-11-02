@@ -73,6 +73,8 @@ void main() {
     final w = await tester.runAsync(() async {
       server = _Server({
         'GET /me': (200, {'id': 'u1', 'role': 'supervisor', 'status': 'active', 'full_name': 'Ifeoma Eze', 'timezone': 'UTC', 'consent_required': false}),
+        'GET /me/notification-preferences': (200, {'push_enabled': true, 'hide_previews': false}),
+        'PUT /me/notification-preferences': (200, {'push_enabled': false, 'hide_previews': false}),
         ...extra,
       });
       final tokens = TokenStore(_Store());
@@ -145,5 +147,24 @@ void main() {
     await tester.scrollUntilVisible(find.text('Retry'), 200, scrollable: find.byType(Scrollable).first);
     expect(find.textContaining('couldn\'t be loaded'), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('the push switch saves both settings', (tester) async {
+    await tester.pumpWidget(await host(tester, {'GET /devices': (200, <Object>[])}));
+    await settle(tester);
+    for (var i = 0; i < 3; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      await settle(tester);
+    }
+    expect(find.text('Push notifications'), findsOneWidget);
+    expect(find.text('Hide previews on lock screen'), findsOneWidget);
+    await tester.tap(find.byType(Switch).first);
+    for (var i = 0; i < 3; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      await settle(tester);
+    }
+    final put = server.seen.singleWhere((r) => r.method == 'PUT');
+    expect(put.path, '/me/notification-preferences');
+    expect(put.data, {'push_enabled': false, 'hide_previews': false});
   });
 }

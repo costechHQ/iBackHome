@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/push.dart';
+import 'core/push_route.dart';
 import 'core/services.dart';
+import 'features/alerts_screen.dart';
 import 'features/home_screen.dart';
 import 'features/payout_screen.dart';
 import 'features/vetting_screen.dart';
@@ -17,10 +22,35 @@ class IbhApp extends ConsumerStatefulWidget {
 }
 
 class _IbhAppState extends ConsumerState<IbhApp> with WidgetsBindingObserver {
+  final _navigator = GlobalKey<NavigatorState>();
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
+  final List<StreamSubscription<PushMessage>> _pushSubs = [];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Push starts once a supervisor or contractor is fully signed in, and stops on sign-out (see signOut).
+    ref.listenManual(authProvider, (_, a) {
+      if (a.status == AuthStatus.signedIn && a.me != null && appRoles.contains(a.role) && a.me?['consent_required'] != true) {
+        unawaited(ref.read(pushProvider).start());
+      }
+    }, fireImmediately: true);
+    final push = ref.read(pushProvider);
+    _pushSubs
+      ..add(push.opened.listen((m) {
+        final screen = screenForPush(m);
+        if (screen != null) _navigator.currentState?.push(MaterialPageRoute<void>(builder: (_) => screen));
+      }))
+      ..add(push.arrived.listen((m) {
+        ref.invalidate(alertsProvider);
+        final text = m.body ?? m.title;
+        if (text != null) {
+          _messenger.currentState
+            ?..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(text)));
+        }
+      }));
     Future.microtask(() async {
       await ref.read(authProvider.notifier).restore();
       final s = ref.read(servicesProvider);
@@ -32,6 +62,9 @@ class _IbhAppState extends ConsumerState<IbhApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    for (final s in _pushSubs) {
+      s.cancel();
+    }
     super.dispose();
   }
 
@@ -44,6 +77,8 @@ class _IbhAppState extends ConsumerState<IbhApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
     return MaterialApp(
+      navigatorKey: _navigator,
+      scaffoldMessengerKey: _messenger,
       title: 'iBackHome',
       debugShowCheckedModeBanner: false,
       theme: ibhAppTheme(),
