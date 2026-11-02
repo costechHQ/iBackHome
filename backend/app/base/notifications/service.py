@@ -27,15 +27,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import select
+from sqlalchemy import Select, func, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.notifications.adapters import Adapter, get_adapters
 from app.base.notifications.models import DEFAULT_ORDER, Channel, Notification, NotificationStatus
 from app.base.notifications.settings import get_notification_settings
-from app.base.notifications.templates import Rendered, Template, get_template
+from app.base.notifications.templates import LOGIN_CODE, Rendered, Template, get_template
 from app.base.users import service as users
 from app.base.users.models import User
+from app.core import pagination
 from app.core.errors import AppError
 
 logger = logging.getLogger(__name__)
@@ -280,3 +281,69 @@ async def retry_failed(
         row.error = "; ".join(delivery.problems) or None
     await session.flush()
     return counts
+
+
+# --- The in-app feed ------------------------------------------------------------------------------
+
+FALLBACK_TITLE = "iBackHome"
+FALLBACK_TEXT = "You have a new update from iBackHome."
+
+
+def feed_words(row: Notification) -> tuple[str, str]:
+    """The title and text the person was sent, rebuilt from the saved template and data.
+
+    A template that is no longer registered (or whose data no longer fits) gets a generic line
+    rather than hiding the item or leaking the raw payload.
+    """
+    template = get_template(row.template)
+    if template is None:
+        return FALLBACK_TITLE, FALLBACK_TEXT
+    try:
+        message = template.render(row.payload)
+    except ValueError:
+        return template.title, FALLBACK_TEXT
+    return message.title, message.text
+
+
+def _own_feed(user_id: uuid.UUID) -> Select[Notification]:
+    # Login codes are never stored against a user, but exclude them by name as well.
+    return select(Notification).where(
+        Notification.user_id == user_id, Notification.template != LOGIN_CODE.name
+    )
+
+
+async def list_feed(
+    session: AsyncSession, user: User, *, cursor: str | None = None, limit: int = pagination.DEFAULT_LIMIT
+) -> tuple[list[Notification], str | None, int]:
+    """The user's own notifications, newest first: (page, next cursor, unread count over everything).
+
+    A message that failed on every channel is listed too: the feed may be the only place it can be read.
+    """
+    query = _own_feed(user.id)
+    if cursor is not None:
+        at, row_id = pagination.decode_cursor(cursor)
+        query = query.where(tuple_(Notification.created_at, Notification.id) < tuple_(at, row_id))
+    rows = list(
+        await session.scalars(
+            query.order_by(Notification.created_at.desc(), Notification.id.desc()).limit(limit + 1)
+        )
+    )
+    items, next_cursor = pagination.page(rows, limit, lambda n: (n.created_at, n.id))
+    unread = await session.scalar(
+        select(func.count()).select_from(_own_feed(user.id).where(Notification.read_at.is_(None)).subquery())
+    )
+    return items, next_cursor, unread or 0
+
+
+async def mark_read(session: AsyncSession, user: User, notification_id: uuid.UUID) -> Notification:
+    """Mark one of the user's own notifications read. Reading twice keeps the first time.
+
+    Someone else's id is a 404, the same as an id that does not exist: it must not say it exists.
+    """
+    row = await session.get(Notification, notification_id)
+    if row is None or row.user_id != user.id or row.template == LOGIN_CODE.name:
+        raise AppError("notification_not_found", "This notification does not exist.", 404)
+    if row.read_at is None:
+        row.read_at = datetime.now(UTC)
+        await session.flush()
+    return row
