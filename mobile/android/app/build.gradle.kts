@@ -4,6 +4,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Push needs the Firebase project's google-services.json (git-ignored, see mobile/README.md). Without it
+// the app builds and runs exactly as before, with push switched off.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "ng.ibackhome.ibackhome_mobile"
     compileSdk = flutter.compileSdkVersion

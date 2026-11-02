@@ -8,6 +8,7 @@ import 'api.dart';
 import 'api_error.dart';
 import 'capture_service.dart';
 import 'config.dart';
+import 'push.dart';
 import 'queue_db.dart';
 import 'signing.dart';
 import 'sync_service.dart';
@@ -261,6 +262,8 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    // Forget this phone's push token while the session still works, so the next person never gets these alerts.
+    await ref.read(pushProvider).stop();
     await _s.tokens.clear();
     if (_s.saveReads) await _s.db.clearCache();
     state = const AuthState(AuthStatus.signedOut);

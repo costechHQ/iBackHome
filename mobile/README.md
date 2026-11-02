@@ -53,7 +53,7 @@ A real phone is the right test for the camera, GPS and Keystore: emulators fake 
 ## Blocked by the backend (not built, on purpose)
 
 - **Confirm delivery (AND-SUPERVISOR-009) and contractor orders (AND-CONTRACTOR-004):** there is no route that lists a project's orders or deliveries, only `POST`. Needs `GET /projects/{id}/orders` (and a supplier-side list). Propose it, then build.
-- **Push and in-app alerts (AND-SUPERVISOR-013/014, AND-CONTRACTOR-005/006, FR-20):** no route to register an FCM token or to list notifications, and no Firebase project yet.
+- **Push (FR-20):** built in the app and on the backend; it switches on when you add the Firebase project (below). Until then the app runs exactly as before, with push off.
 - **Spot checks:** a supervisor doing a spot check is not a member of the project, so `GET /projects/{id}` is 403 (the app cannot read the site boundary) and the server's evidence check rejects their captures as "not a party to this project". The screens are built; the backend needs to let the visiting supervisor in for the visit.
 - **Checklist templates (AND-SUPERVISOR-004):** the design says they come from ops templates; no route exists, so every milestone uses `defaultChecklist` in `features/capture_target.dart` (a placeholder).
 - **Supervisor NIN:** the application API takes no NIN; operations verify it, and the app shows its status.
@@ -68,3 +68,14 @@ A real phone is the right test for the camera, GPS and Keystore: emulators fake 
 - Play Integrity, crash reporting, release signing and Play Console; a low-storage warning.
 - Not yet run on a real device. The emulator on the dev PC was too slow to finish a test.
 - Signing out and signing in as a different person leaves the first person's queued captures on the phone; the server rejects them (wrong device owner). Clear them before handing a phone over.
+
+## Turning on push (Firebase)
+
+Push needs an iBackHome Firebase project (never reuse another project's key). Until these steps are done the app builds and runs, and push stays off.
+
+1. In the Firebase console create a project and add an Android app with package `ng.ibackhome.ibackhome_mobile`.
+2. Download `google-services.json` into `mobile/android/app/`. It is git-ignored; never commit it. The Gradle build applies the Google services plugin only when this file exists.
+3. On the backend set `FCM_PROJECT_ID` and `FCM_SERVICE_ACCOUNT_JSON` (a service-account key for the same project, from Project settings, Service accounts). Never put either in the repo.
+4. Rebuild the app. After sign-in a supervisor or contractor is asked for notification permission; the phone's token is saved with `POST /me/push-tokens` and removed with `DELETE /me/push-tokens/{device}` on sign-out. Settings has the Push and Hide previews switches (`/me/notification-preferences`).
+
+A push carries only ids. Tapping it opens the milestone, report, spot check or project it is about.
