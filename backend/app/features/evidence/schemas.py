@@ -34,6 +34,17 @@ class PushTokenOut(BaseModel):
     device_pk: uuid.UUID
 
 
+class DeviceListItem(BaseModel):
+    """One of the caller's own phones. No public key or user id: the list is only for the owner."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    device_id: str
+    registered_at: datetime
+    revoked_at: datetime | None
+
+
 class UploadUrlRequest(BaseModel):
     project_id: uuid.UUID
     kind: Literal["photo", "video"]

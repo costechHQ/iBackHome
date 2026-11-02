@@ -435,7 +435,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List My Devices
+         * @description The caller's own registered phones, newest first (a supervisor's or contractor's Settings).
+         */
+        get: operations["list_my_devices_api_v1_devices_get"];
         put?: never;
         /** Register Device */
         post: operations["register_device_api_v1_devices_post"];
@@ -775,7 +779,9 @@ export interface paths {
         };
         /**
          * Get Project
-         * @description One project with its site. Its client, contractor and supervisor, and ops.
+         * @description One project with its site and the names (and phones) of its contractor and supervisor.
+         *
+         *     Its client, contractor and supervisor, and ops, only: a phone is never shown to anyone else.
          */
         get: operations["get_project_api_v1_projects__project_id__get"];
         put?: never;
@@ -1163,13 +1169,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List Orders
+         * @description A project's material orders, newest first, with each supplier's name and its delivery count if any.
+         *
+         *     For the project's client, contractor, assigned supervisor, and ops.
+         */
+        get: operations["list_orders_api_v1_projects__project_id__orders_get"];
         put?: never;
         /**
          * Request Order
          * @description Contractor: request materials from a supplier. The total is worked out by the server.
          */
         post: operations["request_order_api_v1_projects__project_id__orders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Order
+         * @description One order with its supplier's name and its delivery count if any (same people as the list).
+         */
+        get: operations["get_order_api_v1_orders__order_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1600,6 +1632,26 @@ export interface components {
             device_id: string;
             /** Public Key */
             public_key: string;
+        };
+        /**
+         * DeviceListItem
+         * @description One of the caller's own phones. No public key or user id: the list is only for the owner.
+         */
+        DeviceListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Device Id */
+            device_id: string;
+            /**
+             * Registered At
+             * Format: date-time
+             */
+            registered_at: string;
+            /** Revoked At */
+            revoked_at: string | null;
         };
         /** DeviceOut */
         DeviceOut: {
@@ -2249,6 +2301,53 @@ export interface components {
             /** Disputes */
             disputes: components["schemas"]["DisputeItem"][];
         };
+        /**
+         * OrderDetail
+         * @description An order as the project's members read it: with the supplier's name and, once counted, its delivery.
+         */
+        OrderDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Supplier Id
+             * Format: uuid
+             */
+            supplier_id: string;
+            /**
+             * Requested By
+             * Format: uuid
+             */
+            requested_by: string;
+            /** Items */
+            items: {
+                [key: string]: unknown;
+            }[];
+            /** Total Minor */
+            total_minor: number;
+            /** Currency */
+            currency: string;
+            /** Status */
+            status: string;
+            /** Approved By */
+            approved_by: string | null;
+            /** Approved At */
+            approved_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            supplier: components["schemas"]["SupplierRef"];
+            delivery?: components["schemas"]["DeliveryOut"] | null;
+        };
         /** OrderItem */
         OrderItem: {
             /** Item */
@@ -2302,6 +2401,13 @@ export interface components {
              */
             created_at: string;
         };
+        /** OrderPage */
+        OrderPage: {
+            /** Items */
+            items: components["schemas"]["OrderDetail"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** OrderRequest */
         OrderRequest: {
             /**
@@ -2350,6 +2456,23 @@ export interface components {
              * @description The 6-digit code that was sent.
              */
             code: string;
+        };
+        /**
+         * PartyOut
+         * @description A person on the project, as the other members see them (MX-26). The phone is for the project's
+         *     own members and ops (this route is members-only); it is left out for a suspended account and for
+         *     someone who signs in by email only.
+         */
+        PartyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Full Name */
+            full_name: string | null;
+            /** Phone */
+            phone: string | null;
         };
         /** PayoutRecipientOut */
         PayoutRecipientOut: {
@@ -2480,6 +2603,8 @@ export interface components {
              */
             updated_at: string;
             site: components["schemas"]["SiteOut"] | null;
+            contractor?: components["schemas"]["PartyOut"] | null;
+            supervisor?: components["schemas"]["PartyOut"] | null;
         };
         /**
          * ProjectMilestoneOut
@@ -3038,6 +3163,19 @@ export interface components {
             rejection_reason: string | null;
             /** Rating */
             rating: string | null;
+        };
+        /**
+         * SupplierRef
+         * @description Who the order is with: the id and name only (never the owner, address or payout code).
+         */
+        SupplierRef: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** TokenPair */
         TokenPair: {
@@ -3977,6 +4115,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_my_devices_api_v1_devices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceListItem"][];
                 };
             };
         };
@@ -5288,6 +5446,40 @@ export interface operations {
             };
         };
     };
+    list_orders_api_v1_projects__project_id__orders_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     request_order_api_v1_projects__project_id__orders_post: {
         parameters: {
             query?: never;
@@ -5312,6 +5504,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_orders__order_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
                 };
             };
             /** @description Validation Error */

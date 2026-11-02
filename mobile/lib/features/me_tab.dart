@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/api_error.dart';
+import '../core/free_space.dart';
 import '../core/queue_db.dart';
 import '../core/services.dart';
 import '../core/wat.dart';
@@ -35,7 +36,69 @@ final _storageProvider = FutureProvider.autoDispose<({int waiting, int bytes})>(
   return (waiting: waiting, bytes: bytes);
 });
 
-String _mb(int bytes) => bytes < 1024 * 1024 ? '${(bytes / 1024).ceil()} KB' : '${(bytes / (1024 * 1024)).toStringAsFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB';
+/// Free space on the phone, read again each time the Me tab opens.
+final freeSpaceProvider = FutureProvider.autoDispose<int?>((ref) => FreeSpace.freeBytes());
+
+/// The "storage almost full" panel (AND-SUPERVISOR-012, state 2): what is waiting, what is safe to
+/// clear, and the two ways out. Shown below [FreeSpace.warnBytes]; below [FreeSpace.stopBytes] the
+/// camera refuses to capture.
+class _StorageLow extends ConsumerWidget {
+  const _StorageLow(this.free, this.waiting);
+  final int free;
+  final ({int waiting, int bytes})? waiting;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final copies = ref.watch(uploadedCopiesProvider).value;
+    final full = FreeSpace.level(free) == StorageLevel.full;
+    final sync = ref.read(servicesProvider).sync;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Alert(
+        full
+            ? 'Phone storage is full: ${formatBytes(free)} free. The camera is stopped until you free some space.'
+            : 'Phone storage almost full: ${formatBytes(free)} free. Captures stay on the phone until they upload. Below ${formatBytes(FreeSpace.stopBytes)} the camera stops.',
+        tone: full ? ChipTone.bad : ChipTone.warn,
+      ),
+      const SizedBox(height: IbhSpace.s12),
+      IbhCard(
+        child: Column(children: [
+          _line('Waiting to upload', waiting == null ? '…' : '${waiting!.waiting} item${waiting!.waiting == 1 ? '' : 's'} · ${formatBytes(waiting!.bytes)}'),
+          _line('Already uploaded, safe to clear', copies == null ? '…' : formatBytes(copies.bytes)),
+        ]),
+      ),
+      const SizedBox(height: IbhSpace.s12),
+      FilledButton.icon(
+        onPressed: () => sync.syncNow(force: true),
+        icon: const Icon(Icons.cloud_upload_outlined),
+        label: const Text('Upload now'),
+      ),
+      const SizedBox(height: IbhSpace.s8),
+      OutlinedButton(
+        onPressed: copies == null || copies.items.isEmpty
+            ? null
+            : () async {
+                await SettingsScreen.clearCopies(context, ref, copies.items, copies.bytes);
+                ref.invalidate(freeSpaceProvider);
+              },
+        child: const Text('Clear uploaded copies'),
+      ),
+      const SizedBox(height: IbhSpace.s8),
+      Text(
+        'Clearing only removes copies the server has accepted. Nothing waiting to upload is deleted.',
+        style: IbhText.small.copyWith(color: IbhColors.muted),
+      ),
+      const SizedBox(height: IbhSpace.s16),
+    ]);
+  }
+
+  static Widget _line(String k, String v) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(children: [
+          Expanded(child: Text(k, style: IbhText.body.copyWith(color: IbhColors.muted))),
+          Text(v, style: IbhText.body.copyWith(fontWeight: FontWeight.w700, color: IbhColors.ink)),
+        ]),
+      );
+}
 
 /// AND-SUPERVISOR-012, the Me tab (Account for a contractor): who you are, vetting, this phone's
 /// signing key, and what is waiting to upload. Time is always Nigerian time (WAT), so there is no
@@ -50,7 +113,9 @@ class MeTab extends ConsumerWidget {
     final name = (me['full_name'] as String?)?.trim();
     final vetting = auth.isSupervisor ? ref.watch(vettingProvider).value : null;
     final storage = ref.watch(_storageProvider).value;
+    final free = ref.watch(freeSpaceProvider).value;
     return ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
+      if (free != null && FreeSpace.level(free) != StorageLevel.ok) _StorageLow(free, storage),
       IbhCard(
         child: Row(children: [
           Container(
@@ -116,7 +181,7 @@ class MeTab extends ConsumerWidget {
         IbhRow(
           leading: const Icon(Icons.sd_storage_outlined),
           title: 'Storage',
-          subtitle: storage == null ? 'Checking…' : '${storage.waiting} item${storage.waiting == 1 ? '' : 's'} waiting · ${_mb(storage.bytes)}',
+          subtitle: storage == null ? 'Checking…' : '${storage.waiting} item${storage.waiting == 1 ? '' : 's'} waiting · ${formatBytes(storage.bytes)}',
         ),
       ]),
       const IbhSectionLabel('THIS PHONE'),

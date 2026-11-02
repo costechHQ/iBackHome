@@ -64,6 +64,14 @@ async def register_device(
     return device, True
 
 
+async def list_devices(session: AsyncSession, user_id: uuid.UUID) -> list[Device]:
+    """The user's own devices, newest first, revoked ones included (so an old phone can be recognised)."""
+    rows = await session.scalars(
+        select(Device).where(Device.user_id == user_id).order_by(Device.registered_at.desc(), Device.id)
+    )
+    return list(rows)
+
+
 async def revoke_device(
     session: AsyncSession, actor: User, device_pk: uuid.UUID, request: Request | None = None
 ) -> Device:

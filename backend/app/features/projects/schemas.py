@@ -71,8 +71,20 @@ class ProjectOut(BaseModel):
     updated_at: datetime
 
 
+class PartyOut(BaseModel):
+    """A person on the project, as the other members see them (MX-26). The phone is for the project's
+    own members and ops (this route is members-only); it is left out for a suspended account and for
+    someone who signs in by email only."""
+
+    id: uuid.UUID
+    full_name: str | None
+    phone: str | None
+
+
 class ProjectDetail(ProjectOut):
     site: SiteOut | None
+    contractor: PartyOut | None = None
+    supervisor: PartyOut | None = None
 
 
 class ProjectPage(BaseModel):

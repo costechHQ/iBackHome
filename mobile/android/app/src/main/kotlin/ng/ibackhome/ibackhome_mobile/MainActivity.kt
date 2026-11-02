@@ -1,6 +1,7 @@
 package ng.ibackhome.ibackhome_mobile
 
 import android.security.keystore.KeyGenParameterSpec
+import android.os.StatFs
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import io.flutter.embedding.android.FlutterActivity
@@ -20,6 +21,19 @@ import java.security.spec.ECGenParameterSpec
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Free space on the app's storage, for the "storage almost full" alert and the camera stop.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "ng.ibackhome/storage")
+            .setMethodCallHandler { call, result ->
+                if (call.method == "freeBytes") {
+                    try {
+                        result.success(StatFs(filesDir.path).availableBytes)
+                    } catch (e: Exception) {
+                        result.error("storage_error", e.message, null)
+                    }
+                } else {
+                    result.notImplemented()
+                }
+            }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "ng.ibackhome/keystore")
             .setMethodCallHandler { call, result ->
                 try {

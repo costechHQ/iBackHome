@@ -440,12 +440,13 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/me/push-tokens` | supervisor, contractor | Save this phone's Firebase token `{device_pk, token}` (a new token for the same device replaces the old one; 403 `not_device_owner`, 409 `device_revoked`). Push reaches only these two roles |
 | DELETE | `/me/push-tokens/{device_pk}` | the device's owner | Forget this phone's token (sign-out); twice is fine |
 | POST | `/projects` | client | Create project, invite contractor |
-| GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects |
+| GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects. `GET /projects/{id}` also returns `contractor` and `supervisor` as `{id, full_name, phone}` (phone only for an active account, never to non-members; MX-26) |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
 | GET | `/projects/{id}/boq` | parties, ops | BoQ grouped by milestone, with totals, budget and approvals |
 | PUT | `/projects/{id}/boq` | contractor | Submit BoQ items grouped into milestones; again while in review replaces it and clears approvals |
 | POST | `/projects/{id}/boq/approve` | client, contractor, ops | Approve BoQ; project goes `active` when all three approve |
 | POST | `/projects/{id}/supervisor` | ops | Assign a vetted supervisor |
+| GET | `/devices` | supervisor, contractor | List my own devices, newest first (id, device_id, registered_at, revoked_at; never the key) |
 | POST | `/devices` | supervisor, contractor | Register device public key |
 | POST | `/devices/{id}/revoke` | the device's owner | Revoke a device key; its captures no longer verify |
 | POST | `/evidence/upload-url` | supervisor, contractor | Get a pre-signed upload URL |
@@ -465,6 +466,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/projects/{id}/funding` | client | Create Stripe checkout for a milestone amount |
 | GET | `/projects/{id}/ledger` | client, ops | Funding, releases and payouts |
 | GET | `/price-index` | signed in | Current material prices |
+| GET | `/projects/{id}/orders` | parties, ops | The project's orders, newest first (`?cursor=&limit=`): each with `supplier` `{id, name}` and its `delivery` (quantities, evidence_ids, confirmed_by, confirmed_at) once counted. Non-members: 403 `not_project_member` |
+| GET | `/orders/{id}` | parties, ops | One order, same shape (404 `order_not_found`) |
 | POST | `/projects/{id}/orders` | contractor | Request materials |
 | POST | `/orders/{id}/approve` | client | Approve order |
 | POST | `/orders/{id}/delivery` | supervisor | Confirm delivery with quantities + evidence |

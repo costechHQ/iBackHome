@@ -1434,6 +1434,35 @@
       }
     },
     "/api/v1/devices": {
+      "get": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "List My Devices",
+        "description": "The caller's own registered phones, newest first (a supervisor's or contractor's Settings).",
+        "operationId": "list_my_devices_api_v1_devices_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceListItem"
+                  },
+                  "title": "Response List My Devices Api V1 Devices Get"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "evidence"
@@ -2622,7 +2651,7 @@
           "projects"
         ],
         "summary": "Get Project",
-        "description": "One project with its site. Its client, contractor and supervisor, and ops.",
+        "description": "One project with its site and the names (and phones) of its contractor and supervisor.\n\nIts client, contractor and supervisor, and ops, only: a phone is never shown to anyone else.",
         "operationId": "get_project_api_v1_projects__project_id__get",
         "security": [
           {
@@ -3958,6 +3987,82 @@
       }
     },
     "/api/v1/projects/{project_id}/orders": {
+      "get": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "List Orders",
+        "description": "A project's material orders, newest first, with each supplier's name and its delivery count if any.\n\nFor the project's client, contractor, assigned supervisor, and ops.",
+        "operationId": "list_orders_api_v1_projects__project_id__orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "suppliers"
@@ -4016,6 +4121,55 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OrderOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orders/{order_id}": {
+      "get": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "Get Order",
+        "description": "One order with its supplier's name and its delivery count if any (same people as the list).",
+        "operationId": "get_order_api_v1_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Order Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetail"
                 }
               }
             }
@@ -5078,6 +5232,45 @@
           "public_key"
         ],
         "title": "DeviceIn"
+      },
+      "DeviceListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "registered_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Registered At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "device_id",
+          "registered_at",
+          "revoked_at"
+        ],
+        "title": "DeviceListItem",
+        "description": "One of the caller's own phones. No public key or user id: the list is only for the owner."
       },
       "DeviceOut": {
         "properties": {
@@ -6493,6 +6686,109 @@
         "title": "OpsQueue",
         "description": "Everything waiting for ops in one place, oldest first."
       },
+      "OrderDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "supplier_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Supplier Id"
+          },
+          "requested_by": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Requested By"
+          },
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total_minor": {
+            "type": "integer",
+            "title": "Total Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "approved_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved By"
+          },
+          "approved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approved At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "supplier": {
+            "$ref": "#/components/schemas/SupplierRef"
+          },
+          "delivery": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "supplier_id",
+          "requested_by",
+          "items",
+          "total_minor",
+          "currency",
+          "status",
+          "approved_by",
+          "approved_at",
+          "created_at",
+          "supplier"
+        ],
+        "title": "OrderDetail",
+        "description": "An order as the project's members read it: with the supplier's name and, once counted, its delivery."
+      },
       "OrderItem": {
         "properties": {
           "item": {
@@ -6623,6 +6919,34 @@
         ],
         "title": "OrderOut"
       },
+      "OrderPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/OrderDetail"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "OrderPage"
+      },
       "OrderRequest": {
         "properties": {
           "supplier_id": {
@@ -6721,6 +7045,45 @@
           "code"
         ],
         "title": "OtpVerifyIn"
+      },
+      "PartyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "phone"
+        ],
+        "title": "PartyOut",
+        "description": "A person on the project, as the other members see them (MX-26). The phone is for the project's\nown members and ops (this route is members-only); it is left out for a suspended account and for\nsomeone who signs in by email only."
       },
       "PayoutRecipientOut": {
         "properties": {
@@ -6987,6 +7350,26 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SiteOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contractor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "supervisor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartyOut"
               },
               {
                 "type": "null"
@@ -8382,6 +8765,26 @@
           "rating"
         ],
         "title": "SupervisorProfileOut"
+      },
+      "SupplierRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "SupplierRef",
+        "description": "Who the order is with: the id and name only (never the owner, address or payout code)."
       },
       "TokenPair": {
         "properties": {

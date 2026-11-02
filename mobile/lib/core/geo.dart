@@ -13,6 +13,15 @@ class Geo {
     ];
   }
 
+  /// The middle of a small site: the average of the corners (a closing duplicate is ignored).
+  /// Returns `(lat, lon)`.
+  static (double, double) centroid(List<List<double>> ring) {
+    final pts = ring.length > 1 && ring.first[0] == ring.last[0] && ring.first[1] == ring.last[1] ? ring.sublist(0, ring.length - 1) : ring;
+    final lon = pts.fold<double>(0, (s, p) => s + p[0]) / pts.length;
+    final lat = pts.fold<double>(0, (s, p) => s + p[1]) / pts.length;
+    return (lat, lon);
+  }
+
   static bool inside(List<List<double>> ring, double lat, double lon) {
     var in_ = false;
     for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {

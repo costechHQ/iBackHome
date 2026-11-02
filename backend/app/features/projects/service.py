@@ -53,6 +53,7 @@ from app.features.projects.schemas import (
     BoqMilestoneOut,
     BoqOut,
     BoqSubmit,
+    PartyOut,
     Pin,
     ProjectCreate,
     SiteOut,
@@ -81,6 +82,21 @@ async def get_project(session: AsyncSession, project_id: uuid.UUID, *, lock: boo
     if project is None:
         raise _not_found()
     return project
+
+
+async def get_party(session: AsyncSession, user_id: uuid.UUID | None) -> PartyOut | None:
+    """A person on the project with a name and, for an active account, a phone (read through users).
+
+    A suspended account keeps its name but shows no phone. Call only after the caller passed
+    `require_project_member()`: the phone is for the project's own members and ops.
+    """
+    if user_id is None:
+        return None
+    person = await users.get_user(session, user_id)
+    if person is None:
+        return None
+    phone = person.phone if person.status == UserStatus.ACTIVE.value else None
+    return PartyOut(id=person.id, full_name=person.full_name, phone=phone)
 
 
 def is_member(user: User, project: Project) -> bool:

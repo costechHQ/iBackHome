@@ -71,10 +71,18 @@ async def list_projects(
 async def get_project(
     project_id: uuid.UUID, session: SessionDep, user: users.CurrentUserDep
 ) -> ProjectDetail:
-    """One project with its site. Its client, contractor and supervisor, and ops."""
+    """One project with its site and the names (and phones) of its contractor and supervisor.
+
+    Its client, contractor and supervisor, and ops, only: a phone is never shown to anyone else.
+    """
     project = await service.require_project_member(session, user, project_id)
     site = await service.get_site(session, project_id)
-    return ProjectDetail(**ProjectOut.model_validate(project).model_dump(), site=site)
+    return ProjectDetail(
+        **ProjectOut.model_validate(project).model_dump(),
+        site=site,
+        contractor=await service.get_party(session, project.contractor_id),
+        supervisor=await service.get_party(session, project.supervisor_id),
+    )
 
 
 @router.put("/projects/{project_id}/site", response_model=SiteOut)
