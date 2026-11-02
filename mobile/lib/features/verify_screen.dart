@@ -28,6 +28,7 @@ class VerifyScreen extends ConsumerStatefulWidget {
     required this.milestoneName,
     this.projectTitle,
     this.contractorName,
+    this.checklist = defaultChecklist,
     this.sequence,
   });
 
@@ -38,6 +39,9 @@ class VerifyScreen extends ConsumerStatefulWidget {
 
   /// The contractor's name when the server has one: "Send back to Engr. Obi" instead of "to contractor".
   final String? contractorName;
+
+  /// What this milestone is checked against (ops' template for it, from the server).
+  final List<String> checklist;
   final int? sequence;
 
   @override
@@ -51,7 +55,7 @@ class _VerifyScreenState extends ConsumerState<VerifyScreen> {
   List<QueuedCapture> _photos = const [];
 
   /// Checklist item text -> ids of this phone's captures that show it.
-  final Map<String, Set<String>> _linked = {for (final i in defaultChecklist) i: <String>{}};
+  late final Map<String, Set<String>> _linked = {for (final i in widget.checklist) i: <String>{}};
   bool _loaded = false;
   bool _busy = false;
   String? _conflict;
