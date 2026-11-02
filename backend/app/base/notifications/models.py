@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,3 +51,39 @@ class Notification(TimestampedBase):
     error: Mapped[str | None] = mapped_column(Text)  # why channels failed, e.g. "whatsapp: not configured"
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # set by the in-app feed
+
+
+class PushToken(TimestampedBase):
+    """One signed-in app install's Firebase token, so push can reach that phone.
+
+    `device_pk` is the evidence device's id (devices.id). There is no foreign key: notifications is a base
+    module and must not depend on a feature's table. The evidence service checks the device belongs to the
+    caller before saving a token and forgets it when the device is revoked. One token per device; a token
+    that moves to another user (someone else signed in on that phone) replaces the old row.
+    """
+
+    __tablename__ = "push_tokens"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), index=True, nullable=False
+    )
+    device_pk: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True, nullable=False)
+    token: Mapped[str] = mapped_column(Text, index=True, nullable=False)
+
+
+class NotificationPreference(TimestampedBase):
+    """A person's push settings (design: AND-SUPERVISOR-015). No row means the defaults: push on, previews on.
+
+    Spot-check SMS is not here: it cannot be turned off.
+    """
+
+    __tablename__ = "notification_preferences"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False
+    )
+    push_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+    # True: a lock screen shows only "You have a new update from iBackHome", never the message text.
+    hide_previews: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )

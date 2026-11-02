@@ -16,6 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base import audit
+from app.base.users import service as users
 from app.base.users.models import Role, User
 from app.core.errors import AppError
 from app.features.projects import service as projects
@@ -101,13 +102,69 @@ async def list_for_project(session: AsyncSession, user: User, project_id: uuid.U
     return list(result)
 
 
+async def person_name(session: AsyncSession, user_id: uuid.UUID | None) -> str | None:
+    """A person's name, read through the users service (None if there is none, or no such person)."""
+    if user_id is None:
+        return None
+    person = await users.get_user(session, user_id)
+    return (person.full_name or None) if person else None
+
+
 async def render_report_pdf(session: AsyncSession, report_id: uuid.UUID) -> bytes:
     """The report as a PDF, titled with the project's name. Raises OSError without WeasyPrint's libraries."""
     report = await get_report(session, report_id)
     project = await projects.get_project(session, report.project_id)
     return pdf.render_pdf(
-        report.body_md, title=project.title, week_start=report.week_start, evidence_ids=report.evidence_ids
+        report.body_md,
+        title=project.title,
+        week_start=report.week_start,
+        evidence_ids=report.evidence_ids,
+        note=report.supervisor_note,
+        note_by=await person_name(session, report.note_by),
+        reviewed_by=await person_name(session, report.reviewed_by),
     )
+
+
+def _require_reviewer(user: User, project: Project) -> None:
+    """Only the project's assigned supervisor or ops may review a report or add a note to it."""
+    if user.role != Role.OPS.value and user.id != project.supervisor_id:
+        raise AppError(
+            "not_report_reviewer", "Only the project's supervisor or ops can review a report.", 403
+        )
+
+
+async def set_note(
+    session: AsyncSession,
+    report_id: uuid.UUID,
+    user: User,
+    note: str | None,
+    *,
+    request: Request | None = None,
+) -> Report:
+    """Add, change or remove the reviewer's note on a draft. The AI's text is never changed.
+
+    The note is shown under the writer's name and goes out with the report (design: "your note to the
+    client, shown under your name"). A blank note removes it. Saving the same note again changes nothing.
+    - 404 report_not_found, 403 not_report_reviewer
+    - 409 report_locked: the report is already reviewed or sent
+    """
+    report = await get_report(session, report_id, lock=True)
+    project = await projects.get_project(session, report.project_id)
+    _require_reviewer(user, project)
+    if report.status != ReportStatus.DRAFT.value:
+        raise AppError("report_locked", f"A {report.status} report can't be changed.", 409)
+    text = (note or "").strip() or None
+    if text == report.supervisor_note:
+        return report
+    before = audit.snapshot(report)
+    report.supervisor_note = text
+    report.note_by = user.id if text else None
+    await session.flush()
+    await session.refresh(report)
+    await audit.record(
+        session, user.id, "report.note_set", "report", report.id, before, audit.snapshot(report), request
+    )
+    return report
 
 
 async def review(
@@ -116,16 +173,14 @@ async def review(
     """Mark a draft reviewed and store its PDF; the 15-minute job then sends it.
 
     Reviewers: the project's assigned supervisor (spec) or ops (decided 2026-10-15, pending Christopher).
+    The PDF names the reviewer and carries the note, and `reviewed_by` records who it was.
     - 404 report_not_found, 403 not_report_reviewer
     - 409 invalid_transition: the report isn't a draft
     - 503 pdf_unavailable: the PDF couldn't be made (nothing is changed)
     """
     report = await get_report(session, report_id, lock=True)
     project = await projects.get_project(session, report.project_id)
-    if user.role != Role.OPS.value and user.id != project.supervisor_id:
-        raise AppError(
-            "not_report_reviewer", "Only the project's supervisor or ops can review a report.", 403
-        )
+    _require_reviewer(user, project)
     if report.status != ReportStatus.DRAFT.value:
         raise AppError("invalid_transition", f"A {report.status} report can't be reviewed.", 409)
 
@@ -135,6 +190,9 @@ async def review(
             title=project.title,
             week_start=report.week_start,
             evidence_ids=report.evidence_ids,
+            note=report.supervisor_note,
+            note_by=await person_name(session, report.note_by),
+            reviewed_by=user.full_name or None,
         )
         key = storage.pdf_key(report.project_id, report.week_start)
         await asyncio.to_thread(storage.put_pdf, key, document)
@@ -144,6 +202,7 @@ async def review(
 
     before = audit.snapshot(report)
     report.status = ReportStatus.REVIEWED.value
+    report.reviewed_by = user.id
     report.pdf_key = key
     await session.flush()
     await session.refresh(report)

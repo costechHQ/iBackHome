@@ -22,16 +22,23 @@ yet. It raises if the code can't be sent (the login must say so) and never store
 import logging
 import uuid
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy import Select, func, select, tuple_
+from sqlalchemy import Select, delete, func, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.base.notifications.adapters import Adapter, get_adapters
-from app.base.notifications.models import DEFAULT_ORDER, Channel, Notification, NotificationStatus
+from app.base.notifications.adapters import Adapter, TokenGone, get_adapters
+from app.base.notifications.models import (
+    DEFAULT_ORDER,
+    Channel,
+    Notification,
+    NotificationPreference,
+    NotificationStatus,
+    PushToken,
+)
 from app.base.notifications.settings import get_notification_settings
 from app.base.notifications.templates import LOGIN_CODE, Rendered, Template, get_template
 from app.base.users import service as users
@@ -63,7 +70,7 @@ def _address(user: User, channel: Channel) -> str | None:
         return user.phone
     if channel == Channel.EMAIL:
         return user.email
-    return None  # push: device push tokens are not stored yet
+    return None  # push has no single address: see _deliver_push()
 
 
 @dataclass
@@ -76,11 +83,133 @@ class _Delivery:
     problems: list[str] = field(default_factory=list)
 
 
+# Push goes only to the Android app's two roles; clients and suppliers get WhatsApp and email (design).
+PUSH_ROLES = ("supervisor", "contractor")
+# What a lock screen shows when the person hides previews: no names, no amounts, nothing to read.
+HIDDEN_TITLE = "iBackHome"
+HIDDEN_TEXT = "You have a new update from iBackHome."
+
+
+@dataclass(frozen=True)
+class Preferences:
+    """A person's push settings. The defaults apply until they change them: push on, previews shown."""
+
+    push_enabled: bool = True
+    hide_previews: bool = False
+
+
+async def get_preferences(session: AsyncSession, user_id: uuid.UUID) -> Preferences:
+    row = await session.scalar(
+        select(NotificationPreference).where(NotificationPreference.user_id == user_id)
+    )
+    return Preferences(row.push_enabled, row.hide_previews) if row else Preferences()
+
+
+async def set_preferences(
+    session: AsyncSession, user_id: uuid.UUID, *, push_enabled: bool, hide_previews: bool
+) -> Preferences:
+    """Save both settings (the caller commits). Sending the same values again changes nothing."""
+    row = await session.scalar(
+        select(NotificationPreference).where(NotificationPreference.user_id == user_id)
+    )
+    if row is None:
+        row = NotificationPreference(user_id=user_id, push_enabled=push_enabled, hide_previews=hide_previews)
+        session.add(row)
+    else:
+        row.push_enabled, row.hide_previews = push_enabled, hide_previews
+    await session.flush()
+    return Preferences(row.push_enabled, row.hide_previews)
+
+
+async def save_push_token(
+    session: AsyncSession, user_id: uuid.UUID, device_pk: uuid.UUID, token: str
+) -> PushToken:
+    """Remember the app install's Firebase token (the caller commits).
+
+    One token per install: sending a new token for the same device replaces the old one. A token that
+    another install still holds (the phone changed hands, or the app was reinstalled) is taken from it, so
+    one phone is never reachable as two people. The caller has already checked the device is the user's.
+    """
+    await session.execute(delete(PushToken).where(PushToken.token == token, PushToken.device_pk != device_pk))
+    row = await session.scalar(select(PushToken).where(PushToken.device_pk == device_pk))
+    if row is None:
+        row = PushToken(user_id=user_id, device_pk=device_pk, token=token)
+        session.add(row)
+    else:
+        row.user_id, row.token = user_id, token
+    await session.flush()
+    return row
+
+
+async def forget_push_token(session: AsyncSession, device_pk: uuid.UUID) -> None:
+    """Drop a device's token (sign-out, or the device was revoked). Nothing to drop is fine."""
+    await session.execute(delete(PushToken).where(PushToken.device_pk == device_pk))
+
+
+async def _deliver_push(
+    session: AsyncSession, user: User, message: Rendered, adapter: Adapter | None, result: _Delivery
+) -> bool:
+    """Push to every phone the person has set up. True if at least one got it.
+
+    Not an app role, no phone registered, or push switched off: skipped, so the next channel runs.
+    With previews hidden the lock screen gets the generic line; the ids that open the right screen still go.
+    """
+    if user.role not in PUSH_ROLES:
+        result.problems.append("push: no address")
+        return False
+    prefs = await get_preferences(session, user.id)
+    if not prefs.push_enabled:
+        result.problems.append("push: turned off")
+        return False
+    tokens = list(
+        await session.scalars(
+            select(PushToken).where(PushToken.user_id == user.id).order_by(PushToken.created_at, PushToken.id)
+        )
+    )
+    if not tokens:
+        result.problems.append("push: no address")
+        return False
+    if adapter is None:
+        result.problems.append("push: not configured")
+        return False
+    shown = replace(message, title=HIDDEN_TITLE, text=HIDDEN_TEXT) if prefs.hide_previews else message
+    delivered, ref = 0, None
+    for saved in tokens:
+        try:
+            sent = await adapter.send(saved.token, shown)
+        except TokenGone:
+            await session.delete(saved)  # uninstalled or replaced: never try this token again
+            result.problems.append("push: a phone's token was no longer registered")
+            continue
+        except Exception as exc:  # noqa: BLE001 - a provider failure means "try the next phone, then channel"
+            logger.warning("notification %s via push failed: %s", message.template, exc)
+            result.problems.append(f"push: {exc}"[:300])
+            continue
+        delivered += 1
+        ref = ref or sent
+    if not delivered:
+        return False
+    result.channel, result.to, result.ref = (
+        Channel.PUSH,
+        f"{delivered} phone{'s' if delivered != 1 else ''}",
+        ref,
+    )
+    return True
+
+
 async def _deliver(
-    user: User, message: Rendered, order: Sequence[Channel], available: Mapping[Channel, Adapter]
+    session: AsyncSession,
+    user: User,
+    message: Rendered,
+    order: Sequence[Channel],
+    available: Mapping[Channel, Adapter],
 ) -> _Delivery:
     result = _Delivery()
     for channel in order:
+        if channel is Channel.PUSH:
+            if await _deliver_push(session, user, message, available.get(channel), result):
+                break
+            continue
         to = _address(user, channel)
         adapter = available.get(channel)
         if to is None:
@@ -147,7 +276,7 @@ async def notify(
     if key is not None:
         payload[KEY_FIELD] = key
 
-    delivery = await _deliver(user, message, order, available)
+    delivery = await _deliver(session, user, message, order, available)
     if delivery.channel is not None:
         row = Notification(
             user_id=user.id,
@@ -266,7 +395,7 @@ async def retry_failed(
         except ValueError:
             counts["skipped"] += 1
             continue
-        delivery = await _deliver(user, message, DEFAULT_ORDER, available)
+        delivery = await _deliver(session, user, message, DEFAULT_ORDER, available)
         if delivery.channel is not None:
             row.status = NotificationStatus.SENT.value
             row.channel = delivery.channel.value

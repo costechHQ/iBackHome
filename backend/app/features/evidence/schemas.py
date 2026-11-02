@@ -23,6 +23,17 @@ class DeviceOut(BaseModel):
     revoked_at: datetime | None
 
 
+class PushTokenIn(BaseModel):
+    """This phone's Firebase token. `device_pk` is the id `POST /devices` returned."""
+
+    device_pk: uuid.UUID
+    token: str = Field(min_length=20, max_length=4096)
+
+
+class PushTokenOut(BaseModel):
+    device_pk: uuid.UUID
+
+
 class DeviceListItem(BaseModel):
     """One of the caller's own phones. No public key or user id: the list is only for the owner."""
 

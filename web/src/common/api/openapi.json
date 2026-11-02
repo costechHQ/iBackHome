@@ -327,6 +327,97 @@
         }
       }
     },
+    "/api/v1/me/notification-preferences": {
+      "get": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Get My Preferences",
+        "description": "Your push settings. Until you change them: push on, previews shown.",
+        "operationId": "get_my_preferences_api_v1_me_notification_preferences_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "notifications"
+        ],
+        "summary": "Set My Preferences",
+        "description": "Save both push settings. Spot-check SMS is not one of them: it cannot be turned off.",
+        "operationId": "set_my_preferences_api_v1_me_notification_preferences_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreferencesIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferencesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/webhooks/stripe": {
       "post": {
         "tags": [
@@ -1501,6 +1592,131 @@
         }
       }
     },
+    "/api/v1/me/push-tokens": {
+      "post": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Register Push Token",
+        "description": "Save this phone's Firebase token so push can reach it (a supervisor's or contractor's own device).\n\nA new token for the same device replaces the old one. 404 device_not_found, 403 not_device_owner,\n409 device_revoked.",
+        "operationId": "register_push_token_api_v1_me_push_tokens_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushTokenIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushTokenOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/push-tokens/{device_pk}": {
+      "delete": {
+        "tags": [
+          "evidence"
+        ],
+        "summary": "Remove Push Token",
+        "description": "Forget this phone's token (sign-out). Deleting twice is fine.",
+        "operationId": "remove_push_token_api_v1_me_push_tokens__device_pk__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "device_pk",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Device Pk"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/evidence/upload-url": {
       "post": {
         "tags": [
@@ -2109,6 +2325,101 @@
                     "$ref": "#/components/schemas/ProjectMilestoneOut"
                   },
                   "title": "Response List Project Milestones Api V1 Projects  Project Id  Milestones Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/checklist-templates": {
+      "get": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "List Checklist Templates",
+        "description": "Ops: the checklist for each kind of milestone (found by the milestone's name).",
+        "operationId": "list_checklist_templates_api_v1_checklist_templates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChecklistTemplateOut"
+                  },
+                  "title": "Response List Checklist Templates Api V1 Checklist Templates Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "Set Checklist Template",
+        "description": "Ops: write the checklist for a kind of milestone, e.g. \"Foundation\".\n\nNew milestones with that name get a copy; milestones that already exist keep theirs.",
+        "operationId": "set_checklist_template_api_v1_checklist_templates_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChecklistTemplateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChecklistTemplateOut"
                 }
               }
             }
@@ -2750,6 +3061,82 @@
                     "$ref": "#/components/schemas/ReportOut"
                   },
                   "title": "Response List Reports Api V1 Projects  Project Id  Reports Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/{report_id}": {
+      "patch": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Set Report Note",
+        "description": "Add, change or remove your note on a draft report (the project's supervisor or ops).\n\nThe note is shown under your name and goes out with the report. The AI's text is never changed.",
+        "operationId": "set_report_note_api_v1_reports__report_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "report_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Report Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportNoteIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
                 }
               }
             }
@@ -3449,7 +3836,7 @@
           "supervision"
         ],
         "summary": "Supervisor Application",
-        "description": "Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting.",
+        "description": "Ops: one application in full (contacts, guarantors, declared relatives, and the full NIN while it is\npending) to check before vetting. Showing the NIN is written to the audit log.",
         "operationId": "supervisor_application_api_v1_supervisors__supervisor_id__application_get",
         "security": [
           {
@@ -4455,6 +4842,75 @@
         ],
         "title": "ChecklistItem",
         "description": "One thing the supervisor checked on site, and the photos that show it."
+      },
+      "ChecklistTemplateIn": {
+        "properties": {
+          "milestone_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Milestone Name",
+            "examples": [
+              "Foundation"
+            ]
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestone_name",
+          "items"
+        ],
+        "title": "ChecklistTemplateIn",
+        "description": "Ops' checklist for a kind of milestone. Replaces the template with this name, if there is one."
+      },
+      "ChecklistTemplateOut": {
+        "properties": {
+          "milestone_name": {
+            "type": "string",
+            "title": "Milestone Name"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestone_name",
+          "items",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "ChecklistTemplateOut"
       },
       "ConsentIn": {
         "properties": {
@@ -6669,6 +7125,33 @@
         ],
         "title": "PayoutRecipientOut"
       },
+      "PersonRef": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name"
+        ],
+        "title": "PersonRef",
+        "description": "A person named on a report: the id and name only (no phone or email)."
+      },
       "Pin": {
         "properties": {
           "lat": {
@@ -6696,6 +7179,43 @@
           "lon"
         ],
         "title": "Pin"
+      },
+      "PreferencesIn": {
+        "properties": {
+          "push_enabled": {
+            "type": "boolean",
+            "title": "Push Enabled"
+          },
+          "hide_previews": {
+            "type": "boolean",
+            "title": "Hide Previews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "push_enabled",
+          "hide_previews"
+        ],
+        "title": "PreferencesIn",
+        "description": "Both settings, always (a PUT replaces them). Spot-check SMS is not a setting: it stays on."
+      },
+      "PreferencesOut": {
+        "properties": {
+          "push_enabled": {
+            "type": "boolean",
+            "title": "Push Enabled"
+          },
+          "hide_previews": {
+            "type": "boolean",
+            "title": "Hide Previews"
+          }
+        },
+        "type": "object",
+        "required": [
+          "push_enabled",
+          "hide_previews"
+        ],
+        "title": "PreferencesOut"
       },
       "ProjectCreate": {
         "properties": {
@@ -6974,6 +7494,13 @@
                 "type": "null"
               }
             ]
+          },
+          "checklist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checklist"
           }
         },
         "type": "object",
@@ -6992,7 +7519,7 @@
           "released_at"
         ],
         "title": "ProjectMilestoneOut",
-        "description": "A milestone in the project list, with its newest verification (if any).\n\nAfter a rejection the milestone is back to `funded`; `latest_verification.notes` says why."
+        "description": "A milestone in the project list, with its newest verification (if any).\n\nAfter a rejection the milestone is back to `funded`; `latest_verification.notes` says why.\n`checklist` is what the supervisor checks on site: ops' template for this milestone's name, copied in when\nthe milestone was made, or the generic default where there was none."
       },
       "ProjectOut": {
         "properties": {
@@ -7124,6 +7651,42 @@
           "supervisor_id"
         ],
         "title": "ProjectSupervisorOut"
+      },
+      "PushTokenIn": {
+        "properties": {
+          "device_pk": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Device Pk"
+          },
+          "token": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 20,
+            "title": "Token"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_pk",
+          "token"
+        ],
+        "title": "PushTokenIn",
+        "description": "This phone's Firebase token. `device_pk` is the id `POST /devices` returned."
+      },
+      "PushTokenOut": {
+        "properties": {
+          "device_pk": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Device Pk"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_pk"
+        ],
+        "title": "PushTokenOut"
       },
       "QuoteCheckIn": {
         "properties": {
@@ -7326,6 +7889,25 @@
         ],
         "title": "RefreshIn"
       },
+      "ReportNoteIn": {
+        "properties": {
+          "supervisor_note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Note"
+          }
+        },
+        "type": "object",
+        "title": "ReportNoteIn",
+        "description": "The note to the client. An empty or blank note removes it."
+      },
       "ReportOut": {
         "properties": {
           "id": {
@@ -7350,6 +7932,37 @@
           "body_md": {
             "type": "string",
             "title": "Body Md"
+          },
+          "supervisor_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisor Note"
+          },
+          "note_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_by": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "evidence_ids": {
             "items": {
@@ -7400,6 +8013,9 @@
           "week_start",
           "status",
           "body_md",
+          "supervisor_note",
+          "note_by",
+          "reviewed_by",
           "evidence_ids",
           "pdf_url",
           "sent_at",
@@ -7736,6 +8352,19 @@
             "type": "array",
             "maxItems": 20,
             "title": "Related Contractors"
+          },
+          "nin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "password",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin"
           }
         },
         "type": "object",
@@ -7770,6 +8399,17 @@
           "nin_verified": {
             "type": "boolean",
             "title": "Nin Verified"
+          },
+          "nin_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin Last4"
           },
           "guarantor_1_verified": {
             "type": "boolean",
@@ -7853,6 +8493,17 @@
             "type": "string",
             "title": "Account Status"
           },
+          "nin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin"
+          },
           "guarantor_1": {
             "type": "string",
             "title": "Guarantor 1"
@@ -7886,6 +8537,7 @@
           "registration_no",
           "registration_verified",
           "nin_verified",
+          "nin_last4",
           "guarantor_1_verified",
           "guarantor_2_verified",
           "vetting_status",
@@ -8040,6 +8692,17 @@
             "type": "boolean",
             "title": "Nin Verified"
           },
+          "nin_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin Last4"
+          },
           "guarantor_1_verified": {
             "type": "boolean",
             "title": "Guarantor 1 Verified"
@@ -8093,6 +8756,7 @@
           "registration_no",
           "registration_verified",
           "nin_verified",
+          "nin_last4",
           "guarantor_1_verified",
           "guarantor_2_verified",
           "vetting_status",

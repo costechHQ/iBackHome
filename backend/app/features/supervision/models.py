@@ -46,6 +46,12 @@ class SupervisorProfile(TimestampedBase):
     guarantor_1: Mapped[str] = mapped_column(String(200), nullable=False)  # name and phone
     guarantor_2: Mapped[str] = mapped_column(String(200), nullable=False)
 
+    # The NIN (11 digits). The full number is kept encrypted only while the application is pending, for ops to
+    # check, and is wiped when they decide; the last 4 digits stay. `audit: False` keeps the ciphertext out of
+    # the append-only audit log, where a later wipe could never reach it. See nin.py.
+    nin_encrypted: Mapped[str | None] = mapped_column(Text, info={"audit": False})
+    nin_last4: Mapped[str | None] = mapped_column(String(4))
+
     # Ticked by ops during vetting; approval needs all four.
     registration_verified: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     nin_verified: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")

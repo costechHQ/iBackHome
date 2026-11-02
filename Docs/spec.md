@@ -116,17 +116,18 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status (`active`, `suspended`), timezone, country, terms_version, privacy_version, consented_at (NDPA 2023 consent; the current versions are settings, and a new version asks everyone again) |
 | `otp_codes` | base/users | identifier (E.164 phone or lower-case email), channel (`sms`, `whatsapp`, `email`), code_hash (HMAC-SHA256, never the code), expires_at, attempts, consumed_at, requested_ip |
 | `refresh_tokens` | base/users | user → users, token_hash (SHA-256, unique), expires_at, used_at, revoked_at, replaced_by → refresh_tokens |
-| `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating |
+| `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating, nin_encrypted (the full NIN, encrypted with `NIN_ENCRYPTION_KEY` only while the application is pending, then wiped; kept out of the audit log), nin_last4 (all that remains once ops decide) |
 | `supervisor_relations` | supervision | supervisor → users, contractor_phone (E.164), relationship (declared relatives: a related supervisor can't be assigned to, or spot-check, that contractor's projects) |
 | `suppliers` | suppliers | name, owner → users, address, location (POINT), verified, paystack_recipient_code |
 | `projects` | projects | client → users, contractor → users, supervisor → users, title, address, status (`draft`, `boq_review`, `active`, `paused`, `completed`), currency, budget_minor |
 | `sites` | projects | project → projects, location (POINT), geofence (POLYGON, SRID 4326) |
 | `boq_items` | projects | project → projects, milestone → milestones (set when the BoQ is approved), milestone_sequence, milestone_name, line_no, description, unit, quantity (3 dp), unit_price_minor, total_minor, currency |
 | `boq_approvals` | projects | project → projects, user → users, role (`client`, `contractor`, `ops`; one each), approved_at |
-| `milestones` | milestones | project → projects, sequence, name, amount_minor, currency, status (see state machines), funded_at, claimed_at, verified_at, approved_at, released_at |
+| `milestones` | milestones | project → projects, sequence, name, amount_minor, currency, status (see state machines), funded_at, claimed_at, verified_at, approved_at, released_at, checklist (JSONB list of what the supervisor checks: a copy of ops' template for this milestone's name made when the milestone is created; NULL on older milestones, which read as the generic default) |
 | `evidence` | evidence | project → projects, milestone → milestones (nullable), captured_by → users, captured_by_role (`supervisor`, `contractor`), kind (`photo`, `video`), storage_key (unique), content_type, size_bytes, file_sha256, captured_at (phone clock), gps_time (GPS fix), latitude, longitude, accuracy_m, device_id, signature, phash, status (`pending_checks`, `accepted`, `flagged`, `rejected`), reject_reason |
 | `devices` | evidence | user → users, device_id, public_key, registered_at, revoked_at |
 | `verifications` | milestones | milestone → milestones, supervisor → users, checklist (JSONB), notes, decision (`verified`, `rejected`) |
+| `checklist_templates` | milestones | milestone_key (the name lower-cased, one space, unique), milestone_name (as ops wrote it), items (JSONB list of strings), updated_by → users. Ops write one per kind of milestone (Foundation, Blockwork to lintel, Roofing, Plastering, Finishing); no wording is seeded |
 | `escrow_accounts` | escrow | project → projects (unique), provider, provider_account_ref, currency, balance_minor (cached; ledger is source of truth) |
 | `escrow_releases` | escrow | milestone → milestones, amount_minor, status, provider_ref, requested_at, released_at |
 | `disputes` | escrow | project → projects, milestone → milestones, raised_by → users, reason, status (`open`, `resolved_release`, `resolved_reject`), resolution_notes, resolved_by → users |
@@ -140,11 +141,13 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `material_orders` | suppliers | project → projects, supplier → suppliers, requested_by → users, items (JSONB; quantity as a decimal string), total_minor (computed by the server), currency, status (`requested`, `approved`, `delivered`, `paid`, `cancelled`), approved_by → users, approved_at |
 | `deliveries` | suppliers | order → material_orders, confirmed_by → users, quantities (JSONB), evidence_ids, confirmed_at |
 | `spot_checks` | supervision | project → projects, supervisor → users, scheduled_by → users, scheduled_for, completed_at, findings |
-| `reports` | reports | project → projects, week_start (a Monday; one report per project per week), body_md, pdf_key, evidence_ids, status (`draft`, `reviewed`, `sent`), sent_at |
+| `reports` | reports | project → projects, week_start (a Monday; one report per project per week), body_md (the AI draft, never edited), supervisor_note and note_by (the reviewer's own words under their name, added while a draft), reviewed_by, pdf_key, evidence_ids, status (`draft`, `reviewed`, `sent`), sent_at |
 | `agent_runs` | agents | agent, user → users (empty for scheduled runs), input (JSONB: system prompt, prompt, tools), tool_calls (JSONB), output, model (exact version), status (`succeeded`, `failed`), error, duration_ms, created_at |
 | `audit_log` | base/audit | actor → users, action, object_type, object_id, before (JSONB), after (JSONB), ip, device_id, at — insert only |
 | `idempotency_keys` | core | key, scope, status_code, response (the saved response a retried write replays) |
 | `notifications` | base/notifications | user → users (nullable: login codes go to a raw phone or email), channel (`whatsapp`, `push`, `sms`, `email`: the one that delivered, or the last tried), template, payload (JSONB; never a login code; may hold the send key `_key`), recipient (the phone or email used), status (`sent`, `failed`), provider_ref, attempts, error (why channels failed), sent_at, read_at (set when the user marks it read in the in-app feed) |
+| `push_tokens` | base/notifications | user → users, device_pk (the evidence device id, unique: one token per app install; no foreign key, notifications is a base module), token. Saved by `POST /me/push-tokens`, dropped when the device is revoked or the token is dead |
+| `notification_preferences` | base/notifications | user → users (unique), push_enabled (default true), hide_previews (default false). No row means the defaults. Spot-check SMS is not a setting: it stays on |
 
 **Indexes that matter**: GiST on `sites.geofence`; unique on `payment_events (provider, event_id)`; btree on `evidence.phash` plus a BK-tree or prefix index for near-match search (see evidence integrity); `ledger_entries (ref_type, ref_id)`.
 
@@ -433,6 +436,9 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | GET, POST | `/me/consent` | signed in | Current terms and privacy versions; agree to them (older versions: 409 `consent_version_outdated`) |
 | GET | `/me/notifications` | signed in | The user's own notifications, newest first (`?cursor=&limit=`): id, template, title, text, created_at, read_at, plus `unread_count`. Never the raw payload; login codes never appear |
 | POST | `/me/notifications/{id}/read` | signed in | Mark one of the user's own notifications read (twice keeps the first time; someone else's id is 404 `notification_not_found`) |
+| GET, PUT | `/me/notification-preferences` | signed in | Push settings: `push_enabled`, `hide_previews` (a PUT replaces both). With previews hidden a lock screen shows only a generic line; the ids that open the right screen still go |
+| POST | `/me/push-tokens` | supervisor, contractor | Save this phone's Firebase token `{device_pk, token}` (a new token for the same device replaces the old one; 403 `not_device_owner`, 409 `device_revoked`). Push reaches only these two roles |
+| DELETE | `/me/push-tokens/{device_pk}` | the device's owner | Forget this phone's token (sign-out); twice is fine |
 | POST | `/projects` | client | Create project, invite contractor |
 | GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects. `GET /projects/{id}` also returns `contractor` and `supervisor` as `{id, full_name, phone}` (phone only for an active account, never to non-members; MX-26) |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
@@ -447,7 +453,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/evidence` | supervisor, contractor | Submit capture metadata + signature after upload; runs checks |
 | GET | `/projects/{id}/evidence` | parties, ops | Evidence gallery (signed read URLs) |
 | POST | `/evidence/{id}/decision` | ops | Accept or reject flagged evidence (rejecting needs notes) |
-| GET | `/projects/{id}/milestones` | parties, ops | The project's milestones in order, each with its newest verification |
+| GET | `/projects/{id}/milestones` | parties, ops | The project's milestones in order, each with its newest verification, and its `checklist` (what the supervisor checks) |
+| GET, PUT | `/checklist-templates` | ops | Read, or write, the checklist for a kind of milestone `{milestone_name, items}` (1 to 50 items of at most 200 characters, no blanks or repeats). New milestones with that name get a copy; existing ones keep theirs. Changes are audited |
 | POST | `/milestones/{id}/claim` | contractor | Claim milestone done |
 | POST | `/milestones/{id}/verify` | supervisor | Verify or reject with checklist |
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |
@@ -465,12 +472,13 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/orders/{id}/approve` | client | Approve order |
 | POST | `/orders/{id}/delivery` | supervisor | Confirm delivery with quantities + evidence |
 | POST | `/quotes/check` | client, contractor, ops | Run quote checker on a quote or BoQ |
-| GET | `/projects/{id}/reports` | parties, ops | Weekly reports |
+| GET | `/projects/{id}/reports` | parties, ops | Weekly reports, each with `supervisor_note`, `note_by` and `reviewed_by` as `{id, full_name}` |
+| PATCH | `/reports/{id}` | supervisor (assigned), ops | Add, change or remove your note to the client on a draft (`{supervisor_note}`, max 2000, blank removes it). Shown under your name and sent with the report; the AI text is never changed. 409 `report_locked` once reviewed |
 | POST | `/reports/{id}/review` | supervisor (assigned), ops | Mark draft reviewed; queues send |
 | GET | `/ops/queue` | ops | Vetting, flagged evidence, disputes |
-| PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting; view own profile |
+| PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting, with the 11-digit `nin` (write-only; omit it to keep one already given); view own profile, which shows `nin_last4` only |
 | POST | `/supervisors/{id}/vetting` | ops | Approve or reject vetting |
-| GET | `/supervisors/{id}/application` | ops | One application in full (contacts, guarantors, declared relatives) to check before vetting |
+| GET | `/supervisors/{id}/application` | ops | One application in full (contacts, guarantors, declared relatives, and the full `nin` while it is pending) to check before vetting; showing the NIN is audited as `supervisor.nin_viewed`. Once ops decide, only `nin_last4` remains |
 | GET | `/supervisors` | ops | Supervisors by `vetting_status` (approved by default) with their load; with `project_id`, whether each is assigned there or related to its contractor |
 | GET | `/supervisors/me/spot-checks` | supervisor | Visits this supervisor still has to make |
 | POST | `/spot-checks/{id}/complete` | supervisor (the visitor) | Record findings |

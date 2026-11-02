@@ -7,7 +7,7 @@ feed (`GET /me/notifications`, `POST /me/notifications/{id}/read`).
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class FeedItem(BaseModel):
@@ -25,3 +25,15 @@ class FeedPage(BaseModel):
     items: list[FeedItem]
     next_cursor: str | None
     unread_count: int  # all unread messages, not just this page: for a badge
+
+
+class PreferencesIn(BaseModel):
+    """Both settings, always (a PUT replaces them). Spot-check SMS is not a setting: it stays on."""
+
+    push_enabled: bool = Field(strict=True)
+    hide_previews: bool = Field(strict=True)
+
+
+class PreferencesOut(BaseModel):
+    push_enabled: bool
+    hide_previews: bool

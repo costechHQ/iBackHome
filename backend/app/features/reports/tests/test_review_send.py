@@ -342,3 +342,178 @@ def test_beat_runs_friday_15_utc_and_every_15_minutes() -> None:
 
     assert (weekly.day_of_week, weekly.hour, weekly.minute) == ({5}, {15}, {0})
     assert sending.minute == set(range(0, 60, 15))
+
+
+# The supervisor's note, and who reviewed (the design: AND-SUPERVISOR-011)
+
+
+async def name_people(session: AsyncSession, people: dict[str, User]) -> None:
+    people["supervisor"].full_name = "Chidi Nnaji"
+    people["ops"].full_name = "Obiora Ops"
+    await session.flush()
+
+
+def patch_note(
+    client: AsyncClient, report: Report, who: User, note: str | None, key: str | None = None
+) -> Any:
+    headers = bearer(who) | ({"Idempotency-Key": key} if key else {})
+    return client.patch(f"/api/v1/reports/{report.id}", json={"supervisor_note": note}, headers=headers)
+
+
+async def test_the_supervisor_adds_a_note_under_their_name_and_the_ai_text_is_untouched(
+    client: AsyncClient, db_session: AsyncSession, people: dict[str, User], draft: Report
+) -> None:
+    await name_people(db_session, people)
+    ai_text = draft.body_md
+    response = await patch_note(client, draft, people["supervisor"], "Rework started Thursday.")
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["supervisor_note"] == "Rework started Thursday."
+    assert body["note_by"] == {"id": str(people["supervisor"].id), "full_name": "Chidi Nnaji"}
+    assert body["body_md"] == ai_text  # the AI's words are never edited
+    assert body["status"] == "draft"
+    assert body["reviewed_by"] is None
+
+
+async def test_ops_can_add_a_note_too(
+    client: AsyncClient, db_session: AsyncSession, people: dict[str, User], draft: Report
+) -> None:
+    await name_people(db_session, people)
+    body = (await patch_note(client, draft, people["ops"], "Checked with the site.")).json()
+    assert body["note_by"]["full_name"] == "Obiora Ops"
+
+
+async def test_changing_the_note_is_audited_with_before_and_after(
+    client: AsyncClient, db_session: AsyncSession, people: dict[str, User], draft: Report
+) -> None:
+    await patch_note(client, draft, people["supervisor"], "First.")
+    await patch_note(client, draft, people["supervisor"], "Second.")
+    entries, _ = await search(db_session, object_id=draft.id, action="report.note_set")
+    assert len(entries) == 2
+    newest = entries[0]
+    assert newest.actor_id == people["supervisor"].id
+    assert newest.before is not None and newest.after is not None
+    assert newest.before["supervisor_note"] == "First."
+    assert newest.after["supervisor_note"] == "Second."
+
+
+async def test_saving_the_same_note_again_changes_and_audits_nothing(
+    client: AsyncClient, db_session: AsyncSession, people: dict[str, User], draft: Report
+) -> None:
+    await patch_note(client, draft, people["supervisor"], "Same.")
+    await patch_note(client, draft, people["supervisor"], "  Same.  ")  # spaces don't make it new
+    entries, _ = await search(db_session, object_id=draft.id, action="report.note_set")
+    assert len(entries) == 1
+
+
+@pytest.mark.parametrize("blank", [None, "", "   \n  "])
+async def test_a_blank_note_removes_it_and_who_wrote_it(
+    client: AsyncClient, people: dict[str, User], draft: Report, blank: str | None
+) -> None:
+    await patch_note(client, draft, people["supervisor"], "To be removed.")
+    body = (await patch_note(client, draft, people["supervisor"], blank)).json()
+    assert body["supervisor_note"] is None
+    assert body["note_by"] is None
+
+
+async def test_a_note_can_run_to_2000_characters_and_no_more(
+    client: AsyncClient, people: dict[str, User], draft: Report
+) -> None:
+    assert (await patch_note(client, draft, people["supervisor"], "x" * 2000)).status_code == 200
+    assert (await patch_note(client, draft, people["supervisor"], "x" * 2001)).status_code == 422
+
+
+@pytest.mark.parametrize("who", ["client", "contractor", "other_supervisor"])
+async def test_only_the_projects_supervisor_or_ops_can_write_a_note(
+    client: AsyncClient, people: dict[str, User], draft: Report, who: str
+) -> None:
+    response = await patch_note(client, draft, people[who], "Not mine to write.")
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "not_report_reviewer"
+    assert draft.supervisor_note is None
+
+
+async def test_a_reviewed_report_can_no_longer_take_a_note(
+    client: AsyncClient, people: dict[str, User], draft: Report, uploads: Uploads
+) -> None:
+    await client.post(f"/api/v1/reports/{draft.id}/review", headers=bearer(people["supervisor"]))
+    response = await patch_note(client, draft, people["supervisor"], "Too late.")
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "report_locked"
+    assert draft.supervisor_note is None
+
+
+async def test_the_note_idempotency_key_replays_the_answer(
+    client: AsyncClient, people: dict[str, User], draft: Report
+) -> None:
+    first = await patch_note(client, draft, people["supervisor"], "Once.", key="note-1")
+    second = await patch_note(client, draft, people["supervisor"], "Once.", key="note-1")
+    assert first.status_code == second.status_code == 200
+    assert second.json() == first.json()
+
+
+async def test_an_unknown_report_is_404_and_signed_out_is_401(
+    client: AsyncClient, people: dict[str, User]
+) -> None:
+    missing = "00000000-0000-0000-0000-000000000000"
+    response = await client.patch(
+        f"/api/v1/reports/{missing}", json={"supervisor_note": "x"}, headers=bearer(people["supervisor"])
+    )
+    assert response.status_code == 404
+    assert (
+        await client.patch(f"/api/v1/reports/{missing}", json={"supervisor_note": "x"})
+    ).status_code == 401
+
+
+async def test_reviewing_records_who_and_puts_the_note_and_names_in_the_pdf(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    people: dict[str, User],
+    draft: Report,
+    uploads: Uploads,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    await name_people(db_session, people)
+    await patch_note(client, draft, people["supervisor"], "Rework started Thursday.")
+    seen: dict[str, Any] = {}
+
+    def capture(body: str, **kwargs: Any) -> bytes:
+        seen.update(kwargs)
+        return b"%PDF-1.7"
+
+    monkeypatch.setattr(pdf, "render_pdf", capture)
+    response = await client.post(f"/api/v1/reports/{draft.id}/review", headers=bearer(people["supervisor"]))
+    assert response.status_code == 200, response.text
+    assert response.json()["reviewed_by"] == {"id": str(people["supervisor"].id), "full_name": "Chidi Nnaji"}
+    assert seen["note"] == "Rework started Thursday."
+    assert seen["note_by"] == "Chidi Nnaji"
+    assert seen["reviewed_by"] == "Chidi Nnaji"
+
+
+async def test_the_client_reads_the_note_and_the_reviewer_in_the_list(
+    client: AsyncClient,
+    db_session: AsyncSession,
+    people: dict[str, User],
+    project: Project,
+    draft: Report,
+    uploads: Uploads,
+) -> None:
+    await name_people(db_session, people)
+    await patch_note(client, draft, people["supervisor"], "All good.")
+    await client.post(f"/api/v1/reports/{draft.id}/review", headers=bearer(people["supervisor"]))
+    listed = (
+        await client.get(f"/api/v1/projects/{project.id}/reports", headers=bearer(people["client"]))
+    ).json()
+    assert listed[0]["supervisor_note"] == "All good."
+    assert listed[0]["note_by"]["full_name"] == "Chidi Nnaji"
+    assert listed[0]["reviewed_by"]["full_name"] == "Chidi Nnaji"
+    assert set(listed[0]["reviewed_by"]) == {"id", "full_name"}  # never a phone or email
+
+
+async def test_a_new_ai_draft_keeps_the_supervisors_note(
+    client: AsyncClient, db_session: AsyncSession, people: dict[str, User], project: Project, draft: Report
+) -> None:
+    await patch_note(client, draft, people["supervisor"], "My own words.")
+    again = await service.create_draft(db_session, project.id, MONDAY, "## This week\n\nA fresh draft.")
+    assert again.body_md.endswith("A fresh draft.")
+    assert again.supervisor_note == "My own words."

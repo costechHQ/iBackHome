@@ -36,7 +36,11 @@ class Report(TimestampedBase):
         UUID(as_uuid=True), ForeignKey("projects.id"), index=True, nullable=False
     )
     week_start: Mapped[date] = mapped_column(Date, nullable=False)  # the Monday of the reported week
-    body_md: Mapped[str] = mapped_column(Text, nullable=False)
+    body_md: Mapped[str] = mapped_column(Text, nullable=False)  # the AI draft; never edited
+    # What the reviewing supervisor (or ops) adds under their own name while the report is a draft, and who.
+    supervisor_note: Mapped[str | None] = mapped_column(Text)
+    note_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    reviewed_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     pdf_key: Mapped[str | None] = mapped_column(String(300))  # object-storage key, once rendered
     # The evidence the report cites, so the dashboard can link each claim to its photos.
     evidence_ids: Mapped[list[uuid.UUID]] = mapped_column(
