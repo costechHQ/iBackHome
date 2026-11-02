@@ -8,7 +8,30 @@ import { PUBLIC_PATHS } from "../src/features/public/seo";
 // outside production is indexed. Screenshots land in test-results/ for comparison with
 // Docs/design/02-screens/.../web-public-00N-*/*.png.
 
+// Colour contrast is read from what is painted, so axe must not run mid-fade. With motion welcome,
+// `.ibh-reveal` blocks start at opacity 0 and fade in over 700 ms and `.ibh-rise` entrances run 900 ms; axe
+// sometimes caught half-faded text and reported colour-contrast on a different page each run (CI is slower
+// than a laptop). Wait until nothing that changes opacity or colour is still running. Infinite loops (the
+// marquee, the float) and slow zooms (the hero) do not change contrast, so they are not waited for.
+async function settled(page: Page) {
+  // Two frames, so the reveal observer has added `.is-in` and its transition has started before we look.
+  await page.evaluate(
+    () => new Promise<void>((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))),
+  );
+  await page.waitForFunction(() =>
+    document.getAnimations().every((a) => {
+      if (a.playState === "finished" || a.playState === "idle") return true;
+      if (a.effect?.getComputedTiming().iterations === Infinity) return true;
+      const paint = ["opacity", "color", "background-color", "border-color"];
+      if (a instanceof CSSTransition) return !paint.includes(a.transitionProperty);
+      const frames = (a.effect as KeyframeEffect | null)?.getKeyframes() ?? [];
+      return !frames.some((f) => paint.some((p) => p in f));
+    }),
+  );
+}
+
 async function axe(page: Page) {
+  await settled(page);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze();
