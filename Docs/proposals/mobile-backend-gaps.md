@@ -1,6 +1,6 @@
 # Proposal: the backend routes the Android app is waiting for
 
-Status: **proposed, not built**. Needs a decision from Christopher before any code. Each item adds a route, a
+Status: **approved 2026-11-02 (D1 to D5 as recommended); building in the order of D5**. Each item still ships in its own PR with its owner as reviewer. The items add a route, a
 column or a table that is not in `Docs/spec.md`, and CLAUDE.md says to propose those first. The gaps come from
 the design package (`Docs/design/04-api-mapping/missing-endpoints.md`, ids MX-xx) and from what the mobile
 work found missing. Every claim below was checked against `main` on 2026-11-02.
