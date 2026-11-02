@@ -17,7 +17,7 @@ import 'widgets.dart';
 
 /// Photos and videos the server already holds that are still on this phone, and the space they take.
 /// Clearing them is safe: only accepted captures count, and nothing waiting to upload is touched.
-final _uploadedCopiesProvider = FutureProvider.autoDispose<({List<QueuedCapture> items, int bytes})>((ref) async {
+final uploadedCopiesProvider = FutureProvider.autoDispose<({List<QueuedCapture> items, int bytes})>((ref) async {
   final all = await ref.read(servicesProvider).db.all();
   final items = <QueuedCapture>[];
   var bytes = 0;
@@ -31,7 +31,7 @@ final _uploadedCopiesProvider = FutureProvider.autoDispose<({List<QueuedCapture>
   return (items: items, bytes: bytes);
 });
 
-String _mb(int bytes) => bytes < 1024 * 1024 ? '${(bytes / 1024).ceil()} KB' : '${(bytes / (1024 * 1024)).toStringAsFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB';
+String formatBytes(int bytes) => bytes < 1024 * 1024 ? '${(bytes / 1024).ceil()} KB' : '${(bytes / (1024 * 1024)).toStringAsFixed(bytes < 10 * 1024 * 1024 ? 1 : 0)} MB';
 
 /// AND-SUPERVISOR-015: settings. Time is Nigerian time for these roles, spot-check SMS cannot be
 /// turned off, and revoking this phone is the one destructive action, so it sits behind a red button
@@ -46,7 +46,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final name = auth.me?['full_name'] as String?;
-    final copies = ref.watch(_uploadedCopiesProvider).value;
+    final copies = ref.watch(uploadedCopiesProvider).value;
     return Scaffold(
       appBar: IbhAppBar(title: 'Settings', subtitle: name),
       body: ListView(padding: const EdgeInsets.all(IbhSpace.s16), children: [
@@ -75,20 +75,20 @@ class SettingsScreen extends ConsumerWidget {
         IbhGroup(children: [
           IbhRow(
             title: 'Clear uploaded copies',
-            subtitle: copies == null ? 'Checking…' : '${_mb(copies.bytes)} · nothing unsent is deleted',
+            subtitle: copies == null ? 'Checking…' : '${formatBytes(copies.bytes)} · nothing unsent is deleted',
             trailing: const Icon(Icons.chevron_right),
-            onTap: copies == null || copies.items.isEmpty ? null : () => _clear(context, ref, copies.items, copies.bytes),
+            onTap: copies == null || copies.items.isEmpty ? null : () => clearCopies(context, ref, copies.items, copies.bytes),
           ),
         ]),
       ]),
     );
   }
 
-  Future<void> _clear(BuildContext context, WidgetRef ref, List<QueuedCapture> items, int bytes) async {
+  static Future<void> clearCopies(BuildContext context, WidgetRef ref, List<QueuedCapture> items, int bytes) async {
     final go = await confirmSheet(
       context,
       title: 'Clear uploaded copies?',
-      message: 'This frees ${_mb(bytes)} on the phone. It only removes copies the server has already accepted. Nothing waiting to upload is deleted.',
+      message: 'This frees ${formatBytes(bytes)} on the phone. It only removes copies the server has already accepted. Nothing waiting to upload is deleted.',
       confirmLabel: 'Clear copies',
       cancelLabel: 'Keep them',
     );
@@ -98,11 +98,11 @@ class SettingsScreen extends ConsumerWidget {
         await File(c.filePath).delete();
       } catch (_) {}
     }
-    ref.invalidate(_uploadedCopiesProvider);
+    ref.invalidate(uploadedCopiesProvider);
     if (context.mounted) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text('Freed ${_mb(bytes)}.')));
+        ..showSnackBar(SnackBar(content: Text('Freed ${formatBytes(bytes)}.')));
     }
   }
 }

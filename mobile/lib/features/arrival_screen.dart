@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/capture_rules.dart';
+import '../core/directions.dart';
 import '../core/geo.dart';
 import '../core/location_tracker.dart';
 import '../core/wat.dart';
@@ -41,6 +42,13 @@ class _ArrivalScreenState extends ConsumerState<ArrivalScreen> {
       _arrivedAt = null;
       _tracker = LocationTracker(widget.target.fence)..start();
     });
+  }
+
+  /// "Directions to site": hands the middle of the boundary to the phone's maps app.
+  Future<void> _directions() async {
+    final (lat, lon) = Geo.centroid(widget.target.fence!);
+    final ok = await openDirections(lat, lon, label: widget.target.subtitle ?? widget.target.title);
+    if (!ok && mounted) showError(context, 'No maps app could open. The site is at ${lat.toStringAsFixed(5)}, ${lon.toStringAsFixed(5)}.');
   }
 
   @override
@@ -112,6 +120,13 @@ class _ArrivalScreenState extends ConsumerState<ArrivalScreen> {
                 child: Text(r.state == Readiness.readyOutside ? 'Capture anyway' : 'Start capturing'),
               ),
               OutlinedButton(onPressed: _again, child: const Text('Check again')),
+              if (widget.target.fence != null)
+                TextButton.icon(
+                  style: TextButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                  onPressed: _directions,
+                  icon: const Icon(Icons.directions_outlined),
+                  label: const Text('Directions to site', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
             ]);
           },
         ),

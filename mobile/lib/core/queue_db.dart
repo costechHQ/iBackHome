@@ -143,7 +143,7 @@ class QueueDb {
     final file = path ?? p.join(await getDatabasesPath(), 'captures.db');
     final db = await openDatabase(
       file,
-      version: 3,
+      version: 4,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE captures (
@@ -155,6 +155,7 @@ class QueueDb {
             next_try INTEGER NOT NULL DEFAULT 0, note TEXT, checklist_item TEXT, context_ref TEXT,
             as_contractor INTEGER NOT NULL DEFAULT 0)''');
         await _createActions(db);
+        await _createReadCache(db);
       },
       onUpgrade: (db, from, _) async {
         if (from < 2) {
@@ -164,10 +165,35 @@ class QueueDb {
           await db.execute('ALTER TABLE captures ADD COLUMN as_contractor INTEGER NOT NULL DEFAULT 0');
         }
         if (from < 3) await _createActions(db);
+        if (from < 4) await _createReadCache(db);
       },
     );
     return QueueDb._(db);
   }
+
+  /// The last good answer of a few read-only routes (who I am, my projects), kept so the app still
+  /// opens with a list when there is no signal.
+  static Future<void> _createReadCache(Database db) => db.execute('''
+        CREATE TABLE IF NOT EXISTS read_cache (
+          key TEXT PRIMARY KEY, body TEXT NOT NULL, saved_at INTEGER NOT NULL)''');
+
+  Future<void> putCache(String key, String body) => _db.insert(
+        'read_cache',
+        {'key': key, 'body': body, 'saved_at': DateTime.now().toUtc().millisecondsSinceEpoch},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+  Future<({String body, DateTime savedAt})?> getCache(String key) async {
+    final rows = await _db.query('read_cache', where: 'key = ?', whereArgs: [key]);
+    if (rows.isEmpty) return null;
+    return (
+      body: rows.first['body'] as String,
+      savedAt: DateTime.fromMillisecondsSinceEpoch(rows.first['saved_at'] as int, isUtc: true),
+    );
+  }
+
+  /// Forgets every saved answer: on sign-in and sign-out, so nobody sees someone else's list.
+  Future<void> clearCache() => _db.delete('read_cache');
 
   static Future<void> _createActions(Database db) => db.execute('''
         CREATE TABLE IF NOT EXISTS actions (

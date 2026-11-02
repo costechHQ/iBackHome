@@ -15,7 +15,11 @@ import 'token_store.dart';
 
 /// Everything the screens share, built once in `main()`.
 class Services {
-  Services._(this.tokens, this.api, this.db, this.keystore, this.sync, this.capture, this.signedOut);
+  Services._(this.tokens, this.api, this.db, this.keystore, this.sync, this.capture, this.signedOut, {this.saveReads = true});
+
+  /// Whether [cachedGet] saves what it reads. Always on in the app; widget tests turn it off because a
+  /// real database write inside a fake clock leaves SQLite's lock timer pending.
+  final bool saveReads;
 
   final TokenStore tokens;
   final Api api;
@@ -34,9 +38,11 @@ class Services {
     required QueueDb db,
     Keystore? keystore,
     ValueNotifier<int>? signedOut,
+    bool saveReads = false,
   }) {
     final ks = keystore ?? Keystore(Config.keyAlias);
-    return Services._(tokens, api, db, ks, SyncService(api, db), CaptureService(db, ks), signedOut ?? ValueNotifier<int>(0));
+    return Services._(tokens, api, db, ks, SyncService(api, db), CaptureService(db, ks), signedOut ?? ValueNotifier<int>(0),
+        saveReads: saveReads);
   }
 
   static Future<Services> create() async {
@@ -47,6 +53,38 @@ class Services {
     final db = await QueueDb.open();
     final keystore = Keystore(Config.keyAlias);
     return Services._(tokens, api, db, keystore, SyncService(api, db), CaptureService(db, keystore), signedOut);
+  }
+
+  /// Set while the screens are showing a saved answer because there is no signal; it holds when that
+  /// answer was saved. Cleared by the next read that reaches the server.
+  final ValueNotifier<DateTime?> staleSince = ValueNotifier<DateTime?>(null);
+
+  /// A read that is remembered on the phone. If the server answers, that answer is saved and
+  /// returned. If only the connection fails, the last saved answer is returned and [staleSince] is
+  /// set. Every other error (401, 403 after a rotation, 404, 5xx) is rethrown, so a revoked person
+  /// never sees stale access.
+  Future<T> cachedGet<T>(String path, {Map<String, dynamic>? query}) async {
+    final key = query == null || query.isEmpty ? path : '$path?${query.entries.map((e) => '${e.key}=${e.value}').join('&')}';
+    try {
+      final data = await api.get<T>(path, query: query);
+      staleSince.value = null;
+      if (saveReads) unawaited(_remember(key, data));
+      return data;
+    } on ApiError catch (e) {
+      if (!e.isNetwork) rethrow;
+      final hit = saveReads ? await db.getCache(key) : null;
+      if (hit == null) rethrow;
+      final current = staleSince.value;
+      if (current == null || hit.savedAt.isBefore(current)) staleSince.value = hit.savedAt;
+      return jsonDecode(hit.body) as T;
+    }
+  }
+
+  /// Saving a copy must never break the screen that asked for the data.
+  Future<void> _remember(String key, Object? data) async {
+    try {
+      await db.putCache(key, jsonEncode(data));
+    } catch (_) {}
   }
 
   /// Sends a write now; if there is no signal, keeps it on the phone and sends it later with the
@@ -185,11 +223,13 @@ class AuthNotifier extends Notifier<AuthState> {
     final pair = await _s.api.post<Map<String, dynamic>>('/auth/otp/verify',
         body: {'identifier': identifier, 'code': code});
     await _s.tokens.save(pair['access_token'] as String, pair['refresh_token'] as String);
+    if (_s.saveReads) await _s.db.clearCache(); // a new sign-in never starts from someone else's saved lists
     await _loadMe();
   }
 
+  /// `/me` is remembered too: opened without signal, the app still knows the role and shows the saved projects.
   Future<void> _loadMe() async {
-    final me = await _s.api.get<Map<String, dynamic>>('/me');
+    final me = await _s.cachedGet<Map<String, dynamic>>('/me');
     state = AuthState(AuthStatus.signedIn, me: me);
   }
 
@@ -204,11 +244,13 @@ class AuthNotifier extends Notifier<AuthState> {
   /// identifiers and are not changed here; time is always Nigerian time for these roles.
   Future<void> updateProfile({required String fullName}) async {
     final me = await _s.api.patch<Map<String, dynamic>>('/me', body: {'full_name': fullName});
+    if (_s.saveReads) await _s.db.putCache('/me', jsonEncode(me));
     state = AuthState(AuthStatus.signedIn, me: me);
   }
 
   Future<void> signOut() async {
     await _s.tokens.clear();
+    if (_s.saveReads) await _s.db.clearCache();
     state = const AuthState(AuthStatus.signedOut);
   }
 }

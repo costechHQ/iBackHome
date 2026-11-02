@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart' show Position;
 
 import '../core/capture_rules.dart';
 import '../core/capture_service.dart';
+import '../core/free_space.dart';
 import '../core/location_tracker.dart';
 import '../core/queue_db.dart';
 import '../core/services.dart';
@@ -16,6 +17,7 @@ import '../ui/ibh_app_bar.dart';
 import 'capture_target.dart';
 import 'home_screen.dart';
 import 'review_screen.dart';
+import 'settings_screen.dart' show formatBytes;
 import 'widgets.dart';
 
 /// AND-SUPERVISOR-006: the in-app camera.
@@ -77,7 +79,7 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     if (cam == null || _busy) return;
     if (!_recording) {
       final fix = widget.tracker.fix;
-      if (fix == null || !widget.tracker.readiness.canShoot) return;
+      if (fix == null || !widget.tracker.readiness.canShoot || !await _hasRoom()) return;
       try {
         await cam.startVideoRecording();
       } catch (e) {
@@ -127,9 +129,18 @@ class _CaptureScreenState extends ConsumerState<CaptureScreen> {
     }
   }
 
+  /// Refuses to capture when the phone is nearly out of space: a capture that can't be saved is lost.
+  Future<bool> _hasRoom() async {
+    final free = await FreeSpace.freeBytes();
+    if (FreeSpace.level(free) != StorageLevel.full) return true;
+    if (mounted) showError(context, 'Phone storage is full (${formatBytes(free!)} free). Open Me, upload or clear copies, then capture again.');
+    return false;
+  }
+
   Future<void> _shoot() async {
     final fix = widget.tracker.fix;
     if (fix == null || _camera == null || _busy || !widget.tracker.readiness.canShoot) return;
+    if (!await _hasRoom()) return;
     setState(() => _busy = true);
     try {
       final deviceId = await ref.read(deviceProvider.future); // the key must be registered first
