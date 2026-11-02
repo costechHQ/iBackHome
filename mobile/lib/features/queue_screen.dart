@@ -11,6 +11,10 @@ import '../theme/ibh_tokens.dart';
 import '../ui/ibh_card.dart';
 import '../ui/sheets.dart';
 import '../ui/states.dart';
+import 'arrival_screen.dart';
+import 'capture_target.dart';
+import 'permissions_screen.dart';
+import 'project_screen.dart';
 import 'widgets.dart';
 
 /// AND-SUPERVISOR-007, the Sync tab: every capture and decision on this phone and where it stands.
@@ -96,6 +100,35 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
     ]);
   }
 
+  /// "Retake now": a rejected or failed capture can't be fixed, so this opens a fresh arrival check
+  /// and camera for the same milestone (or spot check, or delivery line). The old row stays as history.
+  Future<void> _retake(QueuedCapture c) async {
+    try {
+      final d = await ref.read(projectProvider(c.projectId).future);
+      if (!mounted || !await ensureCaptureReady(context, ref) || !mounted) return;
+      var title = c.checklistItem ?? 'Retake';
+      for (final m in d.milestones) {
+        if (m['id'] == c.milestoneId) title = '${m['name']}';
+      }
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => ArrivalScreen(
+          target: CaptureTarget(
+            projectId: c.projectId,
+            milestoneId: c.milestoneId,
+            title: title,
+            subtitle: d.project['title'] as String?,
+            fence: d.fence,
+            contextRef: c.contextRef,
+            fixedItem: c.checklistItem,
+            asContractor: c.asContractor,
+          ),
+        ),
+      ));
+    } catch (e) {
+      if (mounted) showError(context, e);
+    }
+  }
+
   void _open(QueuedCapture c) => showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
@@ -107,6 +140,10 @@ class _QueueScreenState extends ConsumerState<QueueScreen> {
           onRetry: () {
             Navigator.of(sheetContext).pop();
             _s.sync.syncNow(force: true);
+          },
+          onRetake: () {
+            Navigator.of(sheetContext).pop();
+            _retake(c);
           },
           onDelete: () async {
             final go = await confirmSheet(
@@ -222,9 +259,10 @@ class _ActionRow extends StatelessWidget {
 }
 
 class _CaptureSheet extends StatelessWidget {
-  const _CaptureSheet(this.c, {required this.onRetry, required this.onDelete});
+  const _CaptureSheet(this.c, {required this.onRetry, required this.onRetake, required this.onDelete});
   final QueuedCapture c;
   final VoidCallback onRetry;
+  final VoidCallback onRetake;
   final VoidCallback onDelete;
 
   @override
@@ -270,9 +308,17 @@ class _CaptureSheet extends StatelessWidget {
           ],
           const SizedBox(height: IbhSpace.s12),
           ThreeChecksView(ThreeChecks.from(c.status, c.reason)),
+          if (c.status == CaptureStatus.rejected) ...[
+            const SizedBox(height: IbhSpace.s16),
+            FilledButton(onPressed: onRetake, child: const Text('Retake now')),
+          ],
           if (c.status == CaptureStatus.queued || c.status == CaptureStatus.failed) ...[
             const SizedBox(height: IbhSpace.s16),
             OutlinedButton(onPressed: onRetry, child: const Text('Retry now')),
+            if (c.status == CaptureStatus.failed) ...[
+              const SizedBox(height: IbhSpace.s8),
+              OutlinedButton(onPressed: onRetake, child: const Text('Retake now')),
+            ],
             const SizedBox(height: IbhSpace.s8),
             TextButton(
               style: TextButton.styleFrom(foregroundColor: IbhColors.badFg, minimumSize: const Size.fromHeight(48)),
