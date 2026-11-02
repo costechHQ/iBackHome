@@ -677,6 +677,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checklist-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Checklist Templates
+         * @description Ops: the checklist for each kind of milestone (found by the milestone's name).
+         */
+        get: operations["list_checklist_templates_api_v1_checklist_templates_get"];
+        /**
+         * Set Checklist Template
+         * @description Ops: write the checklist for a kind of milestone, e.g. "Foundation".
+         *
+         *     New milestones with that name get a copy; milestones that already exist keep theirs.
+         */
+        put: operations["set_checklist_template_api_v1_checklist_templates_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ops/queue": {
         parameters: {
             query?: never;
@@ -1402,6 +1428,33 @@ export interface components {
             passed: boolean;
             /** Evidence Ids */
             evidence_ids?: string[];
+        };
+        /**
+         * ChecklistTemplateIn
+         * @description Ops' checklist for a kind of milestone. Replaces the template with this name, if there is one.
+         */
+        ChecklistTemplateIn: {
+            /**
+             * Milestone Name
+             * @example Foundation
+             */
+            milestone_name: string;
+            /** Items */
+            items: string[];
+        };
+        /** ChecklistTemplateOut */
+        ChecklistTemplateOut: {
+            /** Milestone Name */
+            milestone_name: string;
+            /** Items */
+            items: string[];
+            /** Updated By */
+            updated_by: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
         };
         /**
          * ConsentIn
@@ -2433,6 +2486,8 @@ export interface components {
          * @description A milestone in the project list, with its newest verification (if any).
          *
          *     After a rejection the milestone is back to `funded`; `latest_verification.notes` says why.
+         *     `checklist` is what the supervisor checks on site: ops' template for this milestone's name, copied in when
+         *     the milestone was made, or the generic default where there was none.
          */
         ProjectMilestoneOut: {
             /**
@@ -2465,6 +2520,8 @@ export interface components {
             /** Released At */
             released_at: string | null;
             latest_verification?: components["schemas"]["VerificationOut"] | null;
+            /** Checklist */
+            checklist?: string[];
         };
         /** ProjectOut */
         ProjectOut: {
@@ -4324,6 +4381,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectMilestoneOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_checklist_templates_api_v1_checklist_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChecklistTemplateOut"][];
+                };
+            };
+        };
+    };
+    set_checklist_template_api_v1_checklist_templates_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChecklistTemplateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChecklistTemplateOut"];
                 };
             };
             /** @description Validation Error */

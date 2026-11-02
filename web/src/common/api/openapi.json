@@ -2313,6 +2313,101 @@
         }
       }
     },
+    "/api/v1/checklist-templates": {
+      "get": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "List Checklist Templates",
+        "description": "Ops: the checklist for each kind of milestone (found by the milestone's name).",
+        "operationId": "list_checklist_templates_api_v1_checklist_templates_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChecklistTemplateOut"
+                  },
+                  "title": "Response List Checklist Templates Api V1 Checklist Templates Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "milestones"
+        ],
+        "summary": "Set Checklist Template",
+        "description": "Ops: write the checklist for a kind of milestone, e.g. \"Foundation\".\n\nNew milestones with that name get a copy; milestones that already exist keep theirs.",
+        "operationId": "set_checklist_template_api_v1_checklist_templates_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChecklistTemplateIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChecklistTemplateOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ops/queue": {
       "get": {
         "tags": [
@@ -4593,6 +4688,75 @@
         ],
         "title": "ChecklistItem",
         "description": "One thing the supervisor checked on site, and the photos that show it."
+      },
+      "ChecklistTemplateIn": {
+        "properties": {
+          "milestone_name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Milestone Name",
+            "examples": [
+              "Foundation"
+            ]
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestone_name",
+          "items"
+        ],
+        "title": "ChecklistTemplateIn",
+        "description": "Ops' checklist for a kind of milestone. Replaces the template with this name, if there is one."
+      },
+      "ChecklistTemplateOut": {
+        "properties": {
+          "milestone_name": {
+            "type": "string",
+            "title": "Milestone Name"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "milestone_name",
+          "items",
+          "updated_by",
+          "updated_at"
+        ],
+        "title": "ChecklistTemplateOut"
       },
       "ConsentIn": {
         "properties": {
@@ -6947,6 +7111,13 @@
                 "type": "null"
               }
             ]
+          },
+          "checklist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Checklist"
           }
         },
         "type": "object",
@@ -6965,7 +7136,7 @@
           "released_at"
         ],
         "title": "ProjectMilestoneOut",
-        "description": "A milestone in the project list, with its newest verification (if any).\n\nAfter a rejection the milestone is back to `funded`; `latest_verification.notes` says why."
+        "description": "A milestone in the project list, with its newest verification (if any).\n\nAfter a rejection the milestone is back to `funded`; `latest_verification.notes` says why.\n`checklist` is what the supervisor checks on site: ops' template for this milestone's name, copied in when\nthe milestone was made, or the generic default where there was none."
       },
       "ProjectOut": {
         "properties": {
