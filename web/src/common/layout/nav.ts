@@ -78,6 +78,7 @@ export const OPS_NAV: readonly OpsSection[] = [
       { label: "Suppliers", href: "/ops/suppliers", ready: false }, // WEB-OPS-008
       { label: "Price index", href: "/ops/price-index", ready: true }, // WEB-OPS-009 (W8a, read-only)
       { label: "Weekly reports", href: "/ops/reports", ready: true }, // WEB-OPS-010 (W8a)
+      { label: "Checklists", href: "/ops/checklists", ready: true }, // what supervisors check per milestone kind (P7)
     ],
   },
   {
