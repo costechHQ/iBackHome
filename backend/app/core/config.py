@@ -33,6 +33,11 @@ class Settings(BaseSettings):
     access_token_minutes: int = 15
     refresh_token_days: int = 30
 
+    # Encrypts a supervisor's NIN while their application is pending (any random string of 32+ characters;
+    # `openssl rand -hex 32`). Empty: the API refuses to take a NIN (503 nin_not_configured). The full NIN is
+    # wiped when ops decide; only its last 4 digits stay.
+    nin_encryption_key: str = ""
+
     # One-time login codes (spec: 6 digits, valid 5 minutes, max 5 attempts, rate-limited per phone and IP)
     otp_ttl_minutes: int = 5
     otp_max_attempts: int = 5

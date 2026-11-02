@@ -86,6 +86,8 @@ envVarGroups:
         value: "*"
       - key: JWT_SECRET
         generateValue: true # random, longer than the 32 characters the app requires
+      - key: NIN_ENCRYPTION_KEY
+        generateValue: true # encrypts a supervisor's NIN while their application is pending
 
 # Add to the ibackhome-app group in the dashboard (secrets and per-environment values):
 #   CORS_ORIGINS            web origin(s); empty list of real origins is fine until the web phase

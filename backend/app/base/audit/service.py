@@ -40,11 +40,17 @@ MAX_PAGE = 200
 def snapshot(obj: object) -> dict[str, Any]:
     """The object's database columns as JSON-safe values, for `before` / `after`.
 
-    Only columns already loaded are included, so this never triggers a database query.
+    Only columns already loaded are included, so this never triggers a database query. A column declared
+    with `info={"audit": False}` is left out, so a secret that is later wiped (an encrypted NIN) never ends
+    up in the append-only log.
     """
     state = instance_state(obj)
     loaded = state.dict
-    values = {attr.key: loaded[attr.key] for attr in state.mapper.column_attrs if attr.key in loaded}
+    values = {
+        attr.key: loaded[attr.key]
+        for attr in state.mapper.column_attrs
+        if attr.key in loaded and attr.columns[0].info.get("audit", True)
+    }
     result: dict[str, Any] = jsonable_encoder(values)
     return result
 

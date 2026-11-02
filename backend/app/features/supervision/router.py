@@ -147,10 +147,13 @@ async def list_supervisors(
 
 @router.get("/supervisors/{supervisor_id}/application", response_model=SupervisorApplicationOut)
 async def supervisor_application(
-    supervisor_id: uuid.UUID, session: SessionDep, actor: OpsUser
+    supervisor_id: uuid.UUID, request: Request, session: SessionDep, actor: OpsUser
 ) -> SupervisorApplicationOut:
-    """Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting."""
-    return await service.get_application(session, supervisor_id)
+    """Ops: one application in full (contacts, guarantors, declared relatives, and the full NIN while it is
+    pending) to check before vetting. Showing the NIN is written to the audit log."""
+    application = await service.get_application(session, supervisor_id, viewer_id=actor.id, request=request)
+    await session.commit()
+    return application
 
 
 @router.get("/supervisors/me/spot-checks", response_model=list[SpotCheckOut])
