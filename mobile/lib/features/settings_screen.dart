@@ -37,8 +37,8 @@ String formatBytes(int bytes) => bytes < 1024 * 1024 ? '${(bytes / 1024).ceil()}
 /// turned off, and revoking this phone is the one destructive action, so it sits behind a red button
 /// inside a sheet.
 ///
-/// Not here yet, on purpose: a push-notification switch and "hide previews" (there is no push yet), a
-/// list of old phones to revoke (no devices list route, MX-12), and "download my data" (no route).
+/// Not here yet, on purpose: a push-notification switch and "hide previews" (there is no push yet) and
+/// "download my data" (no route). The old-phones list reads `GET /devices` (MX-12).
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -66,9 +66,10 @@ class SettingsScreen extends ConsumerWidget {
         ]),
         const IbhSectionLabel('DEVICES'),
         const _ThisPhone(),
+        const _OtherPhones(),
         const SizedBox(height: IbhSpace.s8),
         Text(
-          'Moving to a new phone? Sign in there and create its capture key. A list of your old phones isn\'t in the app yet.',
+          'Moving to a new phone? Sign in there and create its capture key. Revoke the old one here so it can never capture as you.',
           style: IbhText.small.copyWith(color: IbhColors.muted),
         ),
         const IbhSectionLabel('DATA'),
@@ -103,6 +104,96 @@ class SettingsScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text('Freed ${formatBytes(bytes)}.')));
+    }
+  }
+}
+
+/// The person's phones other than this one, read live from the server.
+///
+/// No automatic retry: a failure shows at once with its own Retry button, instead of a loading
+/// skeleton while Riverpod backs off for several seconds.
+final otherPhonesProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
+  (ref) async {
+    final s = ref.read(servicesProvider);
+    final mine = s.device?['id'] as String?;
+    final all = await s.listDevices();
+    return [
+      for (final d in all)
+        if (d['id'] != mine) d,
+    ];
+  },
+  retry: (_, _) => null,
+);
+
+/// AND-SUPERVISOR-015 "Devices": old phones with the time they were set up and, for an active one, a
+/// Revoke button. Revoking another phone only ends its signing key; nothing on this phone changes.
+class _OtherPhones extends ConsumerWidget {
+  const _OtherPhones();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final phones = ref.watch(otherPhonesProvider);
+    return phones.when(
+      loading: () => const Padding(padding: EdgeInsets.only(top: IbhSpace.s8), child: SizedBox(height: 56, child: SkeletonList(rows: 1))),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.only(top: IbhSpace.s8),
+        child: IbhCard(
+          child: Row(children: [
+            Expanded(child: Text('Your other phones couldn\'t be loaded. ${ApiError.from(e).friendlyMessage}', style: IbhText.small)),
+            TextButton(onPressed: () => ref.invalidate(otherPhonesProvider), child: const Text('Retry')),
+          ]),
+        ),
+      ),
+      data: (items) => items.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.only(top: IbhSpace.s8),
+              child: Text('No other phones are set up on your account.', style: IbhText.small.copyWith(color: IbhColors.muted)),
+            )
+          : Padding(
+              padding: const EdgeInsets.only(top: IbhSpace.s8),
+              child: IbhGroup(children: [for (final d in items) _phoneRow(context, ref, d)]),
+            ),
+    );
+  }
+
+  Widget _phoneRow(BuildContext context, WidgetRef ref, Map<String, dynamic> d) {
+    final revoked = d['revoked_at'] != null;
+    final when = DateTime.parse(d['registered_at'] as String);
+    return IbhRow(
+      leading: Icon(revoked ? Icons.phonelink_erase : Icons.smartphone_outlined, color: revoked ? IbhColors.muted : IbhColors.ink),
+      title: 'Another phone',
+      subtitle: revoked
+          ? 'Set up ${watDay(when)} · revoked ${watDay(DateTime.parse(d['revoked_at'] as String))}'
+          : 'Signing key since ${watDay(when)}',
+      trailing: revoked
+          ? const StatusChip('Revoked', tone: ChipTone.neutral)
+          : OutlinedButton(
+              style: OutlinedButton.styleFrom(minimumSize: const Size(96, 48)),
+              onPressed: () => _revoke(context, ref, d['id'] as String),
+              child: const Text('Revoke'),
+            ),
+    );
+  }
+
+  Future<void> _revoke(BuildContext context, WidgetRef ref, String pk) async {
+    final go = await confirmSheet(
+      context,
+      title: 'Revoke this other phone?',
+      message: 'Its signing key stops working at once. Anything still waiting to upload from that phone will be rejected by the server. This phone is not affected.',
+      confirmLabel: 'Revoke phone',
+      destructive: true,
+    );
+    if (!go) return;
+    try {
+      await ref.read(servicesProvider).revokeOtherDevice(pk);
+      ref.invalidate(otherPhonesProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(const SnackBar(content: Text('That phone was revoked. Its signing key no longer works.')));
+      }
+    } catch (e) {
+      if (context.mounted) showError(context, e);
     }
   }
 }

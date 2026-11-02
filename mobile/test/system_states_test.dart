@@ -155,6 +155,7 @@ void main() {
       final w = await tester.runAsync(() async {
         server = _Server({
           'GET /me': (200, {'id': 'u1', 'role': role, 'status': 'active', 'full_name': 'Chidi Nnaji', 'timezone': 'UTC', 'consent_required': false}),
+          'GET /devices': (200, <Object>[]), // Settings lists the other phones
         });
         final tokens = TokenStore(_Store());
         await tokens.save('a', 'r' * 30);
@@ -174,6 +175,10 @@ void main() {
       await tester.pumpWidget(await host(tester, 'supervisor'));
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
       await tester.pump();
+      // Settings now also reads the other phones; let that request finish before the test ends.
+      await tester.pumpAndSettle();
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+      await tester.pump();
       expect(find.text('SMS for spot checks'), findsOneWidget);
       expect(find.text('Required, can\'t be turned off'), findsOneWidget);
       expect(find.textContaining('Nigerian time (WAT)'), findsOneWidget);
@@ -184,6 +189,9 @@ void main() {
       await tester.pumpWidget(await host(tester, 'contractor'));
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
       await tester.pump();
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+      await tester.pump();
+      await tester.pumpAndSettle();
       expect(find.text('SMS for spot checks'), findsNothing);
       expect(find.text('REGION'), findsOneWidget);
     });
