@@ -432,7 +432,7 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | PATCH | `/me` | signed in | Change own full_name, country, timezone (not phone or email: they are sign-in identifiers) |
 | GET, POST | `/me/consent` | signed in | Current terms and privacy versions; agree to them (older versions: 409 `consent_version_outdated`) |
 | POST | `/projects` | client | Create project, invite contractor |
-| GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects |
+| GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects. `GET /projects/{id}` also returns `contractor` and `supervisor` as `{id, full_name, phone}` (phone only for an active account, never to non-members; MX-26) |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
 | GET | `/projects/{id}/boq` | parties, ops | BoQ grouped by milestone, with totals, budget and approvals |
 | PUT | `/projects/{id}/boq` | contractor | Submit BoQ items grouped into milestones; again while in review replaces it and clears approvals |

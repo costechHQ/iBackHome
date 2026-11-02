@@ -2206,7 +2206,7 @@
           "projects"
         ],
         "summary": "Get Project",
-        "description": "One project with its site. Its client, contractor and supervisor, and ops.",
+        "description": "One project with its site and the names (and phones) of its contractor and supervisor.\n\nIts client, contractor and supervisor, and ops, only: a phone is never shown to anyone else.",
         "operationId": "get_project_api_v1_projects__project_id__get",
         "security": [
           {
@@ -6118,6 +6118,45 @@
         ],
         "title": "OtpVerifyIn"
       },
+      "PartyOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "full_name",
+          "phone"
+        ],
+        "title": "PartyOut",
+        "description": "A person on the project, as the other members see them (MX-26). The phone is for the project's\nown members and ops (this route is members-only); it is left out for a suspended account and for\nsomeone who signs in by email only."
+      },
       "PayoutRecipientOut": {
         "properties": {
           "bank_code": {
@@ -6319,6 +6358,26 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SiteOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contractor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "supervisor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartyOut"
               },
               {
                 "type": "null"
