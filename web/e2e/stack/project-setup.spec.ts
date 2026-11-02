@@ -84,7 +84,7 @@ test("pin the site and draw the boundary, with the pin-outside error", async () 
   await expect(client.getByText("Draft · editable")).toBeVisible();
 
   // On the map: three clicks with the Boundary tool make a shape.
-  await client.getByRole("button", { name: "Boundary" }).click();
+  await client.getByRole("button", { name: "Boundary", exact: true }).click();
   const map = client.getByRole("region", { name: "Site map: the pin and the boundary" });
   const box = (await map.boundingBox())!;
   for (const [x, y] of [
@@ -98,8 +98,8 @@ test("pin the site and draw the boundary, with the pin-outside error", async () 
   await client.getByRole("button", { name: "Undo" }).click();
   await expect(client.getByText("2 corners so far.")).toBeVisible();
 
-  // Without the map: coordinates, a square around them, then a pin outside it.
-  await client.getByText("Can't use the map?").click();
+  // Without the map: coordinates (always shown, open by default), a square around them, then a pin outside it.
+  await expect(client.getByLabel("Latitude")).toBeVisible();
   await client.getByLabel("Latitude").fill("6.4483");
   await client.getByLabel("Longitude").fill("7.5139");
   await client.getByRole("button", { name: "Set the pin here" }).click();

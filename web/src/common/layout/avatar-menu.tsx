@@ -1,15 +1,19 @@
 "use client";
 
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
+import Link from "next/link";
 
 import { signOutHere } from "../auth/leave";
+import { useOptionalViewer } from "../auth/viewer";
 import { Avatar } from "../ui/surfaces";
 
 // The initials pill at the right of every top bar ("CN Chioma"), opening a menu with sign-out. Settings joins
 // it once its screen exists.
 
 export function AvatarMenu({ name, onDark }: { name: string; onDark?: boolean }) {
+  const role = useOptionalViewer()?.role;
+  const profileHref = role === "contractor" ? "/c/profile" : role === "ops" ? "/ops/profile" : "/profile";
   const firstName = name.split(/\s+/)[0] ?? name;
   return (
     <Menu.Root>
@@ -32,6 +36,15 @@ export function AvatarMenu({ name, onDark }: { name: string; onDark?: boolean })
           className="z-50 min-w-48 rounded-card border border-line bg-white p-1 shadow-raised"
         >
           <Menu.Label className="type-small px-3 py-2 text-muted">{name}</Menu.Label>
+          <Menu.Item asChild>
+            <Link
+              href={profileHref}
+              className="type-small flex min-h-target cursor-pointer items-center gap-2 rounded-control px-3 font-semibold text-ink outline-none data-highlighted:bg-mist"
+            >
+              <UserRound aria-hidden strokeWidth={1.75} className="size-4" />
+              Your profile
+            </Link>
+          </Menu.Item>
           <Menu.Item
             onSelect={() => void signOutHere()}
             className="type-small flex min-h-target cursor-pointer items-center gap-2 rounded-control px-3 font-semibold text-ink outline-none data-highlighted:bg-mist"
