@@ -115,9 +115,17 @@ void main() {
       await tester.pump();
       await tapText(tester, 'Continue');
 
-      // 2 NIN: explained, nothing collected.
-      expect(find.textContaining('doesn\'t collect your NIN'), findsOneWidget);
-      expect(find.byType(TextField), findsNothing);
+      // 2 NIN: 11 digits, hidden as typed; Continue stays off until all 11 are in.
+      expect(find.text('Your NIN'), findsOneWidget);
+      expect(find.text('11 digits. Hidden as you type.'), findsOneWidget);
+      expect(find.textContaining('Never shown to clients or contractors'), findsOneWidget);
+      expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isTrue);
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue')).onPressed, isNull);
+      await tester.enterText(find.byType(TextField), '1234567890'); // ten digits is not a NIN
+      await tester.pump();
+      expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Continue')).onPressed, isNull);
+      await tester.enterText(find.byType(TextField), '12345678901');
+      await tester.pump();
       await tapText(tester, 'Continue');
 
       // 3 Guarantors
@@ -140,17 +148,76 @@ void main() {
       // 5 Review, then submit
       expect(find.text('COREN · R.24816'), findsOneWidget);
       expect(find.text('Ngozi Eze · Emeka Ani'), findsOneWidget);
+      // Even here only the last four digits show.
+      expect(find.text('NIN · •••••••8901'), findsOneWidget);
+      expect(find.textContaining('12345678901'), findsNothing);
       await tapText(tester, 'Submit application');
 
       final put = server.seen.singleWhere((r) => r.method == 'PUT');
       expect(put.data, {
         'registration_body': 'COREN',
         'registration_no': 'R.24816',
+        'nin': '12345678901',
         'guarantor_1': 'Ngozi Eze, +2348055550114, Former employer',
         'guarantor_2': 'Emeka Ani, +2348055550115, Colleague',
         'related_contractors': <Object>[],
       });
       expect(put.headers['Idempotency-Key'], isNotEmpty);
+    });
+
+    testWidgets('if the server cannot take a NIN right now, the review step says so and keeps the application', (tester) async {
+      final (_, widget) = await host({
+        'PUT /supervisors/me/profile': (503, {'error': {'code': 'nin_not_configured', 'message': 'We can\'t take a NIN right now. Please try again later.'}}),
+      }, const ApplicationFlow(startAtForm: true, registrationNo: 'R.1'));
+      await tester.pumpWidget(widget);
+      await tapText(tester, 'Continue'); // registration -> NIN
+      await tester.enterText(find.byType(TextField), '12345678901');
+      await tester.pump();
+      await tapText(tester, 'Continue'); // NIN -> guarantors
+      for (var i = 0; i < 2; i++) {
+        await tester.enterText(find.byType(TextField).at(i * 2), i == 0 ? 'Ngozi Eze' : 'Emeka Ani');
+        await tester.enterText(find.byType(TextField).at(i * 2 + 1), '+2348055550114');
+        await tester.pump();
+        await tester.ensureVisible(find.byType(DropdownButtonFormField<String>).at(i));
+        await tester.tap(find.byType(DropdownButtonFormField<String>).at(i));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Colleague').last);
+        await tester.pumpAndSettle();
+      }
+      await tapText(tester, 'Continue');
+      await tapText(tester, 'No');
+      await tapText(tester, 'Continue');
+      await tapText(tester, 'Submit application');
+      expect(find.textContaining('can\'t take a NIN right now'), findsOneWidget);
+      expect(find.text('Submit application'), findsOneWidget); // still here, to try again
+    });
+
+    testWidgets('the NIN field takes digits only, at most 11, and can be shown or hidden', (tester) async {
+      final (_, widget) = await host({}, const ApplicationFlow(startAtForm: true, registrationNo: 'R.1'));
+      await tester.pumpWidget(widget);
+      await tapText(tester, 'Continue'); // registration -> NIN
+
+      await tester.enterText(find.byType(TextField), '12ab-34 5678901234567');
+      await tester.pump();
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.controller!.text, '12345678901'); // letters and spaces dropped, cut at 11
+
+      expect(field.obscureText, isTrue);
+      await tester.tap(find.byTooltip('Show NIN'));
+      await tester.pump();
+      expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isFalse);
+      await tester.tap(find.byTooltip('Hide NIN'));
+      await tester.pump();
+      expect(tester.widget<TextField>(find.byType(TextField)).obscureText, isTrue);
+    });
+
+    testWidgets('the NIN field turns off suggestions and autofill, since it is personal data', (tester) async {
+      final (_, widget) = await host({}, const ApplicationFlow(startAtForm: true, registrationNo: 'R.1'));
+      await tester.pumpWidget(widget);
+      await tapText(tester, 'Continue');
+      final field = tester.widget<TextField>(find.byType(TextField));
+      expect(field.enableSuggestions, isFalse);
+      expect(field.autocorrect, isFalse);
     });
 
     testWidgets('payout: a found account shows the bank\'s name and enables Save', (tester) async {
