@@ -19,14 +19,15 @@ import { ToneChip } from "@/common/ui/status-chip";
 import { Card } from "@/common/ui/surfaces";
 
 import { useApplication, useVet, type Application } from "./supervision-api";
-import { CHECK_LABELS, openChecks, type VettingChecks } from "./supervision";
+import { CHECK_LABELS, ninDisplay, openChecks, type VettingChecks } from "./supervision";
 
 // WEB-OPS-003 vetting detail at /ops/vetting/:id: the application from GET /supervisors/{id}/application
 // (backend #78) and the decision (POST /supervisors/{id}/vetting). Ops tick each check as they do it;
 // "Approve applicant" stays locked until all four are ticked (the backend refuses otherwise, 422
 // vetting_checks_incomplete); rejecting needs a reason, which the applicant sees. Not built (PACKAGE-REPORT
 // W-49): "Ask for more information" (no endpoint), the document and photo thumbnails, guarantors' "known for"
-// and call attempts, the NIN's last four digits (the backend keeps only whether it matched), phone model, areas.
+// and call attempts, phone model, areas. The NIN (P8): while the application is pending the backend sends the
+// full number, hidden here until ops press Show; once decided it keeps only the last four digits.
 
 const STATUS: Record<string, { label: string; tone: "warn" | "ok" | "bad" }> = {
   pending: { label: "Waiting for ops", tone: "warn" },
@@ -58,6 +59,31 @@ function CheckBox({
       />
       <span className="type-small font-semibold">{CHECK_LABELS[name]}</span>
     </label>
+  );
+}
+
+/** The applicant's NIN: hidden until ops press Show, never put in the page title or the URL. */
+function NinLine({ nin, last4 }: { nin: string | null; last4: string | null }) {
+  const [shown, setShown] = useState(false);
+  const text = ninDisplay(nin, last4, shown);
+  return (
+    <dl className="flex items-center justify-between gap-3">
+      <dt className="text-slate">NIN</dt>
+      <dd className="flex items-center gap-2">
+        <span className="type-mono font-semibold text-ink" data-testid="nin-value">
+          {text}
+        </span>
+        {nin ? (
+          <Button
+            variant="secondary"
+            aria-label={shown ? "Hide the NIN" : "Show the NIN"}
+            onClick={() => setShown(!shown)}
+          >
+            {shown ? "Hide" : "Show"}
+          </Button>
+        ) : null}
+      </dd>
+    </dl>
   );
 }
 
@@ -131,9 +157,10 @@ function Detail({ app }: { app: Application }) {
           chip={checks.nin_verified ? { label: "Matched", tone: "ok" } : { label: "To check", tone: "warn" }}
         >
           <p className="type-small text-slate">
-            Match the applicant’s name and date of birth with the NIN record. iBackHome keeps only whether it
-            matched, not the number.
+            Match the applicant’s name and date of birth with the NIN record. Once you decide, iBackHome keeps
+            only the last four digits and whether it matched.
           </p>
+          <NinLine nin={app.nin ?? null} last4={app.nin_last4 ?? null} />
           <CheckBox
             name="nin_verified"
             checked={checks.nin_verified}
