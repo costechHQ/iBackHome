@@ -642,7 +642,9 @@ export interface paths {
         };
         /**
          * Get Project
-         * @description One project with its site. Its client, contractor and supervisor, and ops.
+         * @description One project with its site and the names (and phones) of its contractor and supervisor.
+         *
+         *     Its client, contractor and supervisor, and ops, only: a phone is never shown to anyone else.
          */
         get: operations["get_project_api_v1_projects__project_id__get"];
         put?: never;
@@ -2135,6 +2137,23 @@ export interface components {
              */
             code: string;
         };
+        /**
+         * PartyOut
+         * @description A person on the project, as the other members see them (MX-26). The phone is for the project's
+         *     own members and ops (this route is members-only); it is left out for a suspended account and for
+         *     someone who signs in by email only.
+         */
+        PartyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Full Name */
+            full_name: string | null;
+            /** Phone */
+            phone: string | null;
+        };
         /** PayoutRecipientOut */
         PayoutRecipientOut: {
             /** Bank Code */
@@ -2234,6 +2253,8 @@ export interface components {
              */
             updated_at: string;
             site: components["schemas"]["SiteOut"] | null;
+            contractor?: components["schemas"]["PartyOut"] | null;
+            supervisor?: components["schemas"]["PartyOut"] | null;
         };
         /**
          * ProjectMilestoneOut
