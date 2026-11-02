@@ -159,7 +159,7 @@ class _MilestoneScreenState extends ConsumerState<MilestoneScreen> {
               OutlinedButton(
                 onPressed: () async {
                   final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
-                      builder: (_) => VerifyScreen(projectId: widget.projectId, milestoneId: m['id'] as String, milestoneName: name, projectTitle: '${d.project['title']}', sequence: m['sequence'] as int)));
+                      builder: (_) => VerifyScreen(projectId: widget.projectId, milestoneId: m['id'] as String, milestoneName: name, projectTitle: '${d.project['title']}', contractorName: d.contractorName, sequence: m['sequence'] as int)));
                   if (done == true) {
                     ref.invalidate(projectProvider(widget.projectId));
                     ref.invalidate(projectMilestonesProvider(widget.projectId));
