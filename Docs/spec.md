@@ -123,10 +123,11 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `sites` | projects | project → projects, location (POINT), geofence (POLYGON, SRID 4326) |
 | `boq_items` | projects | project → projects, milestone → milestones (set when the BoQ is approved), milestone_sequence, milestone_name, line_no, description, unit, quantity (3 dp), unit_price_minor, total_minor, currency |
 | `boq_approvals` | projects | project → projects, user → users, role (`client`, `contractor`, `ops`; one each), approved_at |
-| `milestones` | milestones | project → projects, sequence, name, amount_minor, currency, status (see state machines), funded_at, claimed_at, verified_at, approved_at, released_at |
+| `milestones` | milestones | project → projects, sequence, name, amount_minor, currency, status (see state machines), funded_at, claimed_at, verified_at, approved_at, released_at, checklist (JSONB list of what the supervisor checks: a copy of ops' template for this milestone's name made when the milestone is created; NULL on older milestones, which read as the generic default) |
 | `evidence` | evidence | project → projects, milestone → milestones (nullable), captured_by → users, captured_by_role (`supervisor`, `contractor`), kind (`photo`, `video`), storage_key (unique), content_type, size_bytes, file_sha256, captured_at (phone clock), gps_time (GPS fix), latitude, longitude, accuracy_m, device_id, signature, phash, status (`pending_checks`, `accepted`, `flagged`, `rejected`), reject_reason |
 | `devices` | evidence | user → users, device_id, public_key, registered_at, revoked_at |
 | `verifications` | milestones | milestone → milestones, supervisor → users, checklist (JSONB), notes, decision (`verified`, `rejected`) |
+| `checklist_templates` | milestones | milestone_key (the name lower-cased, one space, unique), milestone_name (as ops wrote it), items (JSONB list of strings), updated_by → users. Ops write one per kind of milestone (Foundation, Blockwork to lintel, Roofing, Plastering, Finishing); no wording is seeded |
 | `escrow_accounts` | escrow | project → projects (unique), provider, provider_account_ref, currency, balance_minor (cached; ledger is source of truth) |
 | `escrow_releases` | escrow | milestone → milestones, amount_minor, status, provider_ref, requested_at, released_at |
 | `disputes` | escrow | project → projects, milestone → milestones, raised_by → users, reason, status (`open`, `resolved_release`, `resolved_reject`), resolution_notes, resolved_by → users |
@@ -451,7 +452,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/evidence` | supervisor, contractor | Submit capture metadata + signature after upload; runs checks |
 | GET | `/projects/{id}/evidence` | parties, ops | Evidence gallery (signed read URLs) |
 | POST | `/evidence/{id}/decision` | ops | Accept or reject flagged evidence (rejecting needs notes) |
-| GET | `/projects/{id}/milestones` | parties, ops | The project's milestones in order, each with its newest verification |
+| GET | `/projects/{id}/milestones` | parties, ops | The project's milestones in order, each with its newest verification, and its `checklist` (what the supervisor checks) |
+| GET, PUT | `/checklist-templates` | ops | Read, or write, the checklist for a kind of milestone `{milestone_name, items}` (1 to 50 items of at most 200 characters, no blanks or repeats). New milestones with that name get a copy; existing ones keep theirs. Changes are audited |
 | POST | `/milestones/{id}/claim` | contractor | Claim milestone done |
 | POST | `/milestones/{id}/verify` | supervisor | Verify or reject with checklist |
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |

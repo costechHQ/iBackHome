@@ -67,6 +67,23 @@ class Milestone(TimestampedBase):
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     released_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # What the supervisor checks, copied from ops' template for this milestone's name when the milestone is
+    # created, so editing a template later never changes a live milestone. NULL on milestones made before
+    # templates existed: they read as the generic default (service.checklist_of).
+    checklist: Mapped[list[str] | None] = mapped_column(JSONB)
+
+
+class ChecklistTemplate(TimestampedBase):
+    """Ops' checklist for a kind of milestone ("Foundation", "Roofing", ...), found by its name."""
+
+    __tablename__ = "checklist_templates"
+
+    milestone_key: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False
+    )  # lower-case, one space
+    milestone_name: Mapped[str] = mapped_column(String(120), nullable=False)  # as ops wrote it
+    items: Mapped[list[str]] = mapped_column(JSONB, nullable=False)
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
 
 class VerificationDecision(enum.StrEnum):

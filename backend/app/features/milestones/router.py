@@ -19,6 +19,8 @@ from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.milestones import service
 from app.features.milestones.schemas import (
+    ChecklistTemplateIn,
+    ChecklistTemplateOut,
     MilestoneOut,
     ProjectMilestoneOut,
     VerificationOut,
@@ -30,6 +32,7 @@ router = APIRouter(tags=["milestones"])
 
 SupervisorDep = Annotated[User, Depends(users.require_role("supervisor"))]
 ClientDep = Annotated[User, Depends(users.require_role("client"))]
+OpsDep = Annotated[User, Depends(users.require_role("ops"))]
 
 
 @router.post(
@@ -131,3 +134,31 @@ async def list_project_milestones(
             item.latest_verification = VerificationOut.model_validate(verification)
         result.append(item)
     return result
+
+
+@router.get("/checklist-templates", response_model=list[ChecklistTemplateOut])
+async def list_checklist_templates(session: SessionDep, ops: OpsDep) -> list[ChecklistTemplateOut]:
+    """Ops: the checklist for each kind of milestone (found by the milestone's name)."""
+    return [ChecklistTemplateOut.model_validate(t) for t in await service.list_templates(session)]
+
+
+@router.put("/checklist-templates", response_model=ChecklistTemplateOut)
+async def set_checklist_template(
+    body: ChecklistTemplateIn,
+    request: Request,
+    session: SessionDep,
+    ops: OpsDep,
+    key: IdempotencyKeyDep,
+) -> JSONResponse:
+    """Ops: write the checklist for a kind of milestone, e.g. "Foundation".
+
+    New milestones with that name get a copy; milestones that already exist keep theirs.
+    """
+    scope = f"PUT /checklist-templates {ops.id}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    row = await service.set_template(session, ops, body, request=request)
+    out = ChecklistTemplateOut.model_validate(row).model_dump(mode="json")
+    await remember(session, key, scope, 200, out)
+    await session.commit()
+    return JSONResponse(status_code=200, content=out)

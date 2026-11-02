@@ -32,8 +32,8 @@ from app.base.users.models import User
 from app.core.errors import AppError
 from app.features.escrow import service as escrow
 from app.features.milestones import evidence_check, notices
-from app.features.milestones.models import Milestone, MilestoneStatus, Verification
-from app.features.milestones.schemas import MilestoneGroup, VerifyIn
+from app.features.milestones.models import ChecklistTemplate, Milestone, MilestoneStatus, Verification
+from app.features.milestones.schemas import DEFAULT_CHECKLIST, ChecklistTemplateIn, MilestoneGroup, VerifyIn
 from app.features.milestones.transitions import ALLOWED_TRANSITIONS, ActorRole
 from app.features.projects import service as projects
 from app.features.projects.models import Project
@@ -50,6 +50,67 @@ _STAMP = {
 }
 
 MAX_MILESTONES = 20
+
+
+def template_key(name: str) -> str:
+    """How a milestone name finds its template: case and spacing don't matter ("Roofing" = " roofing ")."""
+    return " ".join(name.lower().split())
+
+
+def checklist_of(milestone: Milestone) -> list[str]:
+    """The milestone's checklist: its own copy of ops' template, or the default for older milestones."""
+    return list(milestone.checklist) if milestone.checklist else list(DEFAULT_CHECKLIST)
+
+
+async def templates_by_key(session: AsyncSession, names: Sequence[str]) -> dict[str, ChecklistTemplate]:
+    keys = {template_key(n) for n in names}
+    rows = await session.scalars(select(ChecklistTemplate).where(ChecklistTemplate.milestone_key.in_(keys)))
+    return {t.milestone_key: t for t in rows}
+
+
+async def list_templates(session: AsyncSession) -> list[ChecklistTemplate]:
+    """Every template, by milestone name (ops)."""
+    return list(await session.scalars(select(ChecklistTemplate).order_by(ChecklistTemplate.milestone_key)))
+
+
+async def set_template(
+    session: AsyncSession,
+    ops: User,
+    data: ChecklistTemplateIn,
+    *,
+    request: Request | None = None,
+) -> ChecklistTemplate:
+    """Create or replace ops' checklist for a milestone name. Milestones already made keep their own copy.
+
+    Saving the same list again changes nothing and writes no audit entry. The change is audited with the
+    old and new list.
+    """
+    key = template_key(data.milestone_name)
+    row = await session.scalar(
+        select(ChecklistTemplate).where(ChecklistTemplate.milestone_key == key).with_for_update()
+    )
+    before = audit.snapshot(row) if row is not None else None
+    if row is None:
+        row = ChecklistTemplate(milestone_key=key, milestone_name=data.milestone_name, items=data.items)
+        session.add(row)
+    elif row.items == data.items and row.milestone_name == data.milestone_name:
+        return row
+    else:
+        row.milestone_name, row.items = data.milestone_name, data.items
+    row.updated_by = ops.id
+    await session.flush()
+    await session.refresh(row)
+    await audit.record(
+        session,
+        ops.id,
+        "checklist_template.set",
+        "checklist_template",
+        row.id,
+        before,
+        audit.snapshot(row),
+        request,
+    )
+    return row
 
 
 async def get_milestone(session: AsyncSession, milestone_id: uuid.UUID, *, lock: bool = False) -> Milestone:
@@ -354,6 +415,7 @@ async def create_for_project(
     if existing:
         raise AppError("milestones_already_exist", "This project already has milestones.", 409)
 
+    templates = await templates_by_key(session, [g.name for g in groups])
     milestones = [
         Milestone(
             project_id=project_id,
@@ -362,6 +424,10 @@ async def create_for_project(
             amount_minor=group.amount_minor,
             currency=currency,
             status=S.PENDING,
+            # Its own copy of ops' template for this name (or the default), so a later edit can't change it.
+            checklist=list(templates[template_key(group.name)].items)
+            if template_key(group.name) in templates
+            else list(DEFAULT_CHECKLIST),
         )
         for index, group in enumerate(groups, start=1)
     ]
