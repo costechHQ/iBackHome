@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { assignFit, openChecks, splitSpotChecks, spotCheckFit, watDateTime } from "./supervision";
+import { assignFit, ninDisplay, openChecks, splitSpotChecks, spotCheckFit, watDateTime } from "./supervision";
 
 describe("vetting checks", () => {
   it("lists what is still open; approval needs all four", () => {
@@ -65,5 +65,18 @@ describe("spot-check times", () => {
     ]);
     expect(upcoming.map((c) => c.scheduled_for.slice(5, 10))).toEqual(["11-01", "11-02"]);
     expect(done.map((c) => c.completed_at!.slice(5, 10))).toEqual(["10-05", "10-01"]);
+  });
+});
+
+describe("the NIN on screen", () => {
+  it("hides all but the last four digits until Show", () => {
+    expect(ninDisplay("12345678901", "8901", false)).toBe("•••••••8901");
+    expect(ninDisplay("12345678901", "8901", true)).toBe("12345678901");
+  });
+  it("after the decision only the last four remain, with no way to show more", () => {
+    expect(ninDisplay(null, "8901", true)).toBe("•••••••8901");
+  });
+  it("says so when none was given", () => {
+    expect(ninDisplay(null, null, false)).toBe("Not given");
   });
 });

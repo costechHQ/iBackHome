@@ -65,3 +65,12 @@ export function splitSpotChecks<T extends { scheduled_for: string; completed_at?
       .sort((a, b) => (b.completed_at ?? "").localeCompare(a.completed_at ?? "")),
   };
 }
+
+/**
+ * What to show for the applicant's NIN: the full number only when ops pressed Show (the backend sends it only
+ * while the application is pending), otherwise dots. After the decision only the last four digits remain.
+ */
+export function ninDisplay(nin: string | null, last4: string | null, shown: boolean): string {
+  if (nin) return shown ? nin : `${"•".repeat(Math.max(nin.length - 4, 0))}${nin.slice(-4)}`;
+  return last4 ? `•••••••${last4}` : "Not given";
+}
