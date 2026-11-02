@@ -167,6 +167,12 @@ await session.commit()                        # the caller commits
 
 **Channels:** email over SMTP (any provider), SMS through Termii, push through Firebase Cloud Messaging, WhatsApp through Meta's WhatsApp Business Cloud API. On `ENVIRONMENT=local`, a channel that isn't configured writes the message to the API log instead; staging and production never do.
 
+**The in-app feed (for the web and Flutter apps).** Whatever `notify()` saved for a person can be read back by that person:
+
+- `GET /me/notifications?cursor=&limit=` returns `{items, next_cursor, unread_count}`, newest first. Each item is `{id, template, title, text, created_at, read_at}`: the words the person was sent, rebuilt from the template (never the raw payload). `unread_count` covers everything unread, not just the page, so an app can show a badge.
+- `POST /me/notifications/{id}/read` marks one read (twice keeps the first time). An id that isn't the caller's is 404 `notification_not_found`, the same as one that doesn't exist.
+- A message that failed on every channel is listed too, since the feed may be the only place it can be read. Login codes never appear. A template that is no longer registered shows a generic line instead of its data.
+
 **Environment variables** (empty means that channel is off):
 
 | Variable | Example |

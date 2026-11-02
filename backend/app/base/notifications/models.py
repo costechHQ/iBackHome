@@ -50,3 +50,4 @@ class Notification(TimestampedBase):
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     error: Mapped[str | None] = mapped_column(Text)  # why channels failed, e.g. "whatsapp: not configured"
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # set by the in-app feed

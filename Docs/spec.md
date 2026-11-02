@@ -144,7 +144,7 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `agent_runs` | agents | agent, user → users (empty for scheduled runs), input (JSONB: system prompt, prompt, tools), tool_calls (JSONB), output, model (exact version), status (`succeeded`, `failed`), error, duration_ms, created_at |
 | `audit_log` | base/audit | actor → users, action, object_type, object_id, before (JSONB), after (JSONB), ip, device_id, at — insert only |
 | `idempotency_keys` | core | key, scope, status_code, response (the saved response a retried write replays) |
-| `notifications` | base/notifications | user → users (nullable: login codes go to a raw phone or email), channel (`whatsapp`, `push`, `sms`, `email`: the one that delivered, or the last tried), template, payload (JSONB; never a login code; may hold the send key `_key`), recipient (the phone or email used), status (`sent`, `failed`), provider_ref, attempts, error (why channels failed), sent_at |
+| `notifications` | base/notifications | user → users (nullable: login codes go to a raw phone or email), channel (`whatsapp`, `push`, `sms`, `email`: the one that delivered, or the last tried), template, payload (JSONB; never a login code; may hold the send key `_key`), recipient (the phone or email used), status (`sent`, `failed`), provider_ref, attempts, error (why channels failed), sent_at, read_at (set when the user marks it read in the in-app feed) |
 
 **Indexes that matter**: GiST on `sites.geofence`; unique on `payment_events (provider, event_id)`; btree on `evidence.phash` plus a BK-tree or prefix index for near-match search (see evidence integrity); `ledger_entries (ref_type, ref_id)`.
 
@@ -431,6 +431,8 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | GET | `/me` | signed in | Current user and role; `consent_required` until the current terms and privacy policy are agreed |
 | PATCH | `/me` | signed in | Change own full_name, country, timezone (not phone or email: they are sign-in identifiers) |
 | GET, POST | `/me/consent` | signed in | Current terms and privacy versions; agree to them (older versions: 409 `consent_version_outdated`) |
+| GET | `/me/notifications` | signed in | The user's own notifications, newest first (`?cursor=&limit=`): id, template, title, text, created_at, read_at, plus `unread_count`. Never the raw payload; login codes never appear |
+| POST | `/me/notifications/{id}/read` | signed in | Mark one of the user's own notifications read (twice keeps the first time; someone else's id is 404 `notification_not_found`) |
 | POST | `/projects` | client | Create project, invite contractor |
 | GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
