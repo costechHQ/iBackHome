@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.base import audit
 from app.base.users import service as users
 from app.core.errors import AppError
+from app.features.supervision import nin as nin_store
 from app.features.supervision.models import SpotCheck, SupervisorProfile, SupervisorRelation, VettingStatus
 from app.features.supervision.schemas import (
     DeclaredRelationOut,
@@ -62,7 +63,12 @@ async def submit_application(
 
     - 409 supervisor_already_vetted: an approved profile can only be changed by ops
     - 422 invalid_phone / phone_needs_country_code: a declared relative's number (same rules as login)
+    - 503 nin_not_configured: a NIN was sent but the server has no encryption key (nothing is saved)
+
+    A NIN, if sent, is kept encrypted for ops to check and wiped when they decide (see nin.py). Leaving it
+    out keeps whatever NIN was given before.
     """
+    encrypted_nin = nin_store.encrypt(application.nin.get_secret_value()) if application.nin else None
     relations = {
         _contractor_phone(r.contractor_phone): r.relationship for r in application.related_contractors
     }
@@ -80,6 +86,9 @@ async def submit_application(
     profile.registration_no = application.registration_no
     profile.guarantor_1 = application.guarantor_1
     profile.guarantor_2 = application.guarantor_2
+    if application.nin is not None and encrypted_nin is not None:
+        profile.nin_encrypted = encrypted_nin
+        profile.nin_last4 = application.nin.get_secret_value()[-4:]
     for check in CHECKS:
         setattr(profile, check, False)
     profile.vetting_status = VettingStatus.PENDING
@@ -128,6 +137,7 @@ async def vet(
         setattr(profile, check, getattr(decision, check))
     profile.vetting_status = VettingStatus(decision.decision)
     profile.rejection_reason = decision.reason if decision.decision == "rejected" else None
+    profile.nin_encrypted = None  # the check is done: only the last 4 digits stay
     profile.vetted_by = actor_id
     profile.vetted_at = datetime.now(UTC)
     await session.flush()
@@ -200,16 +210,34 @@ async def list_relations(session: AsyncSession, supervisor_id: uuid.UUID) -> lis
     return list(result)
 
 
-async def get_application(session: AsyncSession, supervisor_id: uuid.UUID) -> SupervisorApplicationOut:
-    """One application in full for ops: the profile, the person's contacts, the guarantors and the declared
-    relatives. Read-only. 404 supervisor_profile_not_found."""
+async def get_application(
+    session: AsyncSession,
+    supervisor_id: uuid.UUID,
+    *,
+    viewer_id: uuid.UUID | None = None,
+    request: Request | None = None,
+) -> SupervisorApplicationOut:
+    """One application in full for ops: the profile, the person's contacts, the guarantors, the declared
+    relatives and, while it is pending, the full NIN to check. 404 supervisor_profile_not_found.
+
+    Showing the full NIN is audited (`supervisor.nin_viewed`, who and when, never the number), so the caller
+    must commit. Once ops have decided, the NIN is gone and only `nin_last4` is shown.
+    """
     profile = await get_profile(session, supervisor_id)
     user = await users.get_user(session, supervisor_id)
     if user is None:
         raise AppError("supervisor_profile_not_found", "This supervisor has not applied for vetting.", 404)
+    full_nin: str | None = None
+    if profile.nin_encrypted and profile.vetting_status == VettingStatus.PENDING:
+        full_nin = nin_store.decrypt(profile.nin_encrypted)
+        if full_nin is not None:
+            await audit.record(
+                session, viewer_id, "supervisor.nin_viewed", "supervisor_profile", profile.id, request=request
+            )
     return SupervisorApplicationOut.model_validate(
         {
             **SupervisorProfileOut.model_validate(profile).model_dump(),
+            "nin": full_nin,
             "full_name": user.full_name,
             "phone": user.phone,
             "email": user.email,

@@ -5,8 +5,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal, Self
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, model_validator
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
+from app.features.supervision import nin as nin_rules
 from app.features.supervision.models import VettingStatus
 
 
@@ -24,6 +25,18 @@ class SupervisorApplication(BaseModel):
     guarantor_1: str = Field(min_length=5, max_length=200, examples=["Ngozi Eze, +2348031234567"])
     guarantor_2: str = Field(min_length=5, max_length=200)
     related_contractors: list[DeclaredRelation] = Field(default_factory=list, max_length=20)
+    # The National Identification Number: 11 digits, write-only. Kept encrypted until ops decide, then
+    # only the last 4 digits stay. A SecretStr, so it never shows in a log line or a traceback. Omit it
+    # to leave a NIN already given as it is.
+    nin: SecretStr | None = None
+
+    @field_validator("nin")
+    @classmethod
+    def _eleven_digits(cls, value: SecretStr | None) -> SecretStr | None:
+        # The message names the rule, never the number.
+        if value is not None and not nin_rules.is_nin(value.get_secret_value()):
+            raise ValueError(f"a NIN is {nin_rules.NIN_DIGITS} digits")
+        return value
 
 
 class VettingDecision(BaseModel):
@@ -51,6 +64,7 @@ class SupervisorProfileOut(BaseModel):
     registration_no: str
     registration_verified: bool
     nin_verified: bool
+    nin_last4: str | None  # never more than the last 4 digits
     guarantor_1_verified: bool
     guarantor_2_verified: bool
     vetting_status: VettingStatus
@@ -75,6 +89,9 @@ class SupervisorApplicationOut(SupervisorProfileOut):
     phone: str | None
     email: str | None
     account_status: str  # active or suspended
+    # The full NIN, for ops to check, only while the application is pending and only here. Null once ops have
+    # decided (then `nin_last4` is all that remains), or if none was given or the key has changed.
+    nin: str | None = None
     guarantor_1: str
     guarantor_2: str
     related_contractors: list[DeclaredRelationOut]

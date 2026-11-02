@@ -1078,7 +1078,8 @@ export interface paths {
         };
         /**
          * Supervisor Application
-         * @description Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting.
+         * @description Ops: one application in full (contacts, guarantors, declared relatives, and the full NIN while it is
+         *     pending) to check before vetting. Showing the NIN is written to the audit log.
          */
         get: operations["supervisor_application_api_v1_supervisors__supervisor_id__application_get"];
         put?: never;
@@ -2853,6 +2854,8 @@ export interface components {
             guarantor_2: string;
             /** Related Contractors */
             related_contractors?: components["schemas"]["DeclaredRelation"][];
+            /** Nin */
+            nin?: string | null;
         };
         /**
          * SupervisorApplicationOut
@@ -2872,6 +2875,8 @@ export interface components {
             registration_verified: boolean;
             /** Nin Verified */
             nin_verified: boolean;
+            /** Nin Last4 */
+            nin_last4: string | null;
             /** Guarantor 1 Verified */
             guarantor_1_verified: boolean;
             /** Guarantor 2 Verified */
@@ -2891,6 +2896,8 @@ export interface components {
             email: string | null;
             /** Account Status */
             account_status: string;
+            /** Nin */
+            nin?: string | null;
             /** Guarantor 1 */
             guarantor_1: string;
             /** Guarantor 2 */
@@ -2961,6 +2968,8 @@ export interface components {
             registration_verified: boolean;
             /** Nin Verified */
             nin_verified: boolean;
+            /** Nin Last4 */
+            nin_last4: string | null;
             /** Guarantor 1 Verified */
             guarantor_1_verified: boolean;
             /** Guarantor 2 Verified */

@@ -116,7 +116,7 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `users` | base/users | phone, email, full_name, role (`client`, `contractor`, `supervisor`, `supplier`, `ops`), status (`active`, `suspended`), timezone, country, terms_version, privacy_version, consented_at (NDPA 2023 consent; the current versions are settings, and a new version asks everyone again) |
 | `otp_codes` | base/users | identifier (E.164 phone or lower-case email), channel (`sms`, `whatsapp`, `email`), code_hash (HMAC-SHA256, never the code), expires_at, attempts, consumed_at, requested_ip |
 | `refresh_tokens` | base/users | user → users, token_hash (SHA-256, unique), expires_at, used_at, revoked_at, replaced_by → refresh_tokens |
-| `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating |
+| `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating, nin_encrypted (the full NIN, encrypted with `NIN_ENCRYPTION_KEY` only while the application is pending, then wiped; kept out of the audit log), nin_last4 (all that remains once ops decide) |
 | `supervisor_relations` | supervision | supervisor → users, contractor_phone (E.164), relationship (declared relatives: a related supervisor can't be assigned to, or spot-check, that contractor's projects) |
 | `suppliers` | suppliers | name, owner → users, address, location (POINT), verified, paystack_recipient_code |
 | `projects` | projects | client → users, contractor → users, supervisor → users, title, address, status (`draft`, `boq_review`, `active`, `paused`, `completed`), currency, budget_minor |
@@ -471,9 +471,9 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | PATCH | `/reports/{id}` | supervisor (assigned), ops | Add, change or remove your note to the client on a draft (`{supervisor_note}`, max 2000, blank removes it). Shown under your name and sent with the report; the AI text is never changed. 409 `report_locked` once reviewed |
 | POST | `/reports/{id}/review` | supervisor (assigned), ops | Mark draft reviewed; queues send |
 | GET | `/ops/queue` | ops | Vetting, flagged evidence, disputes |
-| PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting; view own profile |
+| PUT, GET | `/supervisors/me/profile` | supervisor | Apply (or re-apply) for vetting, with the 11-digit `nin` (write-only; omit it to keep one already given); view own profile, which shows `nin_last4` only |
 | POST | `/supervisors/{id}/vetting` | ops | Approve or reject vetting |
-| GET | `/supervisors/{id}/application` | ops | One application in full (contacts, guarantors, declared relatives) to check before vetting |
+| GET | `/supervisors/{id}/application` | ops | One application in full (contacts, guarantors, declared relatives, and the full `nin` while it is pending) to check before vetting; showing the NIN is audited as `supervisor.nin_viewed`. Once ops decide, only `nin_last4` remains |
 | GET | `/supervisors` | ops | Supervisors by `vetting_status` (approved by default) with their load; with `project_id`, whether each is assigned there or related to its contractor |
 | GET | `/supervisors/me/spot-checks` | supervisor | Visits this supervisor still has to make |
 | POST | `/spot-checks/{id}/complete` | supervisor (the visitor) | Record findings |

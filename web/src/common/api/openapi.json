@@ -3712,7 +3712,7 @@
           "supervision"
         ],
         "summary": "Supervisor Application",
-        "description": "Ops: one application in full (contacts, guarantors, declared relatives) to check before vetting.",
+        "description": "Ops: one application in full (contacts, guarantors, declared relatives, and the full NIN while it is\npending) to check before vetting. Showing the NIN is written to the audit log.",
         "operationId": "supervisor_application_api_v1_supervisors__supervisor_id__application_get",
         "security": [
           {
@@ -7798,6 +7798,19 @@
             "type": "array",
             "maxItems": 20,
             "title": "Related Contractors"
+          },
+          "nin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "password",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin"
           }
         },
         "type": "object",
@@ -7832,6 +7845,17 @@
           "nin_verified": {
             "type": "boolean",
             "title": "Nin Verified"
+          },
+          "nin_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin Last4"
           },
           "guarantor_1_verified": {
             "type": "boolean",
@@ -7915,6 +7939,17 @@
             "type": "string",
             "title": "Account Status"
           },
+          "nin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin"
+          },
           "guarantor_1": {
             "type": "string",
             "title": "Guarantor 1"
@@ -7948,6 +7983,7 @@
           "registration_no",
           "registration_verified",
           "nin_verified",
+          "nin_last4",
           "guarantor_1_verified",
           "guarantor_2_verified",
           "vetting_status",
@@ -8102,6 +8138,17 @@
             "type": "boolean",
             "title": "Nin Verified"
           },
+          "nin_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nin Last4"
+          },
           "guarantor_1_verified": {
             "type": "boolean",
             "title": "Guarantor 1 Verified"
@@ -8155,6 +8202,7 @@
           "registration_no",
           "registration_verified",
           "nin_verified",
+          "nin_last4",
           "guarantor_1_verified",
           "guarantor_2_verified",
           "vetting_status",
