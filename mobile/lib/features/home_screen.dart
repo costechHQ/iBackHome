@@ -101,14 +101,14 @@ Widget _withBadge(_Badge b, Icon icon) => switch (b) {
       _Badge.none => icon,
     };
 
-/// Unread alerts on the Alerts tab (sample data until the feed route exists).
+/// Unread alerts on the Alerts tab: the server's count over all of them, not just the page shown.
 class _AlertsBadge extends ConsumerWidget {
   const _AlertsBadge(this.icon);
   final Icon icon;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = (ref.watch(alertsProvider).value ?? const []).where((a) => a['unread'] == true).length;
+    final unread = ref.watch(alertsProvider).value?.unread ?? 0;
     return Badge(isLabelVisible: unread > 0, label: Text('$unread'), backgroundColor: IbhColors.navy900, child: icon);
   }
 }

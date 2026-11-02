@@ -172,11 +172,73 @@ void main() {
       expect(find.text('Request materials'), findsOneWidget);
     });
 
-    testWidgets('alerts show sample alerts clearly labelled, with the unread one marked', (tester) async {
-      await tester.pumpWidget(await host(tester, {}, const Scaffold(body: AlertsTab())));
+    Map<String, Object?> alert(String id, String title, String text, {String? readAt}) =>
+        {'id': id, 'template': 'milestone.verified', 'title': title, 'text': text, 'created_at': '2026-11-01T09:00:00Z', 'read_at': readAt};
+
+    testWidgets('alerts show what the server sent, with the unread one marked (not by the dot alone)', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {
+          'items': [
+            alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.'),
+            alert('n2', 'Milestone funded', 'You can start work.', readAt: '2026-11-01T10:00:00Z'),
+          ],
+          'next_cursor': null,
+          'unread_count': 1,
+        }),
+      }, const Scaffold(body: AlertsTab())));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Sample alerts'), findsOneWidget);
-      expect(find.textContaining('(unread)'), findsOneWidget); // not by the blue dot alone
+      expect(find.textContaining('Sample alerts'), findsNothing);
+      expect(find.text('Foundation was verified by the supervisor.'), findsOneWidget);
+      expect(find.text('You can start work.'), findsOneWidget);
+      expect(find.textContaining('(unread)'), findsOneWidget);
+    });
+
+    testWidgets('opening an unread alert marks it read with an Idempotency-Key and reads the list again', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {
+          'items': [alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.')],
+          'next_cursor': null,
+          'unread_count': 1,
+        }),
+        'POST /me/notifications/n1/read': (200, alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.', readAt: '2026-11-02T08:00:00Z')),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('(unread)'), findsOneWidget);
+
+      server.routes['GET /me/notifications'] = (200, {
+        'items': [alert('n1', 'Milestone verified', 'Foundation was verified by the supervisor.', readAt: '2026-11-02T08:00:00Z')],
+        'next_cursor': null,
+        'unread_count': 0,
+      });
+      await tester.tap(find.text('Foundation was verified by the supervisor.'));
+      await tester.pumpAndSettle();
+
+      final post = server.seen.singleWhere((r) => r.method == 'POST');
+      expect(post.path, '/me/notifications/n1/read');
+      expect(post.headers['Idempotency-Key'], 'read-n1');
+      expect(find.textContaining('(unread)'), findsNothing);
+    });
+
+    testWidgets('a read alert sends nothing when it is tapped', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {
+          'items': [alert('n2', 'Milestone funded', 'You can start work.', readAt: '2026-11-01T10:00:00Z')],
+          'next_cursor': null,
+          'unread_count': 0,
+        }),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('You can start work.'));
+      await tester.pumpAndSettle();
+      expect(server.seen.where((r) => r.method == 'POST'), isEmpty);
+    });
+
+    testWidgets('no alerts yet says so', (tester) async {
+      await tester.pumpWidget(await host(tester, {
+        'GET /me/notifications': (200, {'items': <Object>[], 'next_cursor': null, 'unread_count': 0}),
+      }, const Scaffold(body: AlertsTab())));
+      await tester.pumpAndSettle();
+      expect(find.text('No alerts yet'), findsOneWidget);
     });
 
     testWidgets('delivery: the count step needs a photo for every line before it confirms', (tester) async {
