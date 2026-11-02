@@ -2,6 +2,7 @@ import base64
 import secrets
 import uuid
 from collections.abc import Iterator
+from datetime import UTC, datetime
 
 import pytest
 from cryptography.hazmat.primitives import serialization
@@ -253,3 +254,66 @@ async def test_service_rejects_a_bad_key(db_session: AsyncSession, supervisor: U
     with pytest.raises(AppError) as err:
         await service.register_device(db_session, supervisor.id, "phone-12", "nope")
     assert err.value.code == "invalid_public_key"
+
+
+# GET /devices
+
+
+async def test_lists_only_my_own_devices_newest_first(
+    client: AsyncClient, db_session: AsyncSession, supervisor: User, contractor: User
+) -> None:
+    await register(client, supervisor, "old-phone", public_key())
+    await register(client, supervisor, "new-phone", public_key())
+    await register(client, contractor, "not-mine", public_key())
+    # One test transaction gives every row the same now(); give the two phones distinct times.
+    for name, when in (
+        ("old-phone", datetime(2026, 1, 1, tzinfo=UTC)),
+        ("new-phone", datetime(2026, 6, 1, tzinfo=UTC)),
+    ):
+        device = await service.get_device(db_session, name)
+        assert device is not None
+        device.registered_at = when
+    await db_session.flush()
+
+    sign_in_as(supervisor)
+    response = await client.get("/api/v1/devices")
+    assert response.status_code == 200
+    rows = response.json()
+    assert [r["device_id"] for r in rows] == ["new-phone", "old-phone"]
+    assert all(r["revoked_at"] is None for r in rows)
+
+
+async def test_the_list_never_exposes_keys_or_the_user(client: AsyncClient, supervisor: User) -> None:
+    await register(client, supervisor, "phone-list", public_key())
+    sign_in_as(supervisor)
+    row = (await client.get("/api/v1/devices")).json()[0]
+    assert set(row) == {"id", "device_id", "registered_at", "revoked_at"}
+
+
+async def test_a_revoked_device_stays_in_the_list(client: AsyncClient, supervisor: User) -> None:
+    device = await register(client, supervisor, "phone-gone", public_key())
+    await client.post(f"/api/v1/devices/{device['id']}/revoke")
+    rows = (await client.get("/api/v1/devices")).json()
+    assert rows[0]["device_id"] == "phone-gone"
+    assert rows[0]["revoked_at"] is not None
+
+
+async def test_no_devices_is_an_empty_list(client: AsyncClient, contractor: User) -> None:
+    sign_in_as(contractor)
+    response = await client.get("/api/v1/devices")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+@pytest.mark.parametrize("role", ["client", "ops", "supplier"])
+async def test_list_is_for_supervisors_and_contractors_only(
+    client: AsyncClient, db_session: AsyncSession, role: str
+) -> None:
+    sign_in_as(await make_user(db_session, role))
+    response = await client.get("/api/v1/devices")
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "forbidden_role"
+
+
+async def test_list_needs_a_sign_in(client: AsyncClient) -> None:
+    assert (await client.get("/api/v1/devices")).status_code == 401

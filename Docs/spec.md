@@ -438,6 +438,7 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | PUT | `/projects/{id}/boq` | contractor | Submit BoQ items grouped into milestones; again while in review replaces it and clears approvals |
 | POST | `/projects/{id}/boq/approve` | client, contractor, ops | Approve BoQ; project goes `active` when all three approve |
 | POST | `/projects/{id}/supervisor` | ops | Assign a vetted supervisor |
+| GET | `/devices` | supervisor, contractor | List my own devices, newest first (id, device_id, registered_at, revoked_at; never the key) |
 | POST | `/devices` | supervisor, contractor | Register device public key |
 | POST | `/devices/{id}/revoke` | the device's owner | Revoke a device key; its captures no longer verify |
 | POST | `/evidence/upload-url` | supervisor, contractor | Get a pre-signed upload URL |
