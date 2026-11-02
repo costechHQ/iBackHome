@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/config.dart';
+import '../core/dialer.dart';
 import '../core/geo.dart';
 import '../core/services.dart';
 import '../theme/ibh_tokens.dart';
@@ -32,6 +33,54 @@ class ProjectData {
       if (m['status'] == 'claimed') return m;
     }
     return null;
+  }
+
+  /// The contractor as `GET /projects/{id}` names them (MX-26): `{id, full_name, phone}`, or null.
+  Map<String, dynamic>? get contractor => project['contractor'] as Map<String, dynamic>?;
+
+  /// Null when the server has no name for them yet (an invited contractor who never filled it in).
+  String? get contractorName {
+    final n = (contractor?['full_name'] as String?)?.trim();
+    return n == null || n.isEmpty ? null : n;
+  }
+
+  /// Null for a suspended or email-only account: there is nothing to call.
+  String? get contractorPhone => contractor?['phone'] as String?;
+}
+
+/// AND-SUPERVISOR-004: who the contractor is, and a Call button when the server gave a phone.
+class ContractorCard extends StatelessWidget {
+  const ContractorCard(this.data, {super.key});
+  final ProjectData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = data.contractorName;
+    final phone = data.contractorPhone;
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      IbhCard(
+        child: Row(children: [
+          Expanded(child: Text('Contractor', style: IbhText.body.copyWith(color: IbhColors.muted))),
+          Flexible(
+            child: Text(
+              name ?? 'Not named yet',
+              textAlign: TextAlign.right,
+              style: IbhText.body.copyWith(fontWeight: FontWeight.w700, color: IbhColors.ink),
+            ),
+          ),
+        ]),
+      ),
+      if (phone != null) ...[
+        const SizedBox(height: IbhSpace.s12),
+        OutlinedButton.icon(
+          onPressed: () async {
+            if (!await callPhone(phone) && context.mounted) showError(context, 'No phone app could open. The number is $phone.');
+          },
+          icon: const Icon(Icons.phone_outlined),
+          label: Text(name == null ? 'Call the contractor' : 'Call $name'),
+        ),
+      ],
+    ]);
   }
 }
 
@@ -103,6 +152,8 @@ class ProjectScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: IbhSpace.s12),
                 child: Alert('This project is ${d.project['status']}: claims, verification and approvals are on hold.', tone: ChipTone.info),
               ),
+            if (auth.isSupervisor && d.contractor != null)
+              Padding(padding: const EdgeInsets.only(bottom: IbhSpace.s12), child: ContractorCard(d)),
             if (auth.isSupervisor)
               Padding(
                 padding: const EdgeInsets.only(bottom: IbhSpace.s12),
