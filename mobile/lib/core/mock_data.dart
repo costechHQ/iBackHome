@@ -1,10 +1,11 @@
-// SAMPLE DATA, NOT REAL. Everything in this file stands in for backend routes that do not exist yet:
+// SAMPLE DATA, NOT REAL. Everything in this file stands in for a backend route that does not exist yet:
 //
 //  - MX-05  material orders: `GET /projects/{id}/orders` (list and read). Only `POST` exists today.
-//  - MX-11  the in-app alerts feed: `GET /notifications`.
+//
+// (MX-11, the alerts feed, is real now: `GET /me/notifications`.)
 //
 // The screens read it only when `Config.mocks` is on (debug builds), and label what they show as
-// sample data. When the routes exist, replace the three functions below with calls to the API and
+// sample data. When the route exists, replace the two functions below with calls to the API and
 // delete this file. The shapes follow `Docs/design/.../fixtures.json` (`mock_adapters`).
 //
 // Money is whole kobo. The names and amounts are invented.
@@ -63,30 +64,6 @@ const _sampleOrders = <Map<String, Object?>>[
   },
 ];
 
-const _sampleAlerts = <Map<String, Object?>>[
-  {
-    '_mock': true,
-    'title': 'A milestone was sent back for rework',
-    'body': 'The supervisor says some items were not ready. Tap to see why.',
-    'sent_at': '2027-01-06T14:41:00Z',
-    'unread': true,
-  },
-  {
-    '_mock': true,
-    'title': 'Supervisor visit booked',
-    'body': 'The supervisor visits on the date you were told.',
-    'sent_at': '2027-01-04T09:16:00Z',
-    'unread': false,
-  },
-  {
-    '_mock': true,
-    'title': 'A milestone is funded',
-    'body': 'You can start work.',
-    'sent_at': '2026-12-14T10:09:00Z',
-    'unread': false,
-  },
-];
-
 /// Material orders for a project (MX-05). Empty unless mocks are on.
 Future<List<Map<String, Object?>>> sampleOrders() async => Config.mocks ? _sampleOrders : const [];
 
@@ -98,6 +75,3 @@ Future<Map<String, Object?>?> sampleOrder(String id) async {
   }
   return null;
 }
-
-/// The signed-in user's alerts, newest first (MX-11). Empty unless mocks are on.
-Future<List<Map<String, Object?>>> sampleAlerts() async => Config.mocks ? _sampleAlerts : const [];
