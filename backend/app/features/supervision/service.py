@@ -337,6 +337,9 @@ async def schedule_spot_check(
         audit.snapshot(spot_check),
         request,
     )
+    from app.features.supervision import notices  # here: notices needs projects, which needs this module
+
+    notices.schedule(session, spot_check)  # the supervisor hears about it once this commits
     return spot_check
 
 
