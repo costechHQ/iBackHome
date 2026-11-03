@@ -27,3 +27,6 @@ mobile/.flutter-plugins*
 .idea/
 .vscode/
 Gabriel — Backend Daily Prompts.md
+# Private keys: never commit
+ibackhome_ssh
+ibackhome_ssh.pub
