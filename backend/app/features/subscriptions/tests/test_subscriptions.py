@@ -499,7 +499,7 @@ async def test_the_plans_are_public_and_priced_in_usd(client: AsyncClient) -> No
         ("premium", 20_000, 4),
     ]
     assert {p["currency"] for p in response.json()} == {"USD"}
-    assert [p["code"] for p in response.json() if p["recommended"]] == ["standard"]
+    assert [p["code"] for p in response.json() if p["recommended"]] == ["premium"]
 
 
 @pytest.mark.parametrize(

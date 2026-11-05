@@ -30,7 +30,7 @@ export const PUBLIC_PLANS: readonly PlanView[] = [
     visits_per_month: 3,
     currency: "USD",
     amount_minor: 15_000,
-    recommended: true,
+    recommended: false,
   },
   {
     code: "premium",
@@ -38,15 +38,15 @@ export const PUBLIC_PLANS: readonly PlanView[] = [
     visits_per_month: 4,
     currency: "USD",
     amount_minor: 20_000,
-    recommended: false,
+    recommended: true,
   },
 ];
 
 /** What each plan is for, in one line. */
 export const PLAN_BLURB: Record<PlanCode, string> = {
   basic: "For a small build, or one where you're on site often yourself.",
-  standard: "Our pick for most homes: a visit about every ten days.",
-  premium: "For a larger or fast-moving build: a visit about every week.",
+  standard: "A visit about every ten days.",
+  premium: "Our pick: a visit about every week, for a larger or fast-moving build.",
 };
 
 /** "2 site visits a month". */

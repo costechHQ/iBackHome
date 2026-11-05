@@ -11,9 +11,9 @@ describe("supervision plans", () => {
     ]);
   });
 
-  it("gives 2, 3 and 4 site visits a month, and recommends Standard only", () => {
+  it("gives 2, 3 and 4 site visits a month, and recommends Premium only", () => {
     expect(PUBLIC_PLANS.map((p) => p.visits_per_month)).toEqual([2, 3, 4]);
-    expect(PUBLIC_PLANS.filter((p) => p.recommended).map((p) => p.code)).toEqual(["standard"]);
+    expect(PUBLIC_PLANS.filter((p) => p.recommended).map((p) => p.code)).toEqual(["premium"]);
   });
 
   it("words the visits and has a blurb for every plan", () => {

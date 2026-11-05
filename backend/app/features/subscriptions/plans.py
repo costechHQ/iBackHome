@@ -13,7 +13,7 @@ from app.features.subscriptions.settings import get_subscription_settings
 PlanCode = Literal["basic", "standard", "premium"]
 PLAN_CODES: tuple[str, ...] = get_args(PlanCode)
 DEFAULT_PLAN: PlanCode = "basic"
-RECOMMENDED_PLAN: PlanCode = "standard"
+RECOMMENDED_PLAN: PlanCode = "premium"
 CURRENCY = "USD"
 
 

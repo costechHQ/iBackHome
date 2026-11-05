@@ -49,7 +49,7 @@ export function SubscriptionPage({
   const subscription = useSubscription(projectId, returnedFromStripe);
   const refresh = useRefreshAfterSubscription(projectId);
   const plans = usePlans();
-  const [chosen, setChosen] = useState<PlanCode>("standard");
+  const [chosen, setChosen] = useState<PlanCode>("premium");
   const [confirming, setConfirming] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 

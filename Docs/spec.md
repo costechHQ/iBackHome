@@ -460,7 +460,7 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |
 | POST | `/milestones/{id}/disputes` | client, contractor | Raise dispute |
 | POST | `/disputes/{id}/resolve` | ops | Resolve (release or rework); needs two ops approvals |
-| GET | `/subscription/plans` | public | The three plans with price (USD) and site visits per month; Standard is marked `recommended` |
+| GET | `/subscription/plans` | public | The three plans with price (USD) and site visits per month; Premium is marked `recommended` |
 | POST | `/projects/{id}/subscription` | client | Create a Stripe Checkout session for the monthly supervision fee (body: `plan` = `basic`, `standard` or `premium`; `currency` may only be `USD`) |
 | GET | `/projects/{id}/subscription` | members, ops | Plan, visits per month, status, price, renewal date; 404 until one is started |
 | POST | `/projects/{id}/subscription/cancel` | client | Stop renewing at the end of the paid month |
@@ -583,7 +583,7 @@ Release to contractor: debit `contractor_payable`, credit `escrow:{project}`; on
 
 **Subscriptions (supervision fee)**
 
-The monthly fee per project is iBackHome's own income, paid by the project's client through Stripe Billing in USD (never escrow money). The client picks one of three plans: Basic $100 (2 supervisor site visits a month), Standard $150 (3, recommended) or Premium $200 (4). Prices are `SUBSCRIPTION_PRICE_{BASIC,STANDARD,PREMIUM}_MINOR` (US cents). Visits are shown to the client; the server does not count or cap them yet. One plan per project: to change plan, cancel and start again (an unknown plan or a non-USD currency is 422). The payment gateway is behind `BillingGateway`; Stripe does not serve Nigerian merchants, so the gateway for production is still to be chosen.
+The monthly fee per project is iBackHome's own income, paid by the project's client through Stripe Billing in USD (never escrow money). The client picks one of three plans: Basic $100 (2 supervisor site visits a month), Standard $150 (3) or Premium $200 (4, recommended). Prices are `SUBSCRIPTION_PRICE_{BASIC,STANDARD,PREMIUM}_MINOR` (US cents). Visits are shown to the client; the server does not count or cap them yet. One plan per project: to change plan, cancel and start again (an unknown plan or a non-USD currency is 422). The payment gateway is behind `BillingGateway`; Stripe does not serve Nigerian merchants, so the gateway for production is still to be chosen.
 
 - The final BoQ approval needs an `active` subscription, else 409 `subscription_required` and nothing is saved. `SUBSCRIPTION_REQUIRED=false` switches the gate off (staging demos).
 - Only Stripe's signed webhooks change a subscription: `customer.subscription.created/updated/deleted` (status, period, cancel flag) and `invoice.paid` / `invoice.payment_failed`. An event older than the last one applied is ignored.
