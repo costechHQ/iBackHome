@@ -61,7 +61,8 @@ export const SITE: SiteContent = {
     hostingAndRetention: null,
   },
   pricing: {
-    fundingFee: null,
+    // Matches FUNDING_FEE_BPS=250 in the backend (.env.example). Change both together.
+    fundingFee: "2.5%",
     escrowPartnerFee: null,
     materialsCharge: null,
     billing: null,

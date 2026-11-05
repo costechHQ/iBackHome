@@ -13,9 +13,11 @@ const filled = (patch: (c: SiteContent) => void): SiteContent => {
 describe("site content", () => {
   it("ships with every company value empty except the published WhatsApp number and email", () => {
     const { email, whatsapp, ...contact } = SITE.contact;
+    const { fundingFee, ...pricing } = SITE.pricing;
+    expect(fundingFee).toBe("2.5%"); // the backend's FUNDING_FEE_BPS=250
     expect(email).toBe("hello@ibackhome.com");
     expect(whatsapp).toBe("+234 803 836 2327");
-    const values = Object.values({ ...SITE, contact }).flatMap((group) => Object.values(group));
+    const values = Object.values({ ...SITE, contact, pricing }).flatMap((group) => Object.values(group));
     expect(values.every((v) => v === null)).toBe(true);
   });
 
@@ -28,9 +30,9 @@ describe("site content", () => {
     expect(copyrightLine(known, 2026)).toBe("© 2026 iBackHome · Example Ltd · RC 123");
   });
 
-  it("treats the funding fee as unpriced until it is set", () => {
-    expect(hasPrices(SITE)).toBe(false);
-    expect(hasPrices(filled((c) => (c.pricing.fundingFee = "1%")))).toBe(true);
+  it("treats the funding fee as unpriced only while it is empty", () => {
+    expect(hasPrices(SITE)).toBe(true);
+    expect(hasPrices(filled((c) => (c.pricing.fundingFee = null)))).toBe(false);
   });
 });
 
