@@ -1,7 +1,7 @@
 // Everything on the public site that only the company can supply (WEB-PUBLIC-001 to 009). Each value starts
 // empty (null); a section that needs an empty value isn't shown, so no "[PLACEHOLDER]" from the designs is
 // ever published (e2e/public.spec.ts checks). Fill these in when the product owner has them: no other code
-// changes. Prices are text as they should read, e.g. "£45".
+// changes. Prices are text as they should read, e.g. "2.5%". The supervision plans live in subscriptions/plans.ts.
 
 export type SiteContent = {
   company: {
@@ -32,10 +32,6 @@ export type SiteContent = {
     hostingAndRetention: string | null;
   };
   pricing: {
-    /** Monthly supervision per project in each currency. */
-    supervisionGbp: string | null;
-    supervisionUsd: string | null;
-    supervisionEur: string | null;
     /** The funding fee as a percentage, e.g. "2.5%". */
     fundingFee: string | null;
     escrowPartnerFee: string | null;
@@ -65,10 +61,8 @@ export const SITE: SiteContent = {
     hostingAndRetention: null,
   },
   pricing: {
-    supervisionGbp: null,
-    supervisionUsd: null,
-    supervisionEur: null,
-    fundingFee: null,
+    // Matches FUNDING_FEE_BPS=250 in the backend (.env.example). Change both together.
+    fundingFee: "2.5%",
     escrowPartnerFee: null,
     materialsCharge: null,
     billing: null,
@@ -86,8 +80,8 @@ export function copyrightLine(content: SiteContent = SITE, year = new Date().get
     .join(" · ");
 }
 
-/** True once every value is known (the pricing page then shows prices instead of "being finalised"). */
+/** True once the funding fee is known. The supervision plans are fixed (subscriptions/plans.ts), so only the
+ *  funding fee can still be "being finalised". */
 export function hasPrices(content: SiteContent = SITE): boolean {
-  const p = content.pricing;
-  return Boolean(p.supervisionGbp && p.fundingFee);
+  return Boolean(content.pricing.fundingFee);
 }

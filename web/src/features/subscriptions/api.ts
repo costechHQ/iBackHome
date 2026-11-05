@@ -8,7 +8,8 @@ import { ApiError } from "@/common/api/errors";
 import { keys } from "@/common/api/queries";
 import type { components } from "@/common/api/schema";
 import { useWrite } from "@/common/api/use-write";
-import type { ClientCurrency } from "@/common/money";
+
+import type { PlanCode, PlanView } from "./plans";
 
 // The monthly supervision subscription (Stripe Billing). A project has none until the client starts one, so a
 // 404 on the read means "not started", not an error. Nothing counts until Stripe confirms by webhook: after
@@ -18,7 +19,17 @@ export type Subscription = components["schemas"]["SubscriptionOut"];
 
 export const subscriptionKeys = {
   one: (projectId: string) => ["project", projectId, "subscription"] as const,
+  plans: ["subscription", "plans"] as const,
 };
+
+/** The three plans with their current price, from the server. */
+export function usePlans() {
+  return useQuery({
+    queryKey: subscriptionKeys.plans,
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<PlanView[]> => call(api().GET("/api/v1/subscription/plans")),
+  });
+}
 
 /** The project's subscription, or null when none was started (404 no_subscription). */
 export function useSubscription(projectId: string, pollUntilActive = false) {
@@ -42,11 +53,11 @@ export function useSubscription(projectId: string, pollUntilActive = false) {
 }
 
 export function useStartSubscription(projectId: string) {
-  return useWrite((currency: ClientCurrency, key: string) =>
+  return useWrite((plan: PlanCode, key: string) =>
     call(
       api().POST("/api/v1/projects/{project_id}/subscription", {
         params: { path: { project_id: projectId } },
-        body: { currency },
+        body: { plan, currency: "USD" },
         headers: { "Idempotency-Key": key },
       }),
     ),

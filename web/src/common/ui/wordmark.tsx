@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 import { cn } from "./cn";
 
@@ -50,5 +51,16 @@ export function Wordmark({
       priority
       className={cn("w-auto flex-none", HEIGHT[size], className)}
     />
+  );
+}
+
+/** Wherever the logo appears it links to the index page (/). A signed-in visitor is sent on from there to
+ *  their own portal (proxy.ts), a signed-out one sees the website. Put the logo inside this rather than
+ *  writing a Link around it. */
+export function BrandLink({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <Link href="/" aria-label="iBackHome home" className={cn("rounded-control", className)}>
+      {children}
+    </Link>
   );
 }

@@ -3220,13 +3220,39 @@
         }
       }
     },
+    "/api/v1/subscription/plans": {
+      "get": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "List Plans",
+        "description": "Public: the three plans with price and visits per month, for the pricing page.",
+        "operationId": "list_plans_api_v1_subscription_plans_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlanOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Plans Api V1 Subscription Plans Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/subscription": {
       "post": {
         "tags": [
           "subscriptions"
         ],
         "summary": "Start Subscription",
-        "description": "Client: get a Stripe Checkout link for the monthly supervision fee (GBP, USD or EUR).\n\nNothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the\nsame key returns the same link.",
+        "description": "Client: get a Stripe Checkout link for the monthly supervision fee on the chosen plan (USD).\n\nNothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the\nsame key returns the same link.",
         "operationId": "start_subscription_api_v1_projects__project_id__subscription_post",
         "security": [
           {
@@ -7180,6 +7206,52 @@
         ],
         "title": "Pin"
       },
+      "PlanOut": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "basic",
+              "standard",
+              "premium"
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "visits_per_month": {
+            "type": "integer",
+            "title": "Visits Per Month",
+            "description": "Supervisor site visits each month"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "description": "Always USD"
+          },
+          "amount_minor": {
+            "type": "integer",
+            "title": "Amount Minor",
+            "description": "Charged every month, in US cents"
+          },
+          "recommended": {
+            "type": "boolean",
+            "title": "Recommended"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "visits_per_month",
+          "currency",
+          "amount_minor",
+          "recommended"
+        ],
+        "title": "PlanOut"
+      },
       "PreferencesIn": {
         "properties": {
           "push_enabled": {
@@ -8202,6 +8274,19 @@
             "type": "string",
             "title": "Checkout Url"
           },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "basic",
+              "standard",
+              "premium"
+            ],
+            "title": "Plan"
+          },
+          "visits_per_month": {
+            "type": "integer",
+            "title": "Visits Per Month"
+          },
           "currency": {
             "type": "string",
             "title": "Currency"
@@ -8217,6 +8302,8 @@
           "project_id",
           "checkout_session_id",
           "checkout_url",
+          "plan",
+          "visits_per_month",
           "currency",
           "amount_minor"
         ],
@@ -8224,21 +8311,28 @@
       },
       "SubscriptionCreate": {
         "properties": {
-          "currency": {
+          "plan": {
             "type": "string",
             "enum": [
-              "GBP",
-              "USD",
-              "EUR"
+              "basic",
+              "standard",
+              "premium"
             ],
+            "title": "Plan",
+            "description": "basic, standard or premium"
+          },
+          "currency": {
+            "type": "string",
+            "const": "USD",
             "title": "Currency",
-            "description": "The currency the client pays in: GBP, USD or EUR"
+            "description": "Clients pay in USD only",
+            "default": "USD"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "currency"
+          "plan"
         ],
         "title": "SubscriptionCreate"
       },
@@ -8258,6 +8352,15 @@
               "canceled"
             ],
             "title": "Status"
+          },
+          "plan": {
+            "type": "string",
+            "enum": [
+              "basic",
+              "standard",
+              "premium"
+            ],
+            "title": "Plan"
           },
           "currency": {
             "type": "string",
@@ -8298,18 +8401,25 @@
           "paused_by_billing": {
             "type": "boolean",
             "title": "Paused By Billing"
+          },
+          "visits_per_month": {
+            "type": "integer",
+            "title": "Visits Per Month",
+            "readOnly": true
           }
         },
         "type": "object",
         "required": [
           "project_id",
           "status",
+          "plan",
           "currency",
           "amount_minor",
           "current_period_end",
           "cancel_at_period_end",
           "past_due_since",
-          "paused_by_billing"
+          "paused_by_billing",
+          "visits_per_month"
         ],
         "title": "SubscriptionOut"
       },

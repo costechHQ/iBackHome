@@ -27,7 +27,7 @@ export function describe(subscription: SubscriptionView | null | undefined): Sub
       tone: "neutral",
       headline: "Start your monthly supervision",
       detail:
-        "Your project starts once the monthly supervision fee is set up. You pay on Stripe's secure page.",
+        "Choose a plan below. Your project starts once the monthly supervision fee is set up, and you pay on a secure page.",
       canCancel: false,
       canStart: true,
     };
@@ -38,7 +38,7 @@ export function describe(subscription: SubscriptionView | null | undefined): Sub
         label: "Waiting for payment",
         tone: "warn",
         headline: "Finish setting up your subscription",
-        detail: "Stripe hasn't confirmed a payment yet. If you left the payment page, start again.",
+        detail: "We haven't had a confirmed payment yet. If you left the payment page, start again.",
         canCancel: false,
         canStart: true,
       };
@@ -48,8 +48,8 @@ export function describe(subscription: SubscriptionView | null | undefined): Sub
         tone: "bad",
         headline: "Your last payment didn't go through",
         detail: subscription.paused_by_billing
-          ? "Work on your project is paused until the payment succeeds. Stripe will retry, and you can update your card from Stripe's emails."
-          : "Stripe will retry the payment. Update your card from Stripe's emails to avoid a pause.",
+          ? "Work on your project is paused until the payment succeeds. The payment will be retried, and you can update your card from the emails you receive."
+          : "The payment will be retried. Update your card from the emails you receive to avoid a pause.",
         canCancel: false,
         canStart: false,
       };
@@ -76,7 +76,7 @@ export function describe(subscription: SubscriptionView | null | undefined): Sub
             label: "Active",
             tone: "ok",
             headline: "Your supervision subscription is active",
-            detail: "Your supervisor's visits are covered. It renews every month.",
+            detail: "Your supervisor's site visits are covered. It renews every month.",
             canCancel: true,
             canStart: false,
           };

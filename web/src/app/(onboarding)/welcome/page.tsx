@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { viewerFor } from "@/common/auth/guard";
 import { homeFor } from "@/common/auth/roles";
 import { SignOutButton } from "@/common/auth/sign-out-button";
-import { Wordmark } from "@/common/ui/wordmark";
+import { BrandLink, Wordmark } from "@/common/ui/wordmark";
 import { Onboarding } from "@/features/auth/onboarding/onboarding";
 import { onboardingFor } from "@/features/auth/onboarding/server";
 
@@ -26,7 +26,9 @@ export default async function WelcomePage() {
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="flex items-center justify-between border-b border-line bg-white px-4 py-3 sm:px-8">
-        <Wordmark />
+        <BrandLink>
+          <Wordmark />
+        </BrandLink>
         <SignOutButton className="type-small rounded-control font-semibold text-ink underline" />
       </header>
       <main className="flex flex-1 flex-col px-4 py-8 sm:py-10">
