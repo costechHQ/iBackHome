@@ -86,7 +86,7 @@ export function ClientTop({ name, projects }: { name: string; projects: readonly
       )}
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:h-16 sm:gap-6 sm:px-8">
-        <Link href="/projects" aria-label="iBackHome, your projects" className="rounded-control">
+        <Link href="/home" aria-label="iBackHome home" className="rounded-control">
           <Wordmark className="hidden sm:block" />
           <Mark className="sm:hidden" />
         </Link>

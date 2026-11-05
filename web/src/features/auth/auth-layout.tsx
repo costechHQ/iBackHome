@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Button } from "@/common/ui/button";
-import { Wordmark } from "@/common/ui/wordmark";
+import { BrandLink, Wordmark } from "@/common/ui/wordmark";
 
 // The frames around the sign-in card: the public split screen (WEB-PUBLIC-010), the ops card on navy
 // (WEB-OPS-001) and the signed-out page. Privacy, Terms and Help links wait for their pages (PACKAGE-REPORT W-2).
@@ -42,7 +42,9 @@ export function PublicAuthFrame({ children }: { children: ReactNode }) {
         >
           <source src="/landing/sign-in-bg.mp4" type="video/mp4" />
         </video>
-        <Wordmark onDark size="lg" className="self-start" />
+        <BrandLink className="self-start">
+          <Wordmark onDark size="lg" />
+        </BrandLink>
         <div className="flex flex-col gap-8">
           <p className="type-display">Far from home, never out of sight.</p>
           <ul className="flex flex-col gap-4">
@@ -61,7 +63,9 @@ export function PublicAuthFrame({ children }: { children: ReactNode }) {
       <div className="flex flex-col lg:col-span-3">
         <header className="flex items-center justify-between border-b border-line px-4 py-3 lg:border-0 lg:px-12 lg:py-8">
           <span className="lg:invisible">
-            <Wordmark />
+            <BrandLink>
+              <Wordmark />
+            </BrandLink>
           </span>
           <Link
             href="/"
@@ -89,7 +93,9 @@ export function OpsAuthFrame({ children }: { children: ReactNode }) {
     <main className="flex min-h-dvh items-center justify-center bg-navy-900 px-4 py-10">
       <div className="flex w-full max-w-lg flex-col gap-6 rounded-dialog bg-white p-9 shadow-dialog">
         <div className="flex items-center gap-2">
-          <Wordmark />
+          <BrandLink>
+            <Wordmark />
+          </BrandLink>
           <span className="type-caption rounded-tag bg-mist px-1.5 text-slate">Operations</span>
         </div>
         {children}
@@ -102,7 +108,9 @@ export function SignedOut() {
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="border-b border-line bg-white px-4 py-3 sm:px-8">
-        <Wordmark />
+        <BrandLink>
+          <Wordmark />
+        </BrandLink>
       </header>
       <main className="flex flex-1 items-center justify-center px-4 py-10">
         <div className="flex w-full max-w-xl flex-col items-center gap-4 rounded-card border border-line bg-white p-10 text-center shadow-card">

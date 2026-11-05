@@ -58,7 +58,8 @@ export function OpsSidebar({
   return (
     <aside className="ibh-on-navy flex w-58 flex-none flex-col bg-navy-900 text-navy-200">
       <Link
-        href="/ops"
+        href="/home"
+        aria-label="iBackHome home"
 
         className="flex items-center gap-2 px-4.5 py-4"
       >

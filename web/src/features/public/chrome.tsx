@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { Button } from "@/common/ui/button";
 import { cn } from "@/common/ui/cn";
-import { Wordmark } from "@/common/ui/wordmark";
+import { BrandLink, Wordmark } from "@/common/ui/wordmark";
 
 import { FooterOrbit } from "./footer-orbit";
 import { FooterSocials } from "./footer-socials";
@@ -32,7 +32,7 @@ export function PublicHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white">
       <div className="mx-auto flex h-16 max-w-336 items-center gap-6 px-4 sm:px-8 lg:px-12 xl:px-16">
-        <Link href="/" className="rounded-control" aria-label="iBackHome home">
+        <Link href="/home" className="rounded-control" aria-label="iBackHome home">
           <Wordmark />
         </Link>
         <nav aria-label="Main" className="hidden flex-1 lg:block">
@@ -144,7 +144,9 @@ export function PublicFooter() {
 
         <div className="grid gap-10 lg:grid-cols-5">
           <Reveal className="flex flex-col gap-3 lg:col-span-2">
-            <Wordmark onDark size="lg" className="self-start" />
+            <BrandLink className="self-start">
+              <Wordmark onDark size="lg" />
+            </BrandLink>
             <p className="text-white">Far from home, never out of sight.</p>
             <p className="type-small max-w-sm">
               Client funds are held by a licensed escrow partner, never by iBackHome.
