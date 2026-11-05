@@ -61,7 +61,7 @@ export function Pricing() {
           />
         </Reveal>
         <Reveal>
-          <PlanCards plans={PUBLIC_PLANS} />
+          <PlanCards plans={PUBLIC_PLANS} subscribeHref="/sign-in" />
         </Reveal>
         <p className="type-small mt-4 text-center text-slate">
           Per project, per month, in US dollars. Site visits are the supervisor&apos;s scheduled visits; spot

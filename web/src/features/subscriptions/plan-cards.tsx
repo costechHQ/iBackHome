@@ -1,6 +1,8 @@
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 import { formatMoney } from "@/common/money";
+import { Button } from "@/common/ui/button";
 import { ToneChip } from "@/common/ui/status-chip";
 
 import { PLAN_BLURB, visitsLabel, type PlanCode, type PlanView } from "./plans";
@@ -19,10 +21,13 @@ export function PlanCards({
   plans,
   selected,
   onSelect,
+  subscribeHref,
 }: {
   plans: readonly PlanView[];
   selected?: PlanCode;
   onSelect?: (code: PlanCode) => void;
+  /** Public pricing page: shows a Subscribe button on each card that goes here. */
+  subscribeHref?: string;
 }) {
   const selectable = Boolean(onSelect);
   return (
@@ -73,6 +78,11 @@ export function PlanCards({
             className={`${base} ${plan.recommended ? "border-2 border-accent" : "border-line"}`}
           >
             {body}
+            {subscribeHref ? (
+              <Button asChild block variant={plan.recommended ? "primary" : "outline"} className="mt-auto">
+                <Link href={subscribeHref}>Subscribe to {plan.name}</Link>
+              </Button>
+            ) : null}
           </article>
         );
       })}
