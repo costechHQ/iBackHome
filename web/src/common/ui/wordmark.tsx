@@ -54,11 +54,12 @@ export function Wordmark({
   );
 }
 
-/** Wherever the logo appears it links to /home, which sends a signed-in person to their own portal and a
- *  signed-out visitor to sign-in. Put the logo inside this rather than writing a Link around it. */
+/** Wherever the logo appears it links to the index page (/). A signed-in visitor is sent on from there to
+ *  their own portal (proxy.ts), a signed-out one sees the website. Put the logo inside this rather than
+ *  writing a Link around it. */
 export function BrandLink({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <Link href="/home" aria-label="iBackHome home" className={cn("rounded-control", className)}>
+    <Link href="/" aria-label="iBackHome home" className={cn("rounded-control", className)}>
       {children}
     </Link>
   );

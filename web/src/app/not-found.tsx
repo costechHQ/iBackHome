@@ -9,7 +9,7 @@ export default function NotFound() {
     <div className="flex min-h-dvh flex-col">
       <header className="border-b border-line bg-white">
         <div className="mx-auto flex h-16 max-w-7xl items-center px-4 sm:px-8">
-          <Link href="/home" aria-label="iBackHome home" className="rounded-control">
+          <Link href="/" aria-label="iBackHome home" className="rounded-control">
             <Wordmark />
           </Link>
         </div>

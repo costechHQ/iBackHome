@@ -32,7 +32,7 @@ export function PublicHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white">
       <div className="mx-auto flex h-16 max-w-336 items-center gap-6 px-4 sm:px-8 lg:px-12 xl:px-16">
-        <Link href="/home" className="rounded-control" aria-label="iBackHome home">
+        <Link href="/" className="rounded-control" aria-label="iBackHome home">
           <Wordmark />
         </Link>
         <nav aria-label="Main" className="hidden flex-1 lg:block">
