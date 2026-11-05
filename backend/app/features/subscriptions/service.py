@@ -33,6 +33,7 @@ from app.features.projects.models import Project, ProjectStatus
 from app.features.projects.transitions import ActorRole
 from app.features.subscriptions import messages
 from app.features.subscriptions.models import Subscription, SubscriptionInvoice
+from app.features.subscriptions.plans import get_plan
 from app.features.subscriptions.settings import get_subscription_settings
 
 logger = logging.getLogger(__name__)
@@ -95,7 +96,7 @@ async def create_checkout(
     session: AsyncSession,
     user: User,
     project_id: uuid.UUID,
-    currency: str,
+    plan_code: str,
     *,
     gateway: BillingGateway,
     idempotency_key: str | None = None,
@@ -114,14 +115,19 @@ async def create_checkout(
     if subscription is not None and subscription.status in BLOCKING:
         raise AppError("subscription_exists", "This project already has a subscription.", 409)
     settings = get_subscription_settings()
-    amount = settings.price_minor(currency)
+    plan = get_plan(plan_code)
+    currency, amount = plan.currency, plan.amount_minor
     if subscription is None:
         subscription = Subscription(
-            project_id=project_id, client_id=user.id, currency=currency, amount_minor=amount
+            project_id=project_id,
+            client_id=user.id,
+            plan=plan.code,
+            currency=currency,
+            amount_minor=amount,
         )
         session.add(subscription)
     else:
-        subscription.currency, subscription.amount_minor = currency, amount
+        subscription.plan, subscription.currency, subscription.amount_minor = plan.code, currency, amount
         subscription.cancel_at_period_end, subscription.canceled_at = False, None
     await session.flush()
 
@@ -131,7 +137,7 @@ async def create_checkout(
         SubscriptionCheckoutRequest(
             currency=currency,
             amount_minor=amount,
-            product_name=f"iBackHome supervision: {project.title}",
+            product_name=f"iBackHome supervision, {plan.name} plan: {project.title}",
             metadata=metadata,
             success_url=settings.subscription_success_url.format(**url_values),
             cancel_url=settings.subscription_cancel_url.format(**url_values),
@@ -146,7 +152,12 @@ async def create_checkout(
         "subscription.checkout_created",
         "project",
         project_id,
-        after={"currency": currency, "amount_minor": amount, "checkout_session_id": checkout.id},
+        after={
+            "plan": plan.code,
+            "currency": currency,
+            "amount_minor": amount,
+            "checkout_session_id": checkout.id,
+        },
         request=request,
     )
     return subscription, checkout.id, checkout.url

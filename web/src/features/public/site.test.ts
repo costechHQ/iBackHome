@@ -28,14 +28,9 @@ describe("site content", () => {
     expect(copyrightLine(known, 2026)).toBe("© 2026 iBackHome · Example Ltd · RC 123");
   });
 
-  it("shows prices only once the supervision fee and the funding fee are both set", () => {
+  it("treats the funding fee as unpriced until it is set", () => {
     expect(hasPrices(SITE)).toBe(false);
-    expect(hasPrices(filled((c) => (c.pricing.supervisionGbp = "£1")))).toBe(false);
-    const both = filled((c) => {
-      c.pricing.supervisionGbp = "£1";
-      c.pricing.fundingFee = "1%";
-    });
-    expect(hasPrices(both)).toBe(true);
+    expect(hasPrices(filled((c) => (c.pricing.fundingFee = "1%")))).toBe(true);
   });
 });
 

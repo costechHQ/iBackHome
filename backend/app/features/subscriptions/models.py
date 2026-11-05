@@ -1,7 +1,8 @@
 """Database tables for subscriptions (spec: "Subscriptions"). Owner: Christopher.
 
-`subscriptions`: the supervision fee for one project (unique), paid monthly by the project's client
-through Stripe Billing. Status: incomplete (checkout started) -> active -> past_due -> active again,
+`subscriptions`: the supervision fee for one project (unique), on one plan (basic, standard or premium), paid
+monthly by the project's client through Stripe Billing. Status: incomplete (checkout started) -> active ->
+past_due -> active again,
 or canceled. `paused_by_billing` is true only when billing paused the project, so a payment never
 undoes a pause that ops made. `stripe_event_at` is the time of the last Stripe event applied, so an
 event delivered late (Stripe does not guarantee order) cannot undo a newer one.
@@ -25,6 +26,7 @@ class Subscription(TimestampedBase):
     __table_args__ = (
         CheckConstraint("amount_minor > 0", name="amount_positive"),
         CheckConstraint("currency IN ('GBP', 'USD', 'EUR')", name="currency_supported"),
+        CheckConstraint("plan IN ('basic', 'standard', 'premium')", name="plan_valid"),
         CheckConstraint("status IN ('incomplete', 'active', 'past_due', 'canceled')", name="status_valid"),
     )
 
@@ -37,6 +39,7 @@ class Subscription(TimestampedBase):
     status: Mapped[str] = mapped_column(
         String(16), nullable=False, default="incomplete", server_default="incomplete"
     )
+    plan: Mapped[str] = mapped_column(String(16), nullable=False, default="basic", server_default="basic")
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     amount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)

@@ -8,12 +8,11 @@ import { ApiError } from "@/common/api/errors";
 import { useProject } from "@/common/api/queries";
 import { useOnline, useViewerTimeZone } from "@/common/layout/online";
 import { ServerErrorContent } from "@/common/layout/system-pages";
-import { CLIENT_CURRENCIES, formatMoney, type ClientCurrency } from "@/common/money";
+import { formatMoney } from "@/common/money";
 import { formatDate } from "@/common/time";
 import { Alert } from "@/common/ui/alert";
 import { Button } from "@/common/ui/button";
 import { ConfirmDialog } from "@/common/ui/dialog";
-import { SegmentedControl } from "@/common/ui/segmented";
 import { Loading, Skeleton } from "@/common/ui/skeleton";
 import { ToneChip } from "@/common/ui/status-chip";
 import { Card, CardLabel } from "@/common/ui/surfaces";
@@ -21,15 +20,19 @@ import { Card, CardLabel } from "@/common/ui/surfaces";
 import {
   useCancelSubscription,
   useRefreshAfterSubscription,
+  usePlans,
   useStartSubscription,
   useSubscription,
 } from "./api";
+import { PlanCards } from "./plan-cards";
+import { PUBLIC_PLANS, type PlanCode } from "./plans";
 import { describe } from "./state";
 
-// The monthly supervision subscription at /projects/:id/subscription. The client picks GBP, USD or EUR and
-// goes to Stripe Checkout (the price is shown there). Stripe sends them back with ?session_id or ?cancelled=1;
-// the status only turns active when Stripe's webhook reaches the backend, so after Checkout this page keeps
-// reading every few seconds. The final BoQ approval needs an active subscription (409 subscription_required).
+// The monthly supervision subscription at /projects/:id/subscription, and the only place a client pays the
+// supervision fee. They pick Basic, Standard or Premium (USD; prices come from the server) and go to the
+// payment gateway's hosted page. The gateway sends them back with ?session_id or ?cancelled=1; the status
+// only turns active when its webhook reaches the backend, so after payment this page keeps reading every few
+// seconds. The final BoQ approval needs an active subscription (409 subscription_required).
 
 export function SubscriptionPage({
   projectId,
@@ -45,7 +48,8 @@ export function SubscriptionPage({
   const project = useProject(projectId);
   const subscription = useSubscription(projectId, returnedFromStripe);
   const refresh = useRefreshAfterSubscription(projectId);
-  const [currency, setCurrency] = useState<ClientCurrency>("GBP");
+  const plans = usePlans();
+  const [chosen, setChosen] = useState<PlanCode>("standard");
   const [confirming, setConfirming] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
@@ -71,6 +75,7 @@ export function SubscriptionPage({
     return <ServerErrorContent reference={null} onRetry={() => void subscription.refetch()} />;
 
   const sub = subscription.data;
+  const planList = plans.data ?? PUBLIC_PLANS;
   const state = describe(sub);
   const confirmingPayment = returnedFromStripe && sub?.status !== "active";
   const startProblem = !start.error
@@ -97,7 +102,7 @@ export function SubscriptionPage({
         ) : null}
 
         {confirmingPayment ? (
-          <Alert tone="info" title="Payment received. Waiting for Stripe to confirm.">
+          <Alert tone="info" title="Payment received. Waiting for confirmation.">
             <span className="flex items-center gap-2">
               <Loader2 aria-hidden strokeWidth={1.75} className="size-4 animate-spin" />
               Checking every few seconds. You can close this page; your subscription will show here.
@@ -107,6 +112,14 @@ export function SubscriptionPage({
 
         {sub && sub.status !== "incomplete" ? (
           <dl className="flex flex-col divide-y divide-line rounded-card border border-line">
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-slate">Plan</dt>
+              <dd className="text-right font-semibold text-ink capitalize">{sub.plan}</dd>
+            </div>
+            <div className="flex justify-between gap-4 p-4">
+              <dt className="text-slate">Site visits</dt>
+              <dd className="text-right text-ink">{sub.visits_per_month} a month</dd>
+            </div>
             <div className="flex justify-between gap-4 p-4">
               <dt className="text-slate">Every month</dt>
               <dd className="ibh-tabular font-semibold text-ink">
@@ -124,12 +137,7 @@ export function SubscriptionPage({
 
         {state.canStart && !confirmingPayment ? (
           <>
-            <SegmentedControl
-              label="You pay in"
-              value={currency}
-              onChange={(c) => setCurrency(c)}
-              segments={CLIENT_CURRENCIES.map((c) => ({ value: c, label: c }))}
-            />
+            <PlanCards plans={planList} selected={chosen} onSelect={setChosen} />
             {startProblem ? <Alert tone="bad" title={startProblem} /> : null}
             <Button
               size="lg"
@@ -137,7 +145,7 @@ export function SubscriptionPage({
               loading={start.isPending || Boolean(checkoutUrl)}
               disabled={!online}
               onClick={() =>
-                start.mutate(currency, {
+                start.mutate(chosen, {
                   onSuccess: (checkout) => {
                     setCheckoutUrl(checkout.checkout_url);
                     window.location.assign(checkout.checkout_url);
@@ -158,7 +166,7 @@ export function SubscriptionPage({
               </a>
             ) : null}
             <p className="type-small text-center text-slate">
-              Stripe shows the monthly price before you pay. iBackHome never sees your card details.
+              You pay in US dollars on a secure payment page. iBackHome never sees your card details.
             </p>
           </>
         ) : null}
