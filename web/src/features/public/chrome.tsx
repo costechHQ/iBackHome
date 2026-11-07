@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import { Button } from "@/common/ui/button";
 import { cn } from "@/common/ui/cn";
-import { Wordmark } from "@/common/ui/wordmark";
+import { BrandLink, Wordmark } from "@/common/ui/wordmark";
 
 import { FooterOrbit } from "./footer-orbit";
 import { FooterSocials } from "./footer-socials";
@@ -144,7 +144,9 @@ export function PublicFooter() {
 
         <div className="grid gap-10 lg:grid-cols-5">
           <Reveal className="flex flex-col gap-3 lg:col-span-2">
-            <Wordmark onDark size="lg" className="self-start" />
+            <BrandLink className="self-start">
+              <Wordmark onDark size="lg" />
+            </BrandLink>
             <p className="text-white">Far from home, never out of sight.</p>
             <p className="type-small max-w-sm">
               Client funds are held by a licensed escrow partner, never by iBackHome.

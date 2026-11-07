@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Alert } from "@/common/ui/alert";
 import { ToneChip } from "@/common/ui/status-chip";
 
+import { PublicPlans } from "../subscriptions/public-plans";
+
 import { CheckList, CtaBand, Faq, Section, SectionHead } from "./blocks";
 import { PHOTOS } from "./photos";
 import { PricingHero } from "./pricing-visuals";
@@ -21,7 +23,7 @@ export function Pricing() {
   const faq = [
     {
       q: "Which currency do I pay in?",
-      a: "GBP, USD or EUR, by card. Your contractor and suppliers are paid in naira, at the exchange rate recorded on the day you fund. You see both amounts before you pay.",
+      a: "US dollars, by card. Your contractor and suppliers are paid in naira, at the exchange rate recorded on the day you fund. You see both amounts before you pay.",
     },
     {
       q: "Does iBackHome ever hold my money?",
@@ -39,12 +41,12 @@ export function Pricing() {
     <>
       <PricingHero
         title="A small price to protect what you value."
-        lead="A monthly fee for supervision, a small fee each time you fund a milestone, and optional extras."
+        lead="A monthly plan for supervision, a small fee each time you fund a milestone, and optional extras."
       >
         {priced ? null : (
-          <Alert tone="info" title="Pricing is being finalised" className="max-w-3xl">
-            Final prices are being set from our pilot. You always see every amount, and every fee, before you
-            pay anything.
+          <Alert tone="info" title="The funding fee is being finalised" className="max-w-3xl">
+            The monthly plans below are fixed. The fee on each milestone you fund is still being set from our
+            pilot. You always see every amount, and every fee, before you pay anything.
           </Alert>
         )}
       </PricingHero>
@@ -54,36 +56,18 @@ export function Pricing() {
             centered
             id="plans"
             title="What you pay for"
-            lead="Two simple parts: a monthly fee for supervision, and a small fee each time you fund a milestone."
+            lead="Two simple parts: a plan for supervision (monthly, bi-annual or annual), and a small fee each time you fund a milestone."
           />
         </Reveal>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Reveal className="flex">
-            <article className="flex w-full flex-col gap-4 rounded-card border border-line bg-white p-6 shadow-card">
-              <p className="type-caption text-muted uppercase">Every project</p>
-              <h3 className="type-h2 text-ink">Supervision subscription</h3>
-              {priced ? (
-                <p className="type-h3 text-ink">
-                  {p.supervisionGbp} per project, per month
-                  {p.supervisionUsd || p.supervisionEur ? (
-                    <span className="type-small block font-normal text-slate">
-                      Also in {[p.supervisionUsd, p.supervisionEur].filter(Boolean).join(" or ")}
-                    </span>
-                  ) : null}
-                </p>
-              ) : null}
-              <CheckList
-                items={[
-                  "A vetted, registered supervisor for your site",
-                  "Scheduled visits plus unannounced spot checks",
-                  "Every photo and video checked: inside your site, device-signed, not reused",
-                  "Milestone verification before any release",
-                  "Weekly report, checked by your supervisor, on WhatsApp and email",
-                  "Your dashboard: progress, evidence, spending and ledger",
-                ]}
-              />
-            </article>
-          </Reveal>
+        <Reveal>
+          <PublicPlans subscribeHref="/sign-in" />
+        </Reveal>
+        <p className="type-small mt-4 text-center text-slate">
+          Per project, in US dollars. Bi-annual pays for 5 months and covers 6; annual pays for 10 and covers
+          12. Site visits are the supervisor&apos;s scheduled visits; spot checks and the weekly report are
+          included in every plan.
+        </p>
+        <div className="mt-6 grid gap-4">
           <Reveal delay={150} className="flex">
             <article className="flex w-full flex-col gap-4 rounded-card border border-line bg-white p-6 shadow-card">
               <p className="type-caption text-muted uppercase">Each milestone</p>

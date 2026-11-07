@@ -948,6 +948,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/subscription/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Plans
+         * @description Public: the three plans with monthly price, visits per month and the price of each billing period.
+         */
+        get: operations["list_plans_api_v1_subscription_plans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/subscription": {
         parameters: {
             query?: never;
@@ -963,7 +983,7 @@ export interface paths {
         put?: never;
         /**
          * Start Subscription
-         * @description Client: get a Stripe Checkout link for the monthly supervision fee (GBP, USD or EUR).
+         * @description Client: get a Stripe Checkout link for the supervision fee on the chosen plan and billing period (USD).
          *
          *     Nothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the
          *     same key returns the same link.
@@ -2495,6 +2515,39 @@ export interface components {
              */
             created_at: string;
         };
+        /** PeriodPriceOut */
+        PeriodPriceOut: {
+            /**
+             * Period
+             * @enum {string}
+             */
+            period: "monthly" | "biannual" | "annual";
+            /**
+             * Months
+             * @description Months covered by one invoice
+             */
+            months: number;
+            /**
+             * Paid Months
+             * @description Months paid for; the rest are free
+             */
+            paid_months: number;
+            /**
+             * Amount Minor
+             * @description Charged each billing period, in US cents
+             */
+            amount_minor: number;
+            /**
+             * List Amount Minor
+             * @description The same months at the monthly price, before the discount
+             */
+            list_amount_minor: number;
+            /**
+             * Monthly Equivalent Minor
+             * @description amount_minor spread over the months, rounded down
+             */
+            monthly_equivalent_minor: number;
+        };
         /**
          * PersonRef
          * @description A person named on a report: the id and name only (no phone or email).
@@ -2520,6 +2573,38 @@ export interface components {
              * @example 7.5139
              */
             lon: number;
+        };
+        /** PlanOut */
+        PlanOut: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "basic" | "standard" | "premium";
+            /** Name */
+            name: string;
+            /**
+             * Visits Per Month
+             * @description Supervisor site visits each month
+             */
+            visits_per_month: number;
+            /**
+             * Currency
+             * @description Always USD
+             */
+            currency: string;
+            /**
+             * Amount Minor
+             * @description The monthly price, in US cents
+             */
+            amount_minor: number;
+            /** Recommended */
+            recommended: boolean;
+            /**
+             * Periods
+             * @description Price of one invoice for each billing period
+             */
+            periods: components["schemas"]["PeriodPriceOut"][];
         };
         /**
          * PreferencesIn
@@ -2973,22 +3058,48 @@ export interface components {
             checkout_session_id: string;
             /** Checkout Url */
             checkout_url: string;
+            /**
+             * Plan
+             * @enum {string}
+             */
+            plan: "basic" | "standard" | "premium";
+            /**
+             * Billing Period
+             * @enum {string}
+             */
+            billing_period: "monthly" | "biannual" | "annual";
+            /** Visits Per Month */
+            visits_per_month: number;
             /** Currency */
             currency: string;
             /**
              * Amount Minor
-             * @description Charged every month
+             * @description Charged each billing period
              */
             amount_minor: number;
         };
         /** SubscriptionCreate */
         SubscriptionCreate: {
             /**
-             * Currency
-             * @description The currency the client pays in: GBP, USD or EUR
+             * Plan
+             * @description basic, standard or premium
              * @enum {string}
              */
-            currency: "GBP" | "USD" | "EUR";
+            plan: "basic" | "standard" | "premium";
+            /**
+             * Billing Period
+             * @description monthly, biannual (6 months, pay 5) or annual (12 months, pay 10)
+             * @default monthly
+             * @enum {string}
+             */
+            billing_period: "monthly" | "biannual" | "annual";
+            /**
+             * Currency
+             * @description Clients pay in USD only
+             * @default USD
+             * @constant
+             */
+            currency: "USD";
         };
         /** SubscriptionOut */
         SubscriptionOut: {
@@ -3002,9 +3113,22 @@ export interface components {
              * @enum {string}
              */
             status: "incomplete" | "active" | "past_due" | "canceled";
+            /**
+             * Plan
+             * @enum {string}
+             */
+            plan: "basic" | "standard" | "premium";
+            /**
+             * Billing Period
+             * @enum {string}
+             */
+            billing_period: "monthly" | "biannual" | "annual";
             /** Currency */
             currency: string;
-            /** Amount Minor */
+            /**
+             * Amount Minor
+             * @description Charged each billing period
+             */
             amount_minor: number;
             /** Current Period End */
             current_period_end: string | null;
@@ -3014,6 +3138,8 @@ export interface components {
             past_due_since: string | null;
             /** Paused By Billing */
             paused_by_billing: boolean;
+            /** Visits Per Month */
+            readonly visits_per_month: number;
         };
         /**
          * SupervisorApplication
@@ -5026,6 +5152,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_plans_api_v1_subscription_plans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlanOut"][];
                 };
             };
         };

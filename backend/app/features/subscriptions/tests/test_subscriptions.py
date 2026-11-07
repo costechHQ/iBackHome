@@ -118,10 +118,18 @@ def invoice_object(stripe_id: str, invoice_id: str, *, paid: int = 4900) -> dict
     }
 
 
-async def start_checkout(client: AsyncClient, user: Any, project: Project, **headers: str) -> Any:
+async def start_checkout(
+    client: AsyncClient,
+    user: Any,
+    project: Project,
+    plan: str = "basic",
+    billing_period: str | None = None,
+    **headers: str,
+) -> Any:
+    body = {"plan": plan} | ({"billing_period": billing_period} if billing_period else {})
     return await client.post(
         f"/api/v1/projects/{project.id}/subscription",
-        json={"currency": "GBP"},
+        json=body,
         headers=bearer(user) | headers,
     )
 
@@ -161,8 +169,10 @@ async def test_client_starts_checkout_and_nothing_is_active_yet(
     assert response.status_code == 201
     body = response.json()
     assert body["checkout_url"].startswith("https://checkout.stripe.com/")
-    assert (body["currency"], body["amount_minor"]) == ("GBP", 4900)
+    assert (body["plan"], body["visits_per_month"]) == ("basic", 2)
+    assert (body["currency"], body["amount_minor"]) == ("USD", 10_000)
     request = billing.requests[0]
+    assert (request.currency, request.amount_minor) == ("USD", 10_000)
     assert request.metadata == {
         "purpose": "supervision_subscription",
         "project_id": str(project.id),
@@ -443,7 +453,8 @@ async def test_members_read_it_and_outsiders_do_not(
     url = f"/api/v1/projects/{world.project.id}/subscription"
     owner = await projects_client(db_session, world)
     body = (await client.get(url, headers=bearer(owner))).json()
-    assert (body["status"], body["amount_minor"], body["currency"]) == ("active", 4900, "GBP")
+    assert (body["status"], body["amount_minor"], body["currency"]) == ("active", 10_000, "USD")
+    assert (body["plan"], body["visits_per_month"]) == ("basic", 2)
     outsider = await make_user(db_session, "client")
     assert (await client.get(url, headers=bearer(outsider))).status_code == 403
     ops = await make_user(db_session, "ops")
@@ -480,3 +491,155 @@ async def test_cancel_without_an_active_subscription_is_409(
     response = await client.post(f"/api/v1/projects/{project.id}/subscription/cancel", headers=bearer(user))
     assert response.status_code == 409
     assert response.json()["error"]["code"] == "subscription_not_active"
+
+
+# --- plans ------------------------------------------------------------------------------------------------
+
+
+async def test_the_plans_are_public_and_priced_in_usd(client: AsyncClient) -> None:
+    response = await client.get("/api/v1/subscription/plans")  # no sign-in
+    assert response.status_code == 200
+    assert [(p["code"], p["amount_minor"], p["visits_per_month"]) for p in response.json()] == [
+        ("basic", 10_000, 2),
+        ("standard", 15_000, 3),
+        ("premium", 20_000, 4),
+    ]
+    assert {p["currency"] for p in response.json()} == {"USD"}
+    assert [p["code"] for p in response.json() if p["recommended"]] == ["premium"]
+
+
+@pytest.mark.parametrize(
+    ("plan", "amount", "visits"), [("basic", 10_000, 2), ("standard", 15_000, 3), ("premium", 20_000, 4)]
+)
+async def test_each_plan_charges_its_own_price(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling, plan: str, amount: int, visits: int
+) -> None:
+    user, _, project = await running_project(db_session)
+    body = (await start_checkout(client, user, project, plan)).json()
+    assert (body["plan"], body["amount_minor"], body["visits_per_month"]) == (plan, amount, visits)
+    assert (billing.requests[0].currency, billing.requests[0].amount_minor) == ("USD", amount)
+    saved = await row(db_session, project)
+    assert (saved.plan, saved.amount_minor, saved.currency) == (plan, amount, "USD")
+
+
+async def test_an_unknown_plan_or_a_non_usd_currency_is_refused(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling
+) -> None:
+    user, _, project = await running_project(db_session)
+    url = f"/api/v1/projects/{project.id}/subscription"
+    for body in ({"plan": "gold"}, {}, {"plan": "basic", "currency": "GBP"}):
+        assert (await client.post(url, json=body, headers=bearer(user))).status_code == 422
+    assert billing.requests == []
+
+
+async def test_a_subscription_without_a_plan_is_basic(db_session: AsyncSession) -> None:
+    team = await _team(db_session)
+    subscription = Subscription(
+        project_id=team.project.id, client_id=team.client.id, currency="USD", amount_minor=10_000
+    )
+    db_session.add(subscription)
+    await db_session.flush()
+    await db_session.refresh(subscription)
+    assert subscription.plan == "basic"
+
+
+async def test_restarting_after_a_cancel_can_pick_another_plan(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling
+) -> None:
+    world = await subscribed(client, db_session, billing)
+    subscription = await row(db_session, world.project)
+    subscription.status = "canceled"
+    await db_session.flush()
+    owner = await projects_client(db_session, world)
+    body = (await start_checkout(client, owner, world.project, "premium")).json()
+    assert (body["plan"], body["amount_minor"]) == ("premium", 20_000)
+    assert (await row(db_session, world.project)).plan == "premium"
+
+
+# --- billing periods (monthly, bi-annual: 5 months paid for 6, annual: 10 paid for 12) ---------------------
+
+
+async def test_the_plans_list_the_price_of_each_billing_period(client: AsyncClient) -> None:
+    plans = {p["code"]: p for p in (await client.get("/api/v1/subscription/plans")).json()}
+    premium = {p["period"]: p for p in plans["premium"]["periods"]}
+    assert list(premium) == ["monthly", "biannual", "annual"]
+    assert [(p["months"], p["paid_months"]) for p in premium.values()] == [(1, 1), (6, 5), (12, 10)]
+    assert [p["amount_minor"] for p in premium.values()] == [20_000, 100_000, 200_000]
+    assert [p["list_amount_minor"] for p in premium.values()] == [20_000, 120_000, 240_000]
+    assert [p["monthly_equivalent_minor"] for p in premium.values()] == [20_000, 16_666, 16_666]
+    assert [p["amount_minor"] for p in plans["basic"]["periods"]] == [10_000, 50_000, 100_000]
+    assert [p["amount_minor"] for p in plans["standard"]["periods"]] == [15_000, 75_000, 150_000]
+
+
+@pytest.mark.parametrize(
+    ("period", "months", "factor"), [("monthly", 1, 1), ("biannual", 6, 5), ("annual", 12, 10)]
+)
+async def test_a_period_charges_the_discounted_total_and_bills_every_n_months(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling, period: str, months: int, factor: int
+) -> None:
+    user, _, project = await running_project(db_session)
+    response = await start_checkout(client, user, project, "standard", period)
+    assert response.status_code == 201
+    body = response.json()
+    assert (body["billing_period"], body["amount_minor"]) == (period, 15_000 * factor)
+    request = billing.requests[0]
+    assert (request.amount_minor, request.interval_months) == (15_000 * factor, months)
+    saved = await row(db_session, project)
+    assert (saved.billing_period, saved.amount_minor) == (period, 15_000 * factor)
+
+
+async def test_no_period_means_monthly(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling
+) -> None:
+    user, _, project = await running_project(db_session)
+    body = (await start_checkout(client, user, project, "basic")).json()
+    assert (body["billing_period"], body["amount_minor"]) == ("monthly", 10_000)
+    assert billing.requests[0].interval_months == 1
+
+
+async def test_an_unknown_billing_period_is_refused(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling
+) -> None:
+    user, _, project = await running_project(db_session)
+    assert (await start_checkout(client, user, project, "basic", "weekly")).status_code == 422
+    assert billing.requests == []
+
+
+async def test_a_subscription_row_without_a_period_is_monthly(db_session: AsyncSession) -> None:
+    team = await _team(db_session)
+    subscription = Subscription(
+        project_id=team.project.id, client_id=team.client.id, currency="USD", amount_minor=10_000
+    )
+    db_session.add(subscription)
+    await db_session.flush()
+    await db_session.refresh(subscription)
+    assert subscription.billing_period == "monthly"
+
+
+async def test_restarting_after_a_cancel_can_pick_another_period(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling
+) -> None:
+    world = await subscribed(client, db_session, billing)
+    (await row(db_session, world.project)).status = "canceled"
+    await db_session.flush()
+    owner = await projects_client(db_session, world)
+    body = (await start_checkout(client, owner, world.project, "premium", "annual")).json()
+    assert (body["plan"], body["billing_period"], body["amount_minor"]) == ("premium", "annual", 200_000)
+    assert (await row(db_session, world.project)).billing_period == "annual"
+
+
+async def test_an_annual_invoice_books_one_balanced_entry_for_the_whole_year(
+    client: AsyncClient, db_session: AsyncSession, billing: FakeBilling
+) -> None:
+    world = await subscribed(client, db_session, billing)
+    invoice = invoice_object(world.stripe_id, "in_annual_1", paid=200_000) | {"currency": "usd"}
+    assert (await send_stripe(client, event("invoice.paid", invoice))).status_code == 200
+    saved = await db_session.scalar(
+        select(SubscriptionInvoice).where(SubscriptionInvoice.stripe_invoice_id == "in_annual_1")
+    )
+    assert saved is not None
+    entries = (await db_session.scalars(select(LedgerEntry).where(LedgerEntry.ref_id == saved.id))).all()
+    assert sorted((e.account, e.direction, e.amount_minor) for e in entries) == [
+        ("stripe_clearing:USD", "debit", 200_000),
+        ("subscription_revenue:USD", "credit", 200_000),
+    ]

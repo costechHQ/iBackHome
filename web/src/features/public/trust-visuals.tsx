@@ -31,7 +31,7 @@ export function TrustHero({ title, lead, children }: { title: string; lead: stri
     >
       {children}
       <p className="type-caption mt-4 max-w-2xl tracking-normal text-navy-200">
-        Note photos: Koutchika Lihouenou Gaspard (₦1,000, CC BY-SA 4.0) and Vintage Fan 5678 (£50, CC BY 4.0),
+        {/* Note photos: Koutchika Lihouenou Gaspard (₦1,000, CC BY-SA 4.0) and Vintage Fan 5678 (£50, CC BY 4.0), */}
         via Wikimedia Commons.
       </p>
     </BleedHero>
