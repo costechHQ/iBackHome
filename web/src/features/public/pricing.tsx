@@ -4,8 +4,7 @@ import Image from "next/image";
 import { Alert } from "@/common/ui/alert";
 import { ToneChip } from "@/common/ui/status-chip";
 
-import { PlanCards } from "../subscriptions/plan-cards";
-import { PUBLIC_PLANS } from "../subscriptions/plans";
+import { PublicPlans } from "../subscriptions/public-plans";
 
 import { CheckList, CtaBand, Faq, Section, SectionHead } from "./blocks";
 import { PHOTOS } from "./photos";
@@ -57,15 +56,16 @@ export function Pricing() {
             centered
             id="plans"
             title="What you pay for"
-            lead="Two simple parts: a monthly plan for supervision, and a small fee each time you fund a milestone."
+            lead="Two simple parts: a plan for supervision (monthly, bi-annual or annual), and a small fee each time you fund a milestone."
           />
         </Reveal>
         <Reveal>
-          <PlanCards plans={PUBLIC_PLANS} subscribeHref="/sign-in" />
+          <PublicPlans subscribeHref="/sign-in" />
         </Reveal>
         <p className="type-small mt-4 text-center text-slate">
-          Per project, per month, in US dollars. Site visits are the supervisor&apos;s scheduled visits; spot
-          checks and the weekly report are included in every plan.
+          Per project, in US dollars. Bi-annual pays for 5 months and covers 6; annual pays for 10 and covers
+          12. Site visits are the supervisor&apos;s scheduled visits; spot checks and the weekly report are
+          included in every plan.
         </p>
         <div className="mt-6 grid gap-4">
           <Reveal delay={150} className="flex">

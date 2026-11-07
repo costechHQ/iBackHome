@@ -21,7 +21,7 @@ from app.core.errors import AppError
 @dataclass(frozen=True)
 class SubscriptionCheckoutRequest:
     currency: str  # ISO 4217, upper case ("GBP"); Stripe gets it lower case
-    amount_minor: int  # charged every month
+    amount_minor: int  # charged every billing period (every `interval_months` months)
     product_name: str
     metadata: dict[str, str]  # copied onto the Stripe subscription, so its webhooks find the project
     success_url: str
@@ -29,6 +29,7 @@ class SubscriptionCheckoutRequest:
     client_reference_id: str
     customer_email: str | None = None
     idempotency_key: str | None = None
+    interval_months: int = 1  # 1 monthly, 6 bi-annual, 12 annual
 
 
 class BillingGateway(Protocol):
@@ -54,7 +55,7 @@ class StripeBilling:
                     "price_data": {
                         "currency": request.currency.lower(),
                         "unit_amount": request.amount_minor,
-                        "recurring": {"interval": "month"},
+                        "recurring": {"interval": "month", "interval_count": request.interval_months},
                         "product_data": {"name": request.product_name},
                     },
                 }

@@ -957,7 +957,7 @@ export interface paths {
         };
         /**
          * List Plans
-         * @description Public: the three plans with price and visits per month, for the pricing page.
+         * @description Public: the three plans with monthly price, visits per month and the price of each billing period.
          */
         get: operations["list_plans_api_v1_subscription_plans_get"];
         put?: never;
@@ -983,7 +983,7 @@ export interface paths {
         put?: never;
         /**
          * Start Subscription
-         * @description Client: get a Stripe Checkout link for the monthly supervision fee on the chosen plan (USD).
+         * @description Client: get a Stripe Checkout link for the supervision fee on the chosen plan and billing period (USD).
          *
          *     Nothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the
          *     same key returns the same link.
@@ -2515,6 +2515,39 @@ export interface components {
              */
             created_at: string;
         };
+        /** PeriodPriceOut */
+        PeriodPriceOut: {
+            /**
+             * Period
+             * @enum {string}
+             */
+            period: "monthly" | "biannual" | "annual";
+            /**
+             * Months
+             * @description Months covered by one invoice
+             */
+            months: number;
+            /**
+             * Paid Months
+             * @description Months paid for; the rest are free
+             */
+            paid_months: number;
+            /**
+             * Amount Minor
+             * @description Charged each billing period, in US cents
+             */
+            amount_minor: number;
+            /**
+             * List Amount Minor
+             * @description The same months at the monthly price, before the discount
+             */
+            list_amount_minor: number;
+            /**
+             * Monthly Equivalent Minor
+             * @description amount_minor spread over the months, rounded down
+             */
+            monthly_equivalent_minor: number;
+        };
         /**
          * PersonRef
          * @description A person named on a report: the id and name only (no phone or email).
@@ -2562,11 +2595,16 @@ export interface components {
             currency: string;
             /**
              * Amount Minor
-             * @description Charged every month, in US cents
+             * @description The monthly price, in US cents
              */
             amount_minor: number;
             /** Recommended */
             recommended: boolean;
+            /**
+             * Periods
+             * @description Price of one invoice for each billing period
+             */
+            periods: components["schemas"]["PeriodPriceOut"][];
         };
         /**
          * PreferencesIn
@@ -3025,13 +3063,18 @@ export interface components {
              * @enum {string}
              */
             plan: "basic" | "standard" | "premium";
+            /**
+             * Billing Period
+             * @enum {string}
+             */
+            billing_period: "monthly" | "biannual" | "annual";
             /** Visits Per Month */
             visits_per_month: number;
             /** Currency */
             currency: string;
             /**
              * Amount Minor
-             * @description Charged every month
+             * @description Charged each billing period
              */
             amount_minor: number;
         };
@@ -3043,6 +3086,13 @@ export interface components {
              * @enum {string}
              */
             plan: "basic" | "standard" | "premium";
+            /**
+             * Billing Period
+             * @description monthly, biannual (6 months, pay 5) or annual (12 months, pay 10)
+             * @default monthly
+             * @enum {string}
+             */
+            billing_period: "monthly" | "biannual" | "annual";
             /**
              * Currency
              * @description Clients pay in USD only
@@ -3068,9 +3118,17 @@ export interface components {
              * @enum {string}
              */
             plan: "basic" | "standard" | "premium";
+            /**
+             * Billing Period
+             * @enum {string}
+             */
+            billing_period: "monthly" | "biannual" | "annual";
             /** Currency */
             currency: string;
-            /** Amount Minor */
+            /**
+             * Amount Minor
+             * @description Charged each billing period
+             */
             amount_minor: number;
             /** Current Period End */
             current_period_end: string | null;

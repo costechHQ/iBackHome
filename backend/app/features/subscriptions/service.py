@@ -1,7 +1,7 @@
 """Subscription rules (spec: "Subscriptions"). Owner: Christopher.
 
-The supervision fee is iBackHome's own income, paid monthly by the project's client through Stripe
-Billing. It is never escrow money.
+The supervision fee is iBackHome's own income, paid by the project's client through Stripe
+Billing, monthly, every 6 months (5 months paid) or yearly (10 months paid). It is never escrow money.
 
 - The final BoQ approval needs an active subscription (`ensure_can_start`).
 - A failed payment, or a subscription that ends, pauses the project at once (system `active` ->
@@ -33,13 +33,14 @@ from app.features.projects.models import Project, ProjectStatus
 from app.features.projects.transitions import ActorRole
 from app.features.subscriptions import messages
 from app.features.subscriptions.models import Subscription, SubscriptionInvoice
-from app.features.subscriptions.plans import get_plan
+from app.features.subscriptions.plans import DEFAULT_PERIOD, PERIOD_MONTHS, get_plan, period_price
 from app.features.subscriptions.settings import get_subscription_settings
 
 logger = logging.getLogger(__name__)
 
 PURPOSE = "supervision_subscription"
 BLOCKING = frozenset({"active", "past_due"})  # a new checkout would double-charge
+_PERIOD_LABEL = {"monthly": "billed monthly", "biannual": "billed every 6 months", "annual": "billed yearly"}
 
 _STRIPE_STATUS = {
     "active": "active",
@@ -97,12 +98,13 @@ async def create_checkout(
     user: User,
     project_id: uuid.UUID,
     plan_code: str,
+    billing_period: str = DEFAULT_PERIOD,
     *,
     gateway: BillingGateway,
     idempotency_key: str | None = None,
     request: Request | None = None,
 ) -> tuple[Subscription, str, str]:
-    """Start (or restart after a cancel) the monthly subscription: returns (row, session id, URL).
+    """Start (or restart after a cancel) the subscription on a plan and period: (row, session id, URL).
 
     - 404 project_not_found; 403 not_project_client
     - 409 project_completed, subscription_exists (already active or past due); 502 stripe_unavailable
@@ -116,18 +118,21 @@ async def create_checkout(
         raise AppError("subscription_exists", "This project already has a subscription.", 409)
     settings = get_subscription_settings()
     plan = get_plan(plan_code)
-    currency, amount = plan.currency, plan.amount_minor
+    price = period_price(plan.code, billing_period)
+    currency, amount = plan.currency, price.amount_minor
     if subscription is None:
         subscription = Subscription(
             project_id=project_id,
             client_id=user.id,
             plan=plan.code,
+            billing_period=billing_period,
             currency=currency,
             amount_minor=amount,
         )
         session.add(subscription)
     else:
         subscription.plan, subscription.currency, subscription.amount_minor = plan.code, currency, amount
+        subscription.billing_period = billing_period
         subscription.cancel_at_period_end, subscription.canceled_at = False, None
     await session.flush()
 
@@ -137,13 +142,16 @@ async def create_checkout(
         SubscriptionCheckoutRequest(
             currency=currency,
             amount_minor=amount,
-            product_name=f"iBackHome supervision, {plan.name} plan: {project.title}",
+            product_name=(
+                f"iBackHome supervision, {plan.name} plan, {_PERIOD_LABEL[billing_period]}: {project.title}"
+            ),
             metadata=metadata,
             success_url=settings.subscription_success_url.format(**url_values),
             cancel_url=settings.subscription_cancel_url.format(**url_values),
             client_reference_id=str(project_id),
             customer_email=user.email,
             idempotency_key=f"subscription:{project_id}:{idempotency_key}" if idempotency_key else None,
+            interval_months=PERIOD_MONTHS[billing_period][0],
         )
     )
     await audit.record(
@@ -154,6 +162,7 @@ async def create_checkout(
         project_id,
         after={
             "plan": plan.code,
+            "billing_period": billing_period,
             "currency": currency,
             "amount_minor": amount,
             "checkout_session_id": checkout.id,

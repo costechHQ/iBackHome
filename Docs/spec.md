@@ -133,7 +133,7 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `disputes` | escrow | project → projects, milestone → milestones, raised_by → users, reason, status (`open`, `resolved_release`, `resolved_reject`), resolution_notes, resolved_by → users |
 | `ledger_entries` | base/payments | transaction_id, account (e.g. `client_funding`, `escrow`, `contractor_payable`, `supplier_payable`, `fees`), direction (`debit`, `credit`), amount_minor, currency, fx_rate, ref_type, ref_id |
 | `payment_events` | base/payments | provider (`stripe`, `paystack`, `escrow`), event_id (unique per provider; Paystack sends none, so ours is `<event>:<data.id>`), event_type, payload (JSONB), processed_at |
-| `subscriptions` | subscriptions | project → projects (unique), client → users, plan (`basic`, `standard`, `premium`; default `basic`), status (`incomplete`, `active`, `past_due`, `canceled`), currency (USD for new subscriptions; older rows may hold GBP or EUR), amount_minor (monthly), stripe_customer_id, stripe_subscription_id (unique), current_period_end, cancel_at_period_end, past_due_since, paused_by_billing, canceled_at, stripe_event_at (time of the last Stripe event applied) |
+| `subscriptions` | subscriptions | project → projects (unique), client → users, plan (`basic`, `standard`, `premium`; default `basic`), billing_period (`monthly`, `biannual`, `annual`; default `monthly`), status (`incomplete`, `active`, `past_due`, `canceled`), currency (USD for new subscriptions; older rows may hold GBP or EUR), amount_minor (charged each billing period), stripe_customer_id, stripe_subscription_id (unique), current_period_end, cancel_at_period_end, past_due_since, paused_by_billing, canceled_at, stripe_event_at (time of the last Stripe event applied) |
 | `subscription_invoices` | subscriptions | subscription → subscriptions, stripe_invoice_id (unique), period_start, period_end, amount_minor, currency |
 | `payout_recipients` | base/payments | user → users or supplier → suppliers (exactly one), provider (`paystack`), recipient_code (unique), bank_code, bank_name, account_name, account_number_masked (`******1234`; the full number is never stored), currency |
 | `payouts` | base/payments | recipient → payout_recipients, provider, reference (ours, unique, so a retry never pays twice), amount_minor, currency, reason, status (`pending`, `success`, `failed`, `reversed`), provider_transfer_code, failure_reason, completed_at |
@@ -460,10 +460,10 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |
 | POST | `/milestones/{id}/disputes` | client, contractor | Raise dispute |
 | POST | `/disputes/{id}/resolve` | ops | Resolve (release or rework); needs two ops approvals |
-| GET | `/subscription/plans` | public | The three plans with price (USD) and site visits per month; Premium is marked `recommended` |
-| POST | `/projects/{id}/subscription` | client | Create a Stripe Checkout session for the monthly supervision fee (body: `plan` = `basic`, `standard` or `premium`; `currency` may only be `USD`) |
+| GET | `/subscription/plans` | public | The three plans with monthly price (USD), site visits per month and `periods` (the price of one invoice for monthly, biannual and annual); Premium is marked `recommended` |
+| POST | `/projects/{id}/subscription` | client | Create a Stripe Checkout session for the monthly supervision fee (body: `plan` = `basic`, `standard` or `premium`; optional `billing_period` = `monthly` (default), `biannual` or `annual`; `currency` may only be `USD`) |
 | GET | `/projects/{id}/subscription` | members, ops | Plan, visits per month, status, price, renewal date; 404 until one is started |
-| POST | `/projects/{id}/subscription/cancel` | client | Stop renewing at the end of the paid month |
+| POST | `/projects/{id}/subscription/cancel` | client | Stop renewing at the end of the paid period |
 | POST | `/projects/{id}/funding` | client | Create Stripe checkout for a milestone amount |
 | GET | `/projects/{id}/ledger` | client, ops | Funding, releases and payouts |
 | GET | `/price-index` | signed in | Current material prices |
@@ -583,12 +583,12 @@ Release to contractor: debit `contractor_payable`, credit `escrow:{project}`; on
 
 **Subscriptions (supervision fee)**
 
-The monthly fee per project is iBackHome's own income, paid by the project's client through Stripe Billing in USD (never escrow money). The client picks one of three plans: Basic $100 (2 supervisor site visits a month), Standard $150 (3) or Premium $200 (4, recommended). Prices are `SUBSCRIPTION_PRICE_{BASIC,STANDARD,PREMIUM}_MINOR` (US cents). Visits are shown to the client; the server does not count or cap them yet. One plan per project: to change plan, cancel and start again (an unknown plan or a non-USD currency is 422). The payment gateway is behind `BillingGateway`; Stripe does not serve Nigerian merchants, so the gateway for production is still to be chosen.
+The monthly fee per project is iBackHome's own income, paid by the project's client through Stripe Billing in USD (never escrow money). The client picks one of three plans: Basic $100 (2 supervisor site visits a month), Standard $150 (3) or Premium $200 (4, recommended). Prices are `SUBSCRIPTION_PRICE_{BASIC,STANDARD,PREMIUM}_MINOR` (US cents a month). The client also picks a billing period: `monthly`, `biannual` (one invoice every 6 months, 5 months paid: one month free) or `annual` (one invoice a year, 10 months paid: two months free). One invoice costs the monthly price times the months paid (Premium: $200, $1,000, $2,000); Stripe bills every 1, 6 or 12 months (`interval_count`). The discounts are fixed in `plans.py`, not in env. Visits are shown to the client; the server does not count or cap them yet. One plan per project: to change plan, cancel and start again (an unknown plan or a non-USD currency is 422). The payment gateway is behind `BillingGateway`; Stripe does not serve Nigerian merchants, so the gateway for production is still to be chosen.
 
 - The final BoQ approval needs an `active` subscription, else 409 `subscription_required` and nothing is saved. `SUBSCRIPTION_REQUIRED=false` switches the gate off (staging demos).
 - Only Stripe's signed webhooks change a subscription: `customer.subscription.created/updated/deleted` (status, period, cancel flag) and `invoice.paid` / `invoice.payment_failed`. An event older than the last one applied is ignored.
 - `invoice.paid` books one balanced transaction per invoice: debit `stripe_clearing:{cur}`, credit `subscription_revenue:{cur}`.
-- Lapse rule: a failed payment (`past_due`) or an ended subscription (`canceled`) pauses an `active` project at once (system `active` → `paused`), which blocks claims, verification, approval, funding and release. A paid invoice resumes it only if billing paused it (`paused_by_billing`), never an ops pause. Cancel by the client takes effect at the end of the paid month.
+- Lapse rule: a failed payment (`past_due`) or an ended subscription (`canceled`) pauses an `active` project at once (system `active` → `paused`), which blocks claims, verification, approval, funding and release. A paid invoice resumes it only if billing paused it (`paused_by_billing`), never an ops pause. Cancel by the client takes effect at the end of the paid period (up to 12 months; no refund logic).
 - The client is notified when billing pauses or resumes the project.
 
 ## AI agents

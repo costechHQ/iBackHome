@@ -9,7 +9,7 @@ import { keys } from "@/common/api/queries";
 import type { components } from "@/common/api/schema";
 import { useWrite } from "@/common/api/use-write";
 
-import type { PlanCode, PlanView } from "./plans";
+import type { BillingPeriod, PlanCode, PlanView } from "./plans";
 
 // The monthly supervision subscription (Stripe Billing). A project has none until the client starts one, so a
 // 404 on the read means "not started", not an error. Nothing counts until Stripe confirms by webhook: after
@@ -53,11 +53,11 @@ export function useSubscription(projectId: string, pollUntilActive = false) {
 }
 
 export function useStartSubscription(projectId: string) {
-  return useWrite((plan: PlanCode, key: string) =>
+  return useWrite((choice: { plan: PlanCode; period: BillingPeriod }, key: string) =>
     call(
       api().POST("/api/v1/projects/{project_id}/subscription", {
         params: { path: { project_id: projectId } },
-        body: { plan, currency: "USD" },
+        body: { plan: choice.plan, billing_period: choice.period, currency: "USD" },
         headers: { "Idempotency-Key": key },
       }),
     ),

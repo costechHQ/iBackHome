@@ -5,10 +5,20 @@ import { formatMoney } from "@/common/money";
 import { Button } from "@/common/ui/button";
 import { ToneChip } from "@/common/ui/status-chip";
 
-import { PLAN_BLURB, visitsLabel, type PlanCode, type PlanView } from "./plans";
+import {
+  billedLabel,
+  PLAN_BLURB,
+  priceFor,
+  visitsLabel,
+  type BillingPeriod,
+  type PlanCode,
+  type PlanView,
+} from "./plans";
 
 // The three plans as cards. On the public pricing page they only inform; on the subscription page they are
-// a radio group (`onSelect`), so the client chooses a plan before going to the payment page.
+// a radio group (`onSelect`), so the client chooses a plan before going to the payment page. `period` is the
+// billing period picked on the switch above: the big price is what a month costs on that period, with a line
+// under it for what is billed and how many months are free.
 
 const INCLUDED = [
   "A vetted, registered supervisor for your site",
@@ -19,11 +29,13 @@ const INCLUDED = [
 
 export function PlanCards({
   plans,
+  period = "monthly",
   selected,
   onSelect,
   subscribeHref,
 }: {
   plans: readonly PlanView[];
+  period?: BillingPeriod;
   selected?: PlanCode;
   onSelect?: (code: PlanCode) => void;
   /** Public pricing page: shows a Subscribe button on each card that goes here. */
@@ -38,6 +50,8 @@ export function PlanCards({
     >
       {plans.map((plan) => {
         const isSelected = selectable && selected === plan.code;
+        const price = priceFor(plan, period);
+        const discounted = price.list_amount_minor > price.amount_minor;
         const body = (
           <>
             <div className="flex items-center justify-between gap-2">
@@ -45,9 +59,19 @@ export function PlanCards({
               {plan.recommended ? <ToneChip label="Recommended" tone="ok" size="small" /> : null}
             </div>
             <p className="ibh-tabular type-h1 text-ink">
-              {formatMoney(plan.amount_minor, plan.currency)}
+              {formatMoney(price.monthly_equivalent_minor, plan.currency)}
               <span className="type-small font-normal text-slate"> per project, per month</span>
             </p>
+            {price.months > 1 ? (
+              <p className="type-small -mt-1 text-slate">
+                {discounted ? (
+                  <s className="text-muted">{formatMoney(price.list_amount_minor, plan.currency)}</s>
+                ) : null}{" "}
+                <span className="font-semibold text-ink">
+                  {formatMoney(price.amount_minor, plan.currency)} {billedLabel(price)}
+                </span>
+              </p>
+            ) : null}
             <p className="type-body font-semibold text-ink">{visitsLabel(plan.visits_per_month)}</p>
             <p className="type-small text-slate">{PLAN_BLURB[plan.code]}</p>
             <ul className="flex flex-col gap-2">

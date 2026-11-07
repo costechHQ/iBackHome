@@ -1,7 +1,8 @@
 """Database tables for subscriptions (spec: "Subscriptions"). Owner: Christopher.
 
 `subscriptions`: the supervision fee for one project (unique), on one plan (basic, standard or premium), paid
-monthly by the project's client through Stripe Billing. Status: incomplete (checkout started) -> active ->
+monthly, every 6 months or yearly (`billing_period`) by the project's client through Stripe Billing.
+Status: incomplete (checkout started) -> active ->
 past_due -> active again,
 or canceled. `paused_by_billing` is true only when billing paused the project, so a payment never
 undoes a pause that ops made. `stripe_event_at` is the time of the last Stripe event applied, so an
@@ -27,6 +28,7 @@ class Subscription(TimestampedBase):
         CheckConstraint("amount_minor > 0", name="amount_positive"),
         CheckConstraint("currency IN ('GBP', 'USD', 'EUR')", name="currency_supported"),
         CheckConstraint("plan IN ('basic', 'standard', 'premium')", name="plan_valid"),
+        CheckConstraint("billing_period IN ('monthly', 'biannual', 'annual')", name="billing_period_valid"),
         CheckConstraint("status IN ('incomplete', 'active', 'past_due', 'canceled')", name="status_valid"),
     )
 
@@ -40,8 +42,11 @@ class Subscription(TimestampedBase):
         String(16), nullable=False, default="incomplete", server_default="incomplete"
     )
     plan: Mapped[str] = mapped_column(String(16), nullable=False, default="basic", server_default="basic")
+    billing_period: Mapped[str] = mapped_column(
+        String(10), nullable=False, default="monthly", server_default="monthly"
+    )
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
-    amount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    amount_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)  # charged each billing period
     stripe_customer_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     stripe_subscription_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     current_period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

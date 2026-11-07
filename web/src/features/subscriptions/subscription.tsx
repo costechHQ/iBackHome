@@ -24,8 +24,9 @@ import {
   useStartSubscription,
   useSubscription,
 } from "./api";
+import { PeriodToggle } from "./period-toggle";
 import { PlanCards } from "./plan-cards";
-import { PUBLIC_PLANS, type PlanCode } from "./plans";
+import { PUBLIC_PLANS, type BillingPeriod, type PlanCode } from "./plans";
 import { describe } from "./state";
 
 // The monthly supervision subscription at /projects/:id/subscription, and the only place a client pays the
@@ -33,6 +34,12 @@ import { describe } from "./state";
 // payment gateway's hosted page. The gateway sends them back with ?session_id or ?cancelled=1; the status
 // only turns active when its webhook reaches the backend, so after payment this page keeps reading every few
 // seconds. The final BoQ approval needs an active subscription (409 subscription_required).
+
+const PERIOD_EVERY: Record<BillingPeriod, string> = {
+  monthly: "Every month",
+  biannual: "Every 6 months",
+  annual: "Every year",
+};
 
 export function SubscriptionPage({
   projectId,
@@ -50,6 +57,7 @@ export function SubscriptionPage({
   const refresh = useRefreshAfterSubscription(projectId);
   const plans = usePlans();
   const [chosen, setChosen] = useState<PlanCode>("premium");
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const [confirming, setConfirming] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
@@ -121,7 +129,7 @@ export function SubscriptionPage({
               <dd className="text-right text-ink">{sub.visits_per_month} a month</dd>
             </div>
             <div className="flex justify-between gap-4 p-4">
-              <dt className="text-slate">Every month</dt>
+              <dt className="text-slate">{PERIOD_EVERY[sub.billing_period]}</dt>
               <dd className="ibh-tabular font-semibold text-ink">
                 {formatMoney(sub.amount_minor, sub.currency)}
               </dd>
@@ -137,7 +145,8 @@ export function SubscriptionPage({
 
         {state.canStart && !confirmingPayment ? (
           <>
-            <PlanCards plans={planList} selected={chosen} onSelect={setChosen} />
+            <PeriodToggle value={period} onChange={setPeriod} />
+            <PlanCards plans={planList} period={period} selected={chosen} onSelect={setChosen} />
             {startProblem ? <Alert tone="bad" title={startProblem} /> : null}
             <Button
               size="lg"
@@ -145,12 +154,15 @@ export function SubscriptionPage({
               loading={start.isPending || Boolean(checkoutUrl)}
               disabled={!online}
               onClick={() =>
-                start.mutate(chosen, {
-                  onSuccess: (checkout) => {
-                    setCheckoutUrl(checkout.checkout_url);
-                    window.location.assign(checkout.checkout_url);
+                start.mutate(
+                  { plan: chosen, period },
+                  {
+                    onSuccess: (checkout) => {
+                      setCheckoutUrl(checkout.checkout_url);
+                      window.location.assign(checkout.checkout_url);
+                    },
                   },
-                })
+                )
               }
             >
               Continue to secure payment

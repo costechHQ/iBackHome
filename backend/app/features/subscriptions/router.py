@@ -30,7 +30,7 @@ GatewayDep = Annotated[BillingGateway, Depends(get_billing_gateway)]
 
 @router.get("/subscription/plans", response_model=list[PlanOut])
 async def list_plans() -> Any:
-    """Public: the three plans with price and visits per month, for the pricing page."""
+    """Public: the three plans with monthly price, visits per month and the price of each billing period."""
     return plans.list_plans()
 
 
@@ -44,7 +44,7 @@ async def start_subscription(
     key: IdempotencyKeyDep,
     gateway: GatewayDep,
 ) -> Any:
-    """Client: get a Stripe Checkout link for the monthly supervision fee on the chosen plan (USD).
+    """Client: get a Stripe Checkout link for the supervision fee on the chosen plan and billing period (USD).
 
     Nothing counts until Stripe confirms by webhook. Send an `Idempotency-Key`: a retry with the
     same key returns the same link.
@@ -53,13 +53,21 @@ async def start_subscription(
     if (saved := await replay_or_none(session, key, scope)) is not None:
         return saved
     subscription, session_id, url = await service.create_checkout(
-        session, user, project_id, data.plan, gateway=gateway, idempotency_key=key, request=request
+        session,
+        user,
+        project_id,
+        data.plan,
+        data.billing_period,
+        gateway=gateway,
+        idempotency_key=key,
+        request=request,
     )
     body = SubscriptionCheckoutOut(
         project_id=project_id,
         checkout_session_id=session_id,
         checkout_url=url,
         plan=subscription.plan,  # type: ignore[arg-type]
+        billing_period=subscription.billing_period,  # type: ignore[arg-type]
         visits_per_month=plans.visits_for(subscription.plan),
         currency=subscription.currency,
         amount_minor=subscription.amount_minor,
