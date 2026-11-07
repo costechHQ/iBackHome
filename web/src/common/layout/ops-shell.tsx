@@ -57,12 +57,7 @@ export function OpsSidebar({
   const pathname = usePathname();
   return (
     <aside className="ibh-on-navy flex w-58 flex-none flex-col bg-navy-900 text-navy-200">
-      <Link
-        href="/"
-        aria-label="iBackHome home"
-
-        className="flex items-center gap-2 px-4.5 py-4"
-      >
+      <Link href="/" className="flex items-center gap-2 px-4.5 py-4">
         <Wordmark onDark />
         <span className="type-caption rounded-tag bg-navy-700 px-1.5 text-white">OPS</span>
       </Link>

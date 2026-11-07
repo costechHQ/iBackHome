@@ -19,11 +19,7 @@ export function ContractorTop({ name, showAll = false }: { name: string; showAll
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-white">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 px-4 sm:h-16 sm:flex-nowrap sm:gap-8 sm:px-8">
-        <Link
-          href="/"
-          aria-label="iBackHome home"
-          className="flex h-16 items-center gap-2 rounded-control sm:h-auto"
-        >
+        <Link href="/" className="flex h-16 items-center gap-2 rounded-control sm:h-auto">
           <Wordmark />
           <span className="type-caption hidden rounded-tag bg-mist px-2 py-0.5 font-semibold tracking-normal text-slate sm:inline">
             Contractor
