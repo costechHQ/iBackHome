@@ -6,6 +6,13 @@ iBackHome lets Nigerians abroad build homes in Enugu with confidence: vetted sup
 
 HackathonAfrica 3.0 · Team 4
 
+## Start here
+
+- **Read `main`.** It is the working branch and the one that deploys to staging. Other branches are older working branches from the stacked mobile and backend pull requests.
+- **What is built:** a FastAPI backend (escrow, evidence checks, milestones, subscriptions), a web app, and a Flutter mobile app.
+- **Where to look first:** `Docs/spec.md` (how it works), `Docs/adr/` (why we chose what we chose), `.github/CODEOWNERS` (who owns which folder), `deploy/staging/README.md` (how staging runs on Contabo with Cloudflare R2).
+- **Run it locally:** see the next sections (about 10 minutes with Docker).
+
 ## Repository layout
 
 ```

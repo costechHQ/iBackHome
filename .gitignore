@@ -30,3 +30,12 @@ Gabriel — Backend Daily Prompts.md
 # Private keys: never commit
 ibackhome_ssh
 ibackhome_ssh.pub
+
+# Loose design drafts and media kept locally, not part of the repo
+/LOGO-TEMP.png
+/WEB-LOGO-TEMP.png
+/africaplan_foundation_logo.jpg
+/email sample.jpeg
+/icon-smaple.png
+/login screenshot.jpeg
+/video background .mp4
