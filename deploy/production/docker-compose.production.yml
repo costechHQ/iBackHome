@@ -1,0 +1,127 @@
+# Production stack on one VPS. Owner: Christopher.
+# Same services as staging (docker-compose.staging.yml) minus the dev conveniences: no source mounts, no --reload,
+# nothing published except Caddy on 80/443, real secrets from deploy/production/.env, photos in a separate Cloudflare R2 bucket.
+#
+# On the server, from the repo checkout (see deploy/production/README.md):
+#   docker compose -f deploy/production/docker-compose.production.yml --env-file deploy/production/.env up -d --build
+#
+
+name: ibackhome-production
+
+x-backend: &backend
+  build: ../../backend
+  restart: unless-stopped
+  env_file:
+    - path: .env
+      required: true
+  environment:
+    ENVIRONMENT: production
+    DATABASE_URL: postgresql+psycopg://ibackhome:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/production/.env}@db:5432/ibackhome
+    REDIS_URL: redis://redis:6379/0
+    # uvicorn trusts X-Forwarded-For only from these addresses (Caddy's subnet), so the per-IP OTP limit
+    # sees the real caller, not the proxy.
+    FORWARDED_ALLOW_IPS: 172.31.250.0/24
+  networks: [internal]
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  api:
+    <<: *backend
+    # Migrate, then serve (no --reload; the code is baked into the image).
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=4)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  worker:
+    <<: *backend
+    command: celery -A app.workers.celery_app worker --loglevel=info
+
+  beat:
+    <<: *backend
+    command: celery -A app.workers.celery_app beat --loglevel=info --schedule /tmp/celerybeat-schedule
+
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ibackhome
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ibackhome
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      # TCP, not the socket: see the note in docker-compose.yml (first-boot PostGIS init).
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ibackhome -d ibackhome"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # The Next.js web app (ADR 0004), served by Caddy on WEB_DOMAIN. Its server calls the API on the
+  # internal network; it is inside 172.31.250.0/24, so the API trusts the caller IP it forwards.
+  web:
+    build: ../../web
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:8000
+      IBH_ENVIRONMENT: production
+    networks: [internal]
+    depends_on:
+      api:
+        condition: service_healthy
+
+  # HTTPS in front of the API (API_DOMAIN) and the web app (WEB_DOMAIN).
+  # Caddy gets and renews the Let's Encrypt certificates itself.
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?set API_DOMAIN in deploy/production/.env}
+      WEB_DOMAIN: ${WEB_DOMAIN:?set WEB_DOMAIN in deploy/production/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in deploy/production/.env (for the HTTPS certificate)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      internal:
+        ipv4_address: 172.31.250.10
+    depends_on:
+      - api
+      - web
+
+networks:
+  internal:
+    ipam:
+      config:
+        - subnet: 172.31.250.0/24
+
+volumes:
+  db-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

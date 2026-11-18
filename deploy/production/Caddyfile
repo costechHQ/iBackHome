@@ -1,0 +1,22 @@
+# HTTPS for the production API and web app. Owner: Christopher.
+# Caddy obtains and renews the certificates (all DNS A records must point at this server).
+{
+	email {$ACME_EMAIL}
+}
+
+# The API: mobile app, payment webhooks, /docs.
+{$API_DOMAIN} {
+	encode gzip
+	reverse_proxy api:8000
+}
+
+# The web app (ADR 0004), on the root domain.
+{$WEB_DOMAIN} {
+	encode gzip
+	reverse_proxy web:3000
+}
+
+# www goes to the root domain.
+www.{$WEB_DOMAIN} {
+	redir https://{$WEB_DOMAIN}{uri} permanent
+}
