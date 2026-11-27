@@ -7,6 +7,9 @@ import { SITE } from "../site";
 
 export const MAX_QUESTION = 500;
 
+/** Give up on a slow answer after this long, so the visitor is never left waiting on a dot. */
+export const ANSWER_TIMEOUT_MS = 15_000;
+
 export const SUGGESTIONS = [
   "How does escrow work?",
   "How much does it cost?",
@@ -47,8 +50,21 @@ export function contactLinks(contact = SITE.contact): ContactLink[] {
   return links;
 }
 
+/** True when the request was cut off by our own timeout (the browser reports TimeoutError or AbortError). */
+export function timedOut(error: unknown): boolean {
+  const cause: unknown = error instanceof NetworkError ? error.cause : error;
+  const name = typeof cause === "object" && cause !== null ? (cause as { name?: unknown }).name : undefined;
+  return name === "TimeoutError" || name === "AbortError";
+}
+
+/** The same question typed in a different case or with extra spaces is the same question (answers are cached). */
+export function cacheKey(question: string): string {
+  return question.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 /** What to tell the visitor when the assistant couldn't answer. Never shows a raw backend message. */
 export function describeAssistantError(error: unknown): string {
+  if (timedOut(error)) return "That is taking too long. Please try again, or contact us.";
   if (error instanceof NetworkError) {
     return "You seem to be offline. Check your connection and try again.";
   }
@@ -61,6 +77,12 @@ export function describeAssistantError(error: unknown): string {
     if (error.status === 422) return "I couldn’t read that. Please ask in a sentence or two.";
   }
   return "Something went wrong and I couldn’t answer. Please try again, or contact us.";
+}
+
+/** Worth offering "Try again": a slow or dropped request, not a refusal that would only repeat. */
+export function retryable(error: unknown): boolean {
+  if (timedOut(error) || error instanceof NetworkError) return true;
+  return error instanceof ApiError && error.status >= 500 && error.status !== 503;
 }
 
 /** True when the question is worth sending (the backend needs at least two characters). */

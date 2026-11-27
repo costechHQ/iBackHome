@@ -4,10 +4,13 @@ import { ApiError, NetworkError } from "@/common/api/errors";
 
 import {
   askable,
+  cacheKey,
   contactLinks,
   describeAssistantError,
   MAX_QUESTION,
+  retryable,
   SUGGESTIONS,
+  timedOut,
   whatsappHref,
 } from "./assistant";
 
@@ -68,5 +71,33 @@ describe("describeAssistantError", () => {
   it("never shows the raw backend message", () => {
     expect(describeAssistantError(api(500))).not.toContain("backend text");
     expect(describeAssistantError(new Error("boom"))).not.toContain("boom");
+  });
+});
+
+describe("cacheKey", () => {
+  it("treats case and extra spaces as the same question", () => {
+    expect(cacheKey("  How   MUCH does it cost? ")).toBe("how much does it cost?");
+    expect(cacheKey("who holds my money")).not.toBe(cacheKey("who holds your money"));
+  });
+});
+
+describe("timedOut and retryable", () => {
+  const timeout = new NetworkError(new DOMException("timed out", "TimeoutError"));
+
+  it("recognises our own timeout, however it is wrapped", () => {
+    expect(timedOut(timeout)).toBe(true);
+    expect(timedOut(new DOMException("aborted", "AbortError"))).toBe(true);
+    expect(timedOut(new NetworkError(new TypeError("Failed to fetch")))).toBe(false);
+    expect(describeAssistantError(timeout)).toContain("taking too long");
+  });
+
+  it("offers Try again for a slow or dropped request or a server error, never for a refusal", () => {
+    expect(retryable(timeout)).toBe(true);
+    expect(retryable(new NetworkError(new TypeError("x")))).toBe(true);
+    expect(retryable(new ApiError(500, "server_error", "x"))).toBe(true);
+    expect(retryable(new ApiError(502, "bad_gateway", "x"))).toBe(true);
+    expect(retryable(new ApiError(429, "rate_limited", "x"))).toBe(false);
+    expect(retryable(new ApiError(503, "assistant_unavailable", "x"))).toBe(false);
+    expect(retryable(new ApiError(422, "validation", "x"))).toBe(false);
   });
 });
