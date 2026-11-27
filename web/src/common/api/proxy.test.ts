@@ -220,6 +220,47 @@ describe("API proxy", () => {
     expect(calls[0]?.headers.get("idempotency-key")).toBe("apply-1");
   });
 
+  it("sends the contractor application without any session", async () => {
+    backend = () => json(201, { id: "c1", status: "pending" });
+    const res = await proxy("/api/v1/contractor-applications", {
+      method: "POST",
+      cookies: { ibh_at: expired, ibh_rt: "rt-dead" },
+      headers: { "idempotency-key": "contractor-1" },
+      body: { business_name: "Obi Building Works" },
+    });
+    expect(res.status).toBe(201);
+    expect(calls.map((c) => c.url)).toEqual([`${API}/api/v1/contractor-applications`]);
+    expect(calls[0]?.headers.get("authorization")).toBeNull();
+    expect(calls[0]?.headers.get("idempotency-key")).toBe("contractor-1");
+  });
+
+  it("keeps the session for ops reading the contractor queue (a GET on the same path)", async () => {
+    backend = () => json(200, { items: [], next_cursor: null });
+    const res = await proxy("/api/v1/contractor-applications", { cookies: { ibh_at: fresh } });
+    expect(res.status).toBe(200);
+    expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${fresh}`);
+  });
+
+  it("keeps the session for ops deciding a contractor application", async () => {
+    backend = () => json(200, { status: "approved" });
+    await proxy("/api/v1/contractor-applications/abc/decision", {
+      method: "POST",
+      cookies: { ibh_at: fresh },
+      body: { decision: "approved" },
+    });
+    expect(calls[0]?.headers.get("authorization")).toBe(`Bearer ${fresh}`);
+  });
+
+  it("refuses a cross-origin contractor application post", async () => {
+    const res = await proxy("/api/v1/contractor-applications", {
+      method: "POST",
+      origin: "http://evil.test",
+      body: {},
+    });
+    expect(res.status).toBe(403);
+    expect(calls).toHaveLength(0);
+  });
+
   it("passes the application's rate limit (429 and Retry-After) through", async () => {
     backend = () =>
       json(429, { error: { code: "rate_limited", message: "Slow down" } }, { "retry-after": "120" });

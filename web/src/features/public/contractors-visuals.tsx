@@ -47,10 +47,10 @@ export function ContractorHero() {
           </p>
           <div className="ibh-rise flex flex-wrap gap-3 [--ibh-delay:360ms]">
             <Button asChild size="lg">
-              <Link href="#join">How to join</Link>
+              <Link href="#application">Apply to be listed</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/how-it-works">See the release flow</Link>
+              <Link href="#join">How to join</Link>
             </Button>
           </div>
           <ul className="ibh-rise type-small flex flex-wrap gap-2 text-ink [--ibh-delay:480ms]">

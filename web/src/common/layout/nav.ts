@@ -68,6 +68,7 @@ export const OPS_NAV: readonly OpsSection[] = [
       { label: "Vetting", href: "/ops/vetting", ready: true, queue: "vetting" }, // WEB-OPS-003 (W8a: queue)
       { label: "Flagged evidence", href: "/ops/evidence", ready: true, queue: "flagged_evidence" }, // WEB-OPS-005 (W8a)
       { label: "Disputes", href: "/ops/disputes", ready: true, queue: "disputes" }, // WEB-OPS-006 (W3)
+      { label: "Contractors", href: "/ops/contractors", ready: true }, // ADR 0007: applications and directory
     ],
   },
   {

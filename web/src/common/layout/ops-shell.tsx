@@ -6,6 +6,7 @@ import {
   ChartLine,
   FileText,
   Flag,
+  HardHat,
   House,
   LayoutGrid,
   List,
@@ -33,6 +34,7 @@ export type QueueCounts = { vetting: number; flagged_evidence: number; disputes:
 const ICONS: Record<string, LucideIcon> = {
   Overview: LayoutGrid,
   Vetting: Shield,
+  Contractors: HardHat,
   "Flagged evidence": Flag,
   Disputes: Scale,
   Projects: House,
