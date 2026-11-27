@@ -35,7 +35,7 @@ a third party.
   `service`/module APIs. A price change is picked up with no edit to the answers. A test fails if an entry contains a
   number that is not a placeholder.
 - **Honesty about money.** Entries say the product is in a pilot, payments run in test mode and no real money is held
-  yet, and that a licensed escrow partner is in final talks. No entry may say a partner already pays out.
+  yet, and that we are working with banks to become the licensed escrow partner. No entry may say a partner is already in place or pays out.
 
 **2. An optional free model (tier 2, `ASSISTANT_MODEL_ENABLED=false` by default).**
 
@@ -87,4 +87,4 @@ person" is always visible.
 
 1. The exact wording of each answer entry (draft in `Docs/proposals/assistant-answers.md`) and the pilot/escrow wording.
 2. Whether and when to switch tier 2 on, and the privacy-policy sentence that goes with it.
-3. Whether the public website copy about escrow should also be changed to the pilot wording.
+3. Whether the public website copy about escrow should also be changed to the pilot wording (the escrow partner is being sought among banks).
