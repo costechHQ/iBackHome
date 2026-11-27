@@ -1014,6 +1014,48 @@
         }
       }
     },
+    "/api/v1/assistant/chat": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Chat",
+        "description": "Answer one question from the vetted answers, or hand off to a person.",
+        "operationId": "chat_api_v1_assistant_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantChatIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantChatOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/contractor-applications": {
       "post": {
         "tags": [
@@ -5274,6 +5316,74 @@
           "supervisor_id"
         ],
         "title": "AssignSupervisor"
+      },
+      "AssistantChatIn": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Message",
+            "examples": [
+              "How does escrow work?"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "AssistantChatIn",
+        "description": "One question. `extra=\"forbid\"`: nothing else is accepted, and nothing typed is stored."
+      },
+      "AssistantChatOut": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "related": {
+            "items": {
+              "$ref": "#/components/schemas/AssistantRelatedQuestion"
+            },
+            "type": "array",
+            "title": "Related"
+          },
+          "handoff": {
+            "type": "boolean",
+            "title": "Handoff"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "faq",
+              "none"
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "related",
+          "handoff",
+          "source"
+        ],
+        "title": "AssistantChatOut"
+      },
+      "AssistantRelatedQuestion": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "title": "Question"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "AssistantRelatedQuestion"
       },
       "AuditEntryOut": {
         "properties": {

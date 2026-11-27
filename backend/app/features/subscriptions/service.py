@@ -33,7 +33,14 @@ from app.features.projects.models import Project, ProjectStatus
 from app.features.projects.transitions import ActorRole
 from app.features.subscriptions import messages
 from app.features.subscriptions.models import Subscription, SubscriptionInvoice
-from app.features.subscriptions.plans import DEFAULT_PERIOD, PERIOD_MONTHS, get_plan, period_price
+from app.features.subscriptions.plans import (
+    DEFAULT_PERIOD,
+    PERIOD_MONTHS,
+    Plan,
+    get_plan,
+    period_price,
+)
+from app.features.subscriptions.plans import list_plans as _list_plans
 from app.features.subscriptions.settings import get_subscription_settings
 
 logger = logging.getLogger(__name__)
@@ -54,6 +61,11 @@ _STRIPE_STATUS = {
 
 
 # --- reading --------------------------------------------------------------------------------------
+
+
+def list_plans() -> list[Plan]:
+    """The plans with their current prices, read-only. Other features (the website assistant) call this."""
+    return _list_plans()
 
 
 async def _get(session: AsyncSession, project_id: uuid.UUID, *, lock: bool = False) -> Subscription | None:

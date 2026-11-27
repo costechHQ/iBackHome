@@ -322,6 +322,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assistant/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chat
+         * @description Answer one question from the vetted answers, or hand off to a person.
+         */
+        post: operations["chat_api_v1_assistant_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/contractor-applications": {
         parameters: {
             query?: never;
@@ -1510,6 +1530,36 @@ export interface components {
              * Format: uuid
              */
             supervisor_id: string;
+        };
+        /**
+         * AssistantChatIn
+         * @description One question. `extra="forbid"`: nothing else is accepted, and nothing typed is stored.
+         */
+        AssistantChatIn: {
+            /**
+             * Message
+             * @example How does escrow work?
+             */
+            message: string;
+        };
+        /** AssistantChatOut */
+        AssistantChatOut: {
+            /** Answer */
+            answer: string;
+            /** Related */
+            related: components["schemas"]["AssistantRelatedQuestion"][];
+            /** Handoff */
+            handoff: boolean;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "faq" | "none";
+        };
+        /** AssistantRelatedQuestion */
+        AssistantRelatedQuestion: {
+            /** Question */
+            question: string;
         };
         /** AuditEntryOut */
         AuditEntryOut: {
@@ -4771,6 +4821,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    chat_api_v1_assistant_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistantChatIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssistantChatOut"];
                 };
             };
             /** @description Validation Error */

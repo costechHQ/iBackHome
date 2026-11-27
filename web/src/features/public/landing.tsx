@@ -28,6 +28,7 @@ import {
   SectionHead,
   Steps,
 } from "./blocks";
+import { AssistantWidget } from "./assistant/assistant-widget";
 import { HeroCarousel } from "./hero-carousel";
 import { CitiesSection, HomeBanner, StagesSection } from "./landing-photos";
 
@@ -345,6 +346,7 @@ export function Landing() {
         lead="Start with your site address, and your contractor's phone number if you have one. If you don't, we'll help you find a contractor. We'll handle the rest with you."
         secondary={{ label: "Talk to us", href: "/contact" }}
       />
+      <AssistantWidget />
     </>
   );
 }

@@ -1,6 +1,6 @@
 # ADR 0006: A public chat assistant that answers from vetted text, costs nothing and stores nothing
 
-- **Status:** Accepted (2026-11-27). Tier 2 (a free language model) is optional and off by default.
+- **Status:** Accepted (2026-11-27). Tier 1 (vetted answers) is built; tier 2 (a free language model) is optional, off by default and not built.
 - **Date:** 2026-11-27
 - **Owner:** Christopher (decision)
 - **Spec edits:** the route `POST /assistant/chat` and one line in the AI agents section (both in this PR).

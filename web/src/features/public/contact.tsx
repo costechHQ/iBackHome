@@ -18,6 +18,7 @@ import { Button } from "@/common/ui/button";
 
 import { Section, SectionHead } from "./blocks";
 import { ContactHero } from "./contact-visuals";
+import { AssistantWidget } from "./assistant/assistant-widget";
 import { PHOTOS } from "./photos";
 import { Reveal } from "./reveal";
 import { SITE, type SiteContent } from "./site";
@@ -297,6 +298,7 @@ export function Contact() {
           </Reveal>
         </div>
       </section>
+      <AssistantWidget />
     </>
   );
 }

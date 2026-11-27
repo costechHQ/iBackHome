@@ -261,6 +261,30 @@ describe("API proxy", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("sends the chat box's questions without any session, and keeps the rate limit's Retry-After", async () => {
+    backend = () =>
+      json(429, { error: { code: "rate_limited", message: "slow down" } }, { "retry-after": "300" });
+    const res = await proxy("/api/v1/assistant/chat", {
+      method: "POST",
+      cookies: { ibh_at: expired, ibh_rt: "rt-dead" },
+      body: { message: "how much does it cost" },
+    });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("300");
+    expect(calls.map((c) => c.url)).toEqual([`${API}/api/v1/assistant/chat`]); // no refresh attempt
+    expect(calls[0]?.headers.get("authorization")).toBeNull();
+  });
+
+  it("refuses a cross-origin chat question", async () => {
+    const res = await proxy("/api/v1/assistant/chat", {
+      method: "POST",
+      origin: "http://evil.test",
+      body: { message: "hello" },
+    });
+    expect(res.status).toBe(403);
+    expect(calls).toHaveLength(0);
+  });
+
   it("passes the application's rate limit (429 and Retry-After) through", async () => {
     backend = () =>
       json(429, { error: { code: "rate_limited", message: "Slow down" } }, { "retry-after": "120" });
