@@ -14,6 +14,9 @@ const PRIVATE_PATHS = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    agentUpgrade: "security",
+  },
   // The Docker image runs the standalone server (`node server.js`); the Dockerfile sets NEXT_STANDALONE=1.
   // CI and local runs use `next build` + `next start`, which doesn't support standalone output.
   // A static export is never an option: it can't serve the auth proxy.
