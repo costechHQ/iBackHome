@@ -4,13 +4,17 @@ import secrets
 import uuid
 from typing import Any
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.base.users import service as users
 from app.base.users.models import User
-from app.features.contractors import applications
-from app.features.contractors.models import ContractorApplication
-from app.features.contractors.schemas import ContractorApplicationIn
+from app.features.contractors import applications, service
+from app.features.contractors.models import ContractorApplication, ContractorProfile
+from app.features.contractors.schemas import ContractorApplicationIn, ContractorDecisionIn
+from app.features.projects import service as projects
+from app.features.projects.models import Project
+from app.features.projects.schemas import ProjectCreate
 
 URL = "/api/v1/contractor-applications"
 
@@ -72,3 +76,45 @@ def approval(**changes: Any) -> dict[str, Any]:
     }
     body.update(changes)
     return body
+
+
+# --- Match requests ----------------------------------------------------------------------------------------
+
+MATCH_URL = "/api/v1/match-requests"
+
+
+def brief(**changes: Any) -> dict[str, Any]:
+    body: dict[str, Any] = {
+        "state": "Enugu",
+        "city": "Enugu",
+        "work_type": "buildings",
+        "timeline": "Start within three months",
+        "notes": "A four-bedroom bungalow on a flat plot.",
+    }
+    body.update(changes)
+    return body
+
+
+async def make_project(
+    session: AsyncSession, client: User, *, contractor_phone: str | None = None
+) -> Project:
+    """A draft project for this client, through projects.create_project()."""
+    data = ProjectCreate(
+        title="3-bedroom bungalow",
+        address="5 Zik Avenue, Enugu",
+        currency="NGN",
+        budget_minor=30_000_000_00,
+        contractor_phone=contractor_phone,
+    )
+    return await projects.create_project(session, client, data)
+
+
+async def make_contractor(session: AsyncSession, ops: User, **changes: Any) -> ContractorProfile:
+    """An approved, listed contractor (an application ops approved), returned as the directory profile."""
+    row = await make_application(session, **changes)
+    await service.decide(session, row.id, ContractorDecisionIn(**approval()), ops.id)
+    profile = await session.scalar(
+        select(ContractorProfile).where(ContractorProfile.application_id == row.id)
+    )
+    assert profile is not None
+    return profile

@@ -406,6 +406,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/match-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Match Request
+         * @description The project's latest request and, once shortlisted, the shortlist as client-safe cards.
+         */
+        get: operations["get_match_request_api_v1_projects__project_id__match_request_get"];
+        put?: never;
+        /**
+         * Request Match
+         * @description The project's client asks ops to find them a contractor (a draft project with none yet).
+         */
+        post: operations["request_match_api_v1_projects__project_id__match_request_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match-requests/{request_id}/choose": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Choose
+         * @description Choose one shortlisted contractor: they are set on the project and told.
+         */
+        post: operations["choose_api_v1_match_requests__request_id__choose_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match-requests/{request_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel
+         * @description The client who made the request, or ops, cancels an open or shortlisted request.
+         */
+        post: operations["cancel_api_v1_match_requests__request_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ops/match-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Match Requests
+         * @description The queue: requests with this status (open by default), oldest first.
+         */
+        get: operations["list_match_requests_api_v1_ops_match_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/match-requests/{request_id}/shortlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Shortlist
+         * @description Ops put 1 to 3 approved contractors forward (or replace the list); the client is told.
+         */
+        post: operations["set_shortlist_api_v1_match_requests__request_id__shortlist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/funding/quote": {
         parameters: {
             query?: never;
@@ -1819,6 +1923,34 @@ export interface components {
          */
         ContractorApplicationStatus: "pending" | "approved" | "rejected";
         /**
+         * ContractorCard
+         * @description What a client may see of a shortlisted contractor: never a phone number or an email address.
+         */
+        ContractorCard: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Business Name */
+            business_name: string;
+            /** Summary */
+            summary: string;
+            /** States Served */
+            states_served: string[];
+            /** Specialties */
+            specialties: string[];
+            /** Years In Business */
+            years_in_business: number;
+            /** Projects Completed */
+            projects_completed: number;
+            /**
+             * Vetted By Ibackhome
+             * @default true
+             */
+            vetted_by_ibackhome: boolean;
+        };
+        /**
          * ContractorDecisionIn
          * @description Ops' decision. Approval needs both references ticked (and the registration when a number was given) and
          *     a profile summary ops write themselves; rejection needs a reason.
@@ -2583,6 +2715,153 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** MatchCancelIn */
+        MatchCancelIn: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /** MatchChooseIn */
+        MatchChooseIn: {
+            /**
+             * Contractor Id
+             * Format: uuid
+             */
+            contractor_id: string;
+        };
+        /**
+         * MatchRequestIn
+         * @description The client's brief. The budget and currency come from the project, not from here.
+         */
+        MatchRequestIn: {
+            /**
+             * State
+             * @example Enugu
+             */
+            state: string;
+            /**
+             * City
+             * @example Enugu
+             */
+            city: string;
+            /**
+             * Work Type
+             * @enum {string}
+             */
+            work_type: "buildings" | "roofing" | "finishing" | "civil_works" | "other";
+            /**
+             * Timeline
+             * @example Start within three months
+             */
+            timeline: string;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** MatchRequestOpsItem */
+        MatchRequestOpsItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Title */
+            project_title: string;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /** Status */
+            status: string;
+            /** State */
+            state: string;
+            /** City */
+            city: string;
+            /** Work Type */
+            work_type: string;
+            /** Timeline */
+            timeline: string;
+            /** Notes */
+            notes: string | null;
+            /** Budget Minor */
+            budget_minor: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Shortlist Count */
+            shortlist_count: number;
+        };
+        /** MatchRequestOut */
+        MatchRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Status */
+            status: string;
+            /** State */
+            state: string;
+            /** City */
+            city: string;
+            /** Work Type */
+            work_type: string;
+            /** Timeline */
+            timeline: string;
+            /** Notes */
+            notes: string | null;
+            /** Budget Minor */
+            budget_minor: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Cancel Reason */
+            cancel_reason: string | null;
+            /** Shortlist */
+            shortlist: components["schemas"]["ContractorCard"][];
+            chosen: components["schemas"]["ContractorCard"] | null;
+        };
+        /** MatchRequestPage */
+        MatchRequestPage: {
+            /** Items */
+            items: components["schemas"]["MatchRequestOpsItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * MatchShortlistIn
+         * @description 1 to 3 contractor profile ids, in the order ops want the client to see them.
+         */
+        MatchShortlistIn: {
+            /** Contractor Ids */
+            contractor_ids: string[];
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * MatchStatus
+         * @enum {string}
+         */
+        MatchStatus: "open" | "shortlisted" | "matched" | "cancelled";
         /** MeOut */
         MeOut: {
             /**
@@ -4663,6 +4942,218 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ContractorPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_match_request_api_v1_projects__project_id__match_request_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_match_api_v1_projects__project_id__match_request_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    choose_api_v1_match_requests__request_id__choose_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchChooseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_match_requests__request_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchCancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRequestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_match_requests_api_v1_ops_match_requests_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["MatchStatus"];
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRequestPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_shortlist_api_v1_match_requests__request_id__shortlist_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MatchShortlistIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MatchRequestOut"];
                 };
             };
             /** @description Validation Error */

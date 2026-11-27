@@ -136,3 +136,100 @@ class ContractorApplicationPage(BaseModel):
 class ContractorPage(BaseModel):
     items: list[ContractorOut]
     next_cursor: str | None
+
+
+# --- Match requests (ADR 0007, phase 2) ---------------------------------------------------------------
+
+
+class MatchRequestIn(BaseModel):
+    """The client's brief. The budget and currency come from the project, not from here."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    state: str = Field(min_length=2, max_length=60, examples=["Enugu"])
+    city: str = Field(min_length=2, max_length=80, examples=["Enugu"])
+    work_type: SpecialtyName
+    timeline: str = Field(min_length=2, max_length=200, examples=["Start within three months"])
+    notes: str | None = Field(default=None, max_length=2000)
+
+
+class ContractorCard(BaseModel):
+    """What a client may see of a shortlisted contractor: never a phone number or an email address."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    business_name: str
+    summary: str
+    states_served: list[str]
+    specialties: list[str]
+    years_in_business: int
+    projects_completed: int
+    vetted_by_ibackhome: bool = True
+
+
+class MatchRequestOut(BaseModel):
+    id: uuid.UUID
+    project_id: uuid.UUID
+    status: str
+    state: str
+    city: str
+    work_type: str
+    timeline: str
+    notes: str | None
+    budget_minor: int
+    currency: str
+    created_at: datetime
+    decided_at: datetime | None
+    cancel_reason: str | None
+    shortlist: list[ContractorCard]  # in the order ops chose; empty until shortlisted
+    chosen: ContractorCard | None  # set once the client has chosen
+
+
+class MatchRequestOpsItem(BaseModel):
+    id: uuid.UUID
+    project_id: uuid.UUID
+    project_title: str
+    client_id: uuid.UUID
+    status: str
+    state: str
+    city: str
+    work_type: str
+    timeline: str
+    notes: str | None
+    budget_minor: int
+    currency: str
+    created_at: datetime
+    shortlist_count: int
+
+
+class MatchRequestPage(BaseModel):
+    items: list[MatchRequestOpsItem]
+    next_cursor: str | None
+
+
+class MatchShortlistIn(BaseModel):
+    """1 to 3 contractor profile ids, in the order ops want the client to see them."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contractor_ids: list[uuid.UUID] = Field(min_length=1, max_length=3)
+    note: str | None = Field(default=None, max_length=1000)  # for ops only
+
+    @model_validator(mode="after")
+    def _no_repeats(self) -> Self:
+        if len(set(self.contractor_ids)) != len(self.contractor_ids):
+            raise ValueError("each contractor can be on the shortlist once")
+        return self
+
+
+class MatchChooseIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contractor_id: uuid.UUID  # a contractor profile id from the shortlist
+
+
+class MatchCancelIn(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    reason: str | None = Field(default=None, max_length=500)
