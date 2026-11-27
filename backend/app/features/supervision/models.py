@@ -17,12 +17,15 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
+    Integer,
     Numeric,
     String,
     Text,
     UniqueConstraint,
+    text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.models import TimestampedBase
@@ -107,3 +110,61 @@ class SpotCheck(TimestampedBase):
     scheduled_for: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     findings: Mapped[str | None] = mapped_column(Text)
+
+
+class WebApplicationStatus(enum.StrEnum):
+    PENDING = "pending"
+
+
+class SupervisorWebApplication(TimestampedBase):
+    """An application from the public form on /supervisors (ADR 0005, slice 1). The applicant has no user yet.
+
+    There is no NIN here, on purpose: ops check the registration number first, and only then ask for the NIN
+    (the identity lookup costs money). Rows are kept 12 months after a rejection, then deleted (proposed).
+    """
+
+    __tablename__ = "supervisor_applications"
+    __table_args__ = (
+        CheckConstraint("status IN ('pending')", name="status_valid"),
+        CheckConstraint(
+            "registration_body IN ('COREN', 'NIOB', 'CORBON', 'other')", name="registration_body_valid"
+        ),
+        CheckConstraint("years_experience BETWEEN 0 AND 60", name="years_experience_range"),
+        # One pending application per phone and per email; the service checks first for a clear 409.
+        Index(
+            "uq_supervisor_applications_pending_phone",
+            "phone",
+            unique=True,
+            postgresql_where=text("status = 'pending'"),
+        ),
+        Index(
+            "uq_supervisor_applications_pending_email",
+            "email",
+            unique=True,
+            postgresql_where=text("status = 'pending'"),
+        ),
+        Index("ix_supervisor_applications_requested_ip_created_at", "requested_ip", "created_at"),
+    )
+
+    full_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    phone: Mapped[str] = mapped_column(String(16), nullable=False)  # E.164
+    email: Mapped[str] = mapped_column(String(254), nullable=False)  # lower-case
+    state: Mapped[str] = mapped_column(String(60), nullable=False)
+    city: Mapped[str] = mapped_column(String(80), nullable=False)
+    registration_body: Mapped[str] = mapped_column(String(20), nullable=False)
+    registration_no: Mapped[str] = mapped_column(String(60), nullable=False)
+    years_experience: Mapped[int] = mapped_column(Integer, nullable=False)
+    guarantor_1_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    guarantor_1_phone: Mapped[str] = mapped_column(String(16), nullable=False)
+    guarantor_2_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    guarantor_2_phone: Mapped[str] = mapped_column(String(16), nullable=False)
+    # Declared relatives who are contractors: [{"name": ..., "phone": "+234..."}]. May be empty.
+    relatives: Mapped[list[dict[str, str]]] = mapped_column(JSONB, nullable=False, default=list)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=WebApplicationStatus.PENDING.value, server_default="pending"
+    )
+    consented_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    requested_ip: Mapped[str] = mapped_column(String(45), nullable=False)  # fits IPv6
+    # Set when each email went out, so a retried job never sends one twice.
+    ops_emailed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    receipt_sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

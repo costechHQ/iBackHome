@@ -1182,6 +1182,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/supervisor-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply From Website
+         * @description The form on /supervisors. Public (no login), so it is rate limited per IP and has a honeypot.
+         */
+        post: operations["apply_from_website_api_v1_supervisor_applications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/orders": {
         parameters: {
             query?: never;
@@ -2903,6 +2923,19 @@ export interface components {
             refresh_token: string;
         };
         /**
+         * Relative
+         * @description A relative who works as a contractor (declared, so they are never assigned or spot-checked).
+         */
+        Relative: {
+            /** Name */
+            name: string;
+            /**
+             * Phone
+             * @example 08031234567
+             */
+            phone: string;
+        };
+        /**
          * ReportNoteIn
          * @description The note to the client. An empty or blank note removes it.
          */
@@ -3484,6 +3517,78 @@ export interface components {
          * @enum {string}
          */
         VettingStatus: "pending" | "approved" | "rejected";
+        /**
+         * WebApplicationIn
+         * @description What the website form sends. `extra="forbid"`: a field we never ask for (a NIN, say) is a 422, so a
+         *     NIN sent by mistake is refused instead of stored.
+         */
+        WebApplicationIn: {
+            /** Full Name */
+            full_name: string;
+            /**
+             * Phone
+             * @example 08031234567
+             * @example +447700900123
+             */
+            phone: string;
+            /** Email */
+            email: string;
+            /**
+             * State
+             * @example Enugu
+             */
+            state: string;
+            /**
+             * City
+             * @example Enugu
+             */
+            city: string;
+            /**
+             * Registration Body
+             * @enum {string}
+             */
+            registration_body: "COREN" | "NIOB" | "CORBON" | "other";
+            /**
+             * Registration No
+             * @example R.98765
+             */
+            registration_no: string;
+            /** Years Experience */
+            years_experience: number;
+            /** Guarantor 1 Name */
+            guarantor_1_name: string;
+            /** Guarantor 1 Phone */
+            guarantor_1_phone: string;
+            /** Guarantor 2 Name */
+            guarantor_2_name: string;
+            /** Guarantor 2 Phone */
+            guarantor_2_phone: string;
+            /** Relatives */
+            relatives?: components["schemas"]["Relative"][];
+            /**
+             * Consent
+             * @constant
+             */
+            consent: true;
+            /**
+             * Website
+             * @default
+             */
+            website: string;
+        };
+        /** WebApplicationOut */
+        WebApplicationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "pending";
+        };
         /** WebhookAck */
         WebhookAck: {
             /** Received */
@@ -5579,6 +5684,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SpotCheckOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_from_website_api_v1_supervisor_applications_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WebApplicationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebApplicationOut"];
                 };
             };
             /** @description Validation Error */

@@ -4012,6 +4012,67 @@
         }
       }
     },
+    "/api/v1/supervisor-applications": {
+      "post": {
+        "tags": [
+          "supervision"
+        ],
+        "summary": "Apply From Website",
+        "description": "The form on /supervisors. Public (no login), so it is rate limited per IP and has a honeypot.",
+        "operationId": "apply_from_website_api_v1_supervisor_applications_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebApplicationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebApplicationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/orders": {
       "get": {
         "tags": [
@@ -8018,6 +8079,33 @@
         ],
         "title": "RefreshIn"
       },
+      "Relative": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Name"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Phone",
+            "examples": [
+              "08031234567"
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "phone"
+        ],
+        "title": "Relative",
+        "description": "A relative who works as a contractor (declared, so they are never assigned or spot-checked)."
+      },
       "ReportNoteIn": {
         "properties": {
           "supervisor_note": {
@@ -9331,6 +9419,157 @@
           "rejected"
         ],
         "title": "VettingStatus"
+      },
+      "WebApplicationIn": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Full Name"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Phone",
+            "examples": [
+              "08031234567",
+              "+447700900123"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 5,
+            "title": "Email"
+          },
+          "state": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "State",
+            "examples": [
+              "Enugu"
+            ]
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "City",
+            "examples": [
+              "Enugu"
+            ]
+          },
+          "registration_body": {
+            "type": "string",
+            "enum": [
+              "COREN",
+              "NIOB",
+              "CORBON",
+              "other"
+            ],
+            "title": "Registration Body"
+          },
+          "registration_no": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 3,
+            "title": "Registration No",
+            "examples": [
+              "R.98765"
+            ]
+          },
+          "years_experience": {
+            "type": "integer",
+            "maximum": 60.0,
+            "minimum": 0.0,
+            "title": "Years Experience"
+          },
+          "guarantor_1_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Guarantor 1 Name"
+          },
+          "guarantor_1_phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Guarantor 1 Phone"
+          },
+          "guarantor_2_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Guarantor 2 Name"
+          },
+          "guarantor_2_phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Guarantor 2 Phone"
+          },
+          "relatives": {
+            "items": {
+              "$ref": "#/components/schemas/Relative"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Relatives"
+          },
+          "consent": {
+            "type": "boolean",
+            "const": true,
+            "title": "Consent"
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Website",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "full_name",
+          "phone",
+          "email",
+          "state",
+          "city",
+          "registration_body",
+          "registration_no",
+          "years_experience",
+          "guarantor_1_name",
+          "guarantor_1_phone",
+          "guarantor_2_name",
+          "guarantor_2_phone",
+          "consent"
+        ],
+        "title": "WebApplicationIn",
+        "description": "What the website form sends. `extra=\"forbid\"`: a field we never ask for (a NIN, say) is a 422, so a\nNIN sent by mistake is refused instead of stored."
+      },
+      "WebApplicationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "pending",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "WebApplicationOut"
       },
       "WebhookAck": {
         "properties": {
