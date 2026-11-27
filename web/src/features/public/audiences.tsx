@@ -9,13 +9,13 @@ import { ContractorHero, HomesMarquee } from "./contractors-visuals";
 import { PHOTOS } from "./photos";
 import { Reveal } from "./reveal";
 import { SITE } from "./site";
+import { SupervisorApplyForm } from "./supervisor-apply-form";
 import { SitesMarquee, SupervisorHero } from "./supervisors-visuals";
 
 // WEB-PUBLIC-004 For contractors and WEB-PUBLIC-005 Become a supervisor. Contractors join when a client adds
 // their phone number to a project (no invitation link is sent yet, and no email invite exists), so the steps
-// say to sign in with that number. Supervisors apply in the Android app, which isn't published yet, so the
-// page explains the role and points to the contact channel; rates and timings appear once site.ts has them
-// (PACKAGE-REPORT W-37).
+// say to sign in with that number. Supervisors apply with the form on this page (ADR 0005, slice 1), which
+// the backend emails to ops; rates and timings appear once site.ts has them (PACKAGE-REPORT W-37).
 
 export function ForContractors() {
   const c = SITE.contractors;
@@ -184,7 +184,7 @@ export function BecomeASupervisor() {
     ...(s.payment ? [{ q: "How am I paid?", a: s.payment }] : []),
     {
       q: "What if I’m turned down?",
-      a: "You’ll see the reason in the app and can apply again once it’s fixed.",
+      a: "We’ll email you the reason, and you can apply again once it’s fixed.",
     },
   ];
   return (
@@ -200,7 +200,7 @@ export function BecomeASupervisor() {
             <CheckList
               items={[
                 "Registered engineer (COREN) or builder (NIOB)",
-                "A valid NIN",
+                "A valid NIN (we ask for it later, after your registration is checked)",
                 "Two guarantors we can contact",
                 "An Android phone (Android 8 or later) with a working camera and GPS",
                 "Able to reach building sites near where you live",
@@ -276,27 +276,35 @@ export function BecomeASupervisor() {
           <SectionHead
             id="apply"
             title="How to apply"
-            lead="Applications open in the iBackHome supervisor app, where you'll see your vetting status as each check is completed. The app isn't published yet: get in touch and we'll tell you when it is."
+            lead="Fill in the form below. We check your professional registration first, then your guarantors, and only then ask for your NIN."
           />
         </Reveal>
         <Steps
           animate
           items={[
-            { title: "Sign up in the app", body: "With your phone number and a one-time code." },
             {
-              title: "Send your details",
-              body: "Registration number, NIN, two guarantors and any relatives in construction.",
+              title: "Apply on this page",
+              body: "Your details, registration number, two guarantors and any relatives in construction. No NIN yet.",
             },
             {
-              title: "We check",
-              body: `Our team verifies each item.${s.vettingTime ? ` ${s.vettingTime}` : ""}`,
+              title: "We check your registration",
+              body: `We look up your COREN, NIOB or CORBON number on the body's own register.${s.vettingTime ? ` ${s.vettingTime}` : ""}`,
             },
-            { title: "Get your first site", body: "Once approved, ops assigns you a site near you." },
+            {
+              title: "Guarantors, then identity",
+              body: "We call your two guarantors. Only if they check out do we ask for your NIN and verify your identity.",
+            },
+            {
+              title: "Get the app and your first site",
+              body: "Once approved, we tell you how to install the app, and ops assigns you a site near you.",
+            },
           ]}
         />
-        <Button asChild size="lg" className="self-start">
-          <Link href="/contact">Tell us you&apos;re interested</Link>
-        </Button>
+        <Reveal>
+          <div className="max-w-3xl rounded-card border border-line bg-white p-5 sm:p-8">
+            <SupervisorApplyForm />
+          </div>
+        </Reveal>
       </Section>
       <Section labelledBy="supervisor-faq" className="max-w-3xl">
         <h2 id="supervisor-faq" className="type-h1 text-ink">

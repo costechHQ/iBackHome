@@ -205,6 +205,39 @@ describe("API proxy", () => {
     expect(calls[0]?.headers.get("authorization")).toBeNull();
   });
 
+  it("sends the supervisor application without any session, with its Idempotency-Key", async () => {
+    backend = () => json(201, { id: "a1", status: "pending" });
+    const res = await proxy("/api/v1/supervisor-applications", {
+      method: "POST",
+      cookies: { ibh_at: expired, ibh_rt: "rt-dead" },
+      headers: { "idempotency-key": "apply-1" },
+      body: { full_name: "Ngozi Eze" },
+    });
+    expect(res.status).toBe(201);
+    // No refresh attempt, no bearer token: it is a public form.
+    expect(calls.map((c) => c.url)).toEqual([`${API}/api/v1/supervisor-applications`]);
+    expect(calls[0]?.headers.get("authorization")).toBeNull();
+    expect(calls[0]?.headers.get("idempotency-key")).toBe("apply-1");
+  });
+
+  it("passes the application's rate limit (429 and Retry-After) through", async () => {
+    backend = () =>
+      json(429, { error: { code: "rate_limited", message: "Slow down" } }, { "retry-after": "120" });
+    const res = await proxy("/api/v1/supervisor-applications", { method: "POST", body: {} });
+    expect(res.status).toBe(429);
+    expect(res.headers.get("retry-after")).toBe("120");
+  });
+
+  it("refuses a cross-origin application post", async () => {
+    const res = await proxy("/api/v1/supervisor-applications", {
+      method: "POST",
+      origin: "http://evil.test",
+      body: {},
+    });
+    expect(res.status).toBe(403);
+    expect(calls).toHaveLength(0);
+  });
+
   it("answers 502 with our error shape when the backend is down", async () => {
     backend = () => {
       throw new TypeError("fetch failed");
