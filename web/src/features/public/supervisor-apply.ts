@@ -94,12 +94,12 @@ export const FIELD_IDS: Record<Field, string> = {
 const PHONE_CHARS = /^\+?[0-9()\s-]+$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function phoneProblem(raw: string): string | null {
+function phoneProblem(raw: string, whose: string): string | null {
   const value = raw.trim();
-  if (!value) return "Enter a phone number";
+  if (!value) return `Enter ${whose}`;
   const digits = value.replace(/\D/g, "");
   if (!PHONE_CHARS.test(value) || digits.length < 7 || digits.length > 15) {
-    return "Enter a valid phone number, such as 0803 123 4567";
+    return `Enter a valid ${whose}, such as 0803 123 4567`;
   }
   return null;
 }
@@ -119,7 +119,7 @@ export function validate(v: ApplyValues): Problem[] {
   const name = (value: string, what: string) => (value.trim().length < 2 ? `Enter ${what}` : null);
 
   add("fullName", name(v.fullName, "your full name"));
-  add("phone", phoneProblem(v.phone));
+  add("phone", phoneProblem(v.phone, "your phone number"));
   add("email", EMAIL.test(v.email.trim()) ? null : "Enter a valid email address");
   add("state", v.state ? null : "Choose your state");
   add("city", name(v.city, "your city or town"));
@@ -133,11 +133,11 @@ export function validate(v: ApplyValues): Problem[] {
       : null,
   );
   add("g1Name", name(v.g1Name, "the first guarantor’s name"));
-  add("g1Phone", phoneProblem(v.g1Phone));
+  add("g1Phone", phoneProblem(v.g1Phone, "the first guarantor’s phone number"));
   add("g2Name", name(v.g2Name, "the second guarantor’s name"));
-  add("g2Phone", phoneProblem(v.g2Phone));
+  add("g2Phone", phoneProblem(v.g2Phone, "the second guarantor’s phone number"));
   for (const r of filledRelatives(v.relatives)) {
-    if (r.name.length < 2 || phoneProblem(r.phone)) {
+    if (r.name.length < 2 || phoneProblem(r.phone, "a relative’s phone number")) {
       add("relatives", "Give each relative’s name and phone number, or remove the row");
       break;
     }
