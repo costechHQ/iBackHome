@@ -461,6 +461,7 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/milestones/{id}/approve` | client | Approve; triggers release request |
 | POST | `/milestones/{id}/disputes` | client, contractor | Raise dispute |
 | POST | `/disputes/{id}/resolve` | ops | Resolve (release or rework); needs two ops approvals |
+| POST | `/assistant/chat` | public (no login) | Chat box on the home and Contact pages (ADR 0006). Body `{message}` (max 500 characters; extra fields refused); accepts `Idempotency-Key`. Reply `{answer, related[], handoff, source}` where `source` is `faq` (a vetted answer matched; no model), `model` (optional free model, off by default) or `none` (handoff to a person). Prices and the funding fee in answers are filled from the plan list and the fee setting, never typed or generated. Per-IP limit and a global daily cap (429 `rate_limited`); 503 `assistant_unavailable` when switched off (`ASSISTANT_ENABLED`). Nothing typed is stored |
 | GET | `/subscription/plans` | public | The three plans with monthly price (USD), site visits per month and `periods` (the price of one invoice for monthly, biannual and annual); Premium is marked `recommended` |
 | POST | `/projects/{id}/subscription` | client | Create a Stripe Checkout session for the monthly supervision fee (body: `plan` = `basic`, `standard` or `premium`; optional `billing_period` = `monthly` (default), `biannual` or `annual`; `currency` may only be `USD`) |
 | GET | `/projects/{id}/subscription` | members, ops | Plan, visits per month, status, price, renewal date; 404 until one is started |
@@ -603,6 +604,8 @@ Each agent is an LLM with tool calling, where every tool is an existing iBackHom
 | Quote checker | `POST /quotes/check` | `get_price_index`, `get_boq`; quote text extracted from PDF first | Lines flagged above index by > 15%, with index price and % difference; quantities outside plan range |
 | Image stage check (P1) | After evidence `accepted` | Vision model on the image + claimed milestone | Stage estimate + confidence; a mismatch creates a flag for ops, never a rejection |
 | WhatsApp assistant (P1) | `POST /webhooks/whatsapp` | `get_project`, `list_milestones`, `get_ledger`, `get_latest_report` for the sender's projects only | Short answer + dashboard link; hands off to ops on complaints or disputes |
+
+**Public website assistant (ADR 0006)** is not one of these agents: it has no tools, no service token and no access to users, projects or money. It answers only from vetted, owner-approved text (optionally a free model that sees the same text, off by default), and stores nothing typed. The logged-in WhatsApp assistant above is a separate feature.
 
 **Guardrails (enforced in code, not only in prompts)**
 
