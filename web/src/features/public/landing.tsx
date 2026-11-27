@@ -38,7 +38,7 @@ import { CitiesSection, HomeBanner, StagesSection } from "./landing-photos";
 export const LANDING_FAQ = [
   {
     q: "Is iBackHome a construction company?",
-    a: "No. You keep your own contractor. We verify what they claim on site and control when money moves.",
+    a: "No. You work with a contractor you choose: bring your own, or ask us to find one for you. We verify what they claim on site and control when money moves.",
   },
   {
     q: "Who holds my money?",
@@ -105,7 +105,7 @@ export function Landing() {
               </li>
               <li className="flex items-center gap-2">
                 <ShieldCheck aria-hidden strokeWidth={1.75} className="size-4" />
-                Keep your own contractor
+                Bring your own contractor, or we find one
               </li>
             </ul>
           </div>
@@ -161,7 +161,7 @@ export function Landing() {
           items={[
             {
               title: "Set up",
-              body: "Invite your own contractor, agree a bill of quantities split into milestones, and pin your site on the map.",
+              body: "Invite your own contractor, or ask us to find one. Agree a bill of quantities split into milestones, and pin your site on the map.",
             },
             {
               title: "Verified site visits",
@@ -342,7 +342,7 @@ export function Landing() {
 
       <CtaBand
         title="Build at home with proof, not promises"
-        lead="Start with your site address and your contractor's phone number. We'll handle the rest with you."
+        lead="Start with your site address, and your contractor's phone number if you have one. If you don't, we'll help you find a contractor. We'll handle the rest with you."
         secondary={{ label: "Talk to us", href: "/contact" }}
       />
     </>

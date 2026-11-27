@@ -122,8 +122,8 @@ export function HowItWorks() {
               items={[
                 { title: "Create your project", body: "Your site address and a budget." },
                 {
-                  title: "Invite your contractor",
-                  body: "By their phone number. They sign in with a one-time code.",
+                  title: "Invite or find your contractor",
+                  body: "Invite yours by phone number. Or ask us: our team phones vetted contractors and puts up to three forward for you to choose from.",
                 },
                 {
                   title: "Agree the bill of quantities",

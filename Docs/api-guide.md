@@ -39,7 +39,7 @@ Amounts are integers in minor units with a currency: `{"amount_minor": 800000000
 **The main flows, in order**
 
 1. **Sign in** (above), then `GET /me`.
-2. **Project setup:** client `POST /projects` (optional `contractor_phone` invites the contractor) → client `PUT /projects/{id}/site` (pin + GeoJSON geofence; the pin inside it) → contractor `PUT /projects/{id}/boq` → client, contractor and ops `POST /projects/{id}/boq/approve` (the third approval makes the project `active` and creates the milestones) → ops `POST /projects/{id}/supervisor`.
+2. **Project setup:** client `POST /projects` (optional `contractor_phone` invites the contractor; with none, the client can ask us to find one, see "Contractor matching" below) → client `PUT /projects/{id}/site` (pin + GeoJSON geofence; the pin inside it) → contractor `PUT /projects/{id}/boq` → client, contractor and ops `POST /projects/{id}/boq/approve` (the third approval makes the project `active` and creates the milestones) → ops `POST /projects/{id}/supervisor`.
 3. **Funding:** client `POST /projects/{id}/funding` → open the Stripe Checkout URL → after returning, refresh `GET /projects/{id}/milestones` until the milestone is `funded` (the webhook decides, not the redirect).
 4. **Evidence (Flutter):** `POST /devices` once per install → per capture `POST /evidence/upload-url` → PUT the file to that URL → `POST /evidence` with metadata and signature (see `features/evidence/SIGNING.md`) → the status becomes `accepted`, `rejected` (with a reason) or `flagged`. Gallery: `GET /projects/{id}/evidence`.
 5. **Milestone:** contractor `POST /milestones/{id}/claim` → supervisor `POST /milestones/{id}/verify` → client `POST /milestones/{id}/approve` → `released` when escrow confirms. Or client `POST /milestones/{id}/disputes` → ops `POST /disputes/{id}/resolve` (two different ops users).
@@ -209,3 +209,19 @@ await session.commit()                        # the caller commits
 "Push" means push first, then the usual fallback (push tokens aren't stored yet, so today it is WhatsApp, SMS or email). Amounts come from the milestone (`amount_minor` + `currency`, formatted with integers only, e.g. `NGN 8,000,000.00`). The templates are in `app/features/milestones/messages.py`; their WhatsApp names are `milestone_claimed_client`, `milestone_claimed_supervisor`, `milestone_verified_client`, `milestone_verified_contractor`, `milestone_rejected_contractor`, `milestone_released_client`, `milestone_released_contractor`, `milestone_remind_client` and `milestone_remind_supervisor`.
 
 To see what was sent: the `notifications` table has one row per send (`status` `sent` or `failed`, the `channel` used, and in `error` why earlier channels failed).
+
+## Contractor matching
+
+A client with a **draft project and no contractor** can ask iBackHome to find one (ADR 0007). Our team shortlist up to three vetted contractors; the client chooses one, who is set on the project. A contractor's phone number and email are never sent to a client: they only get a card. No money moves in matching.
+
+| Route | Who | What |
+| --- | --- | --- |
+| `POST /api/v1/contractor-applications` | public (no login) | A contractor applies from the website form. Honeypot field `website`, `Idempotency-Key`, per-IP limit (429), 409 `application_exists`. A NIN is refused (422) |
+| `GET /api/v1/contractor-applications`, `.../{id}`; `POST .../{id}/decision`; `GET /api/v1/contractors` | ops | The vetting queue, one application, approve or reject, and the directory of approved contractors (filters `state`, `specialty`, `listed`) |
+| `POST /api/v1/projects/{id}/match-request` | the project's client | Ask for a contractor: `{state, city, work_type, timeline, notes}` (`work_type`: `buildings`, `roofing`, `finishing`, `civil_works`, `other`). The budget comes from the project. 409 `project_not_draft`, `project_has_contractor`, `match_request_exists` |
+| `GET /api/v1/projects/{id}/match-request` | the project's client, ops | The latest request (404 `match_request_not_found` if none) with `status` (`open`, `shortlisted`, `matched`, `cancelled`), the `shortlist` as cards (`id`, `business_name`, `summary`, `states_served`, `specialties`, `years_in_business`, `projects_completed`) and `chosen` |
+| `POST /api/v1/match-requests/{id}/choose` | the client | `{contractor_id}` (a card `id` from the shortlist). Sets the project's contractor and tells them. 422 `contractor_not_on_shortlist`, 409 `contractor_not_available`, 409 `invalid_transition` |
+| `POST /api/v1/match-requests/{id}/cancel` | the client, ops | `{reason}` (optional) while `open` or `shortlisted` |
+| `GET /api/v1/ops/match-requests`, `POST /api/v1/match-requests/{id}/shortlist` | ops | The queue (`?status=`, default `open`), and set 1 to 3 contractor profile ids (`{contractor_ids, note}`); sending again replaces the list. 422 `contractor_not_available` |
+
+Show the client a "Find me a contractor" action only while `contractor_id` is empty and the project is a `draft`. The web screens are `/projects/:id/contractor` (client) and `/ops/match-requests` (ops).

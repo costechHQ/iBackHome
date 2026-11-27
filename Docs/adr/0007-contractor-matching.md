@@ -1,6 +1,6 @@
 # ADR 0007: Contractor matching: contractors apply, ops vet them, ops shortlist, the client chooses
 
-- **Status:** Accepted (2026-11-27, product owner). Nothing is built yet.
+- **Status:** Accepted (2026-11-27, product owner). Built: phase 1 (applications, vetting, directory; PRs #146 and #147) and phase 2 (match requests; PRs #148 and #149). Phase 3 is the public wording and the assistant answers.
 - **Date:** 2026-11-27
 - **Owner:** Christopher (decision)
 - **Spec edits:** four tables, the routes, and the match-request state machine (in this PR).
