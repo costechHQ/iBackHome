@@ -1391,6 +1391,433 @@
         }
       }
     },
+    "/api/v1/projects/{project_id}/match-request": {
+      "post": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Request Match",
+        "description": "The project's client asks ops to find them a contractor (a draft project with none yet).",
+        "operationId": "request_match_api_v1_projects__project_id__match_request_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchRequestIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Get Match Request",
+        "description": "The project's latest request and, once shortlisted, the shortlist as client-safe cards.",
+        "operationId": "get_match_request_api_v1_projects__project_id__match_request_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Project Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match-requests/{request_id}/choose": {
+      "post": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Choose",
+        "description": "Choose one shortlisted contractor: they are set on the project and told.",
+        "operationId": "choose_api_v1_match_requests__request_id__choose_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchChooseIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match-requests/{request_id}/cancel": {
+      "post": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Cancel",
+        "description": "The client who made the request, or ops, cancels an open or shortlisted request.",
+        "operationId": "cancel_api_v1_match_requests__request_id__cancel_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCancelIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ops/match-requests": {
+      "get": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "List Match Requests",
+        "description": "The queue: requests with this status (open by default), oldest first.",
+        "operationId": "list_match_requests_api_v1_ops_match_requests_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MatchStatus",
+              "default": "open"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/match-requests/{request_id}/shortlist": {
+      "post": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Set Shortlist",
+        "description": "Ops put 1 to 3 approved contractors forward (or replace the list); the client is told.",
+        "operationId": "set_shortlist_api_v1_match_requests__request_id__shortlist_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Request Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchShortlistIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchRequestOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/funding/quote": {
       "get": {
         "tags": [
@@ -5898,6 +6325,62 @@
         ],
         "title": "ContractorApplicationStatus"
       },
+      "ContractorCard": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "business_name": {
+            "type": "string",
+            "title": "Business Name"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "states_served": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "States Served"
+          },
+          "specialties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Specialties"
+          },
+          "years_in_business": {
+            "type": "integer",
+            "title": "Years In Business"
+          },
+          "projects_completed": {
+            "type": "integer",
+            "title": "Projects Completed"
+          },
+          "vetted_by_ibackhome": {
+            "type": "boolean",
+            "title": "Vetted By Ibackhome",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "business_name",
+          "summary",
+          "states_served",
+          "specialties",
+          "years_in_business",
+          "projects_completed"
+        ],
+        "title": "ContractorCard",
+        "description": "What a client may see of a shortlisted contractor: never a phone number or an email address."
+      },
       "ContractorDecisionIn": {
         "properties": {
           "decision": {
@@ -7486,6 +7969,381 @@
           "next_cursor"
         ],
         "title": "LedgerPage"
+      },
+      "MatchCancelIn": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "MatchCancelIn"
+      },
+      "MatchChooseIn": {
+        "properties": {
+          "contractor_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Contractor Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contractor_id"
+        ],
+        "title": "MatchChooseIn"
+      },
+      "MatchRequestIn": {
+        "properties": {
+          "state": {
+            "type": "string",
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "State",
+            "examples": [
+              "Enugu"
+            ]
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "City",
+            "examples": [
+              "Enugu"
+            ]
+          },
+          "work_type": {
+            "type": "string",
+            "enum": [
+              "buildings",
+              "roofing",
+              "finishing",
+              "civil_works",
+              "other"
+            ],
+            "title": "Work Type"
+          },
+          "timeline": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Timeline",
+            "examples": [
+              "Start within three months"
+            ]
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "state",
+          "city",
+          "work_type",
+          "timeline"
+        ],
+        "title": "MatchRequestIn",
+        "description": "The client's brief. The budget and currency come from the project, not from here."
+      },
+      "MatchRequestOpsItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "project_title": {
+            "type": "string",
+            "title": "Project Title"
+          },
+          "client_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Client Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "work_type": {
+            "type": "string",
+            "title": "Work Type"
+          },
+          "timeline": {
+            "type": "string",
+            "title": "Timeline"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "budget_minor": {
+            "type": "integer",
+            "title": "Budget Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "shortlist_count": {
+            "type": "integer",
+            "title": "Shortlist Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "project_title",
+          "client_id",
+          "status",
+          "state",
+          "city",
+          "work_type",
+          "timeline",
+          "notes",
+          "budget_minor",
+          "currency",
+          "created_at",
+          "shortlist_count"
+        ],
+        "title": "MatchRequestOpsItem"
+      },
+      "MatchRequestOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Project Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "state": {
+            "type": "string",
+            "title": "State"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "work_type": {
+            "type": "string",
+            "title": "Work Type"
+          },
+          "timeline": {
+            "type": "string",
+            "title": "Timeline"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "budget_minor": {
+            "type": "integer",
+            "title": "Budget Minor"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "cancel_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cancel Reason"
+          },
+          "shortlist": {
+            "items": {
+              "$ref": "#/components/schemas/ContractorCard"
+            },
+            "type": "array",
+            "title": "Shortlist"
+          },
+          "chosen": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContractorCard"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "status",
+          "state",
+          "city",
+          "work_type",
+          "timeline",
+          "notes",
+          "budget_minor",
+          "currency",
+          "created_at",
+          "decided_at",
+          "cancel_reason",
+          "shortlist",
+          "chosen"
+        ],
+        "title": "MatchRequestOut"
+      },
+      "MatchRequestPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchRequestOpsItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "MatchRequestPage"
+      },
+      "MatchShortlistIn": {
+        "properties": {
+          "contractor_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Contractor Ids"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "contractor_ids"
+        ],
+        "title": "MatchShortlistIn",
+        "description": "1 to 3 contractor profile ids, in the order ops want the client to see them."
+      },
+      "MatchStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "shortlisted",
+          "matched",
+          "cancelled"
+        ],
+        "title": "MatchStatus"
       },
       "MeOut": {
         "properties": {

@@ -373,6 +373,57 @@ async def set_supervisor(
     return project
 
 
+async def set_contractor(
+    session: AsyncSession,
+    project_id: uuid.UUID,
+    contractor_id: uuid.UUID,
+    actor_id: uuid.UUID,
+    *,
+    request: Request | None = None,
+) -> Project:
+    """Attach the project's contractor after it was created (contractor matching, ADR 0007).
+
+    Only a draft project that has no contractor yet; the BoQ needs one, so this is the last moment.
+
+    - 404 project_not_found, 404 user_not_found
+    - 409 project_not_draft: the BoQ has started, so the contractor can't be set here
+    - 409 project_has_contractor
+    - 422 not_a_contractor: the user's role is not contractor
+    - 409 contractor_suspended
+    Setting the contractor already on the project changes nothing and writes no audit entry.
+    """
+    project = await get_project(session, project_id, lock=True)
+    contractor = await users.get_user(session, contractor_id)
+    if contractor is None:
+        raise AppError("user_not_found", "User not found.", 404)
+    if project.contractor_id == contractor_id:
+        return project
+    if project.status != S.DRAFT.value:
+        raise AppError("project_not_draft", "A contractor can only be set while the project is a draft.", 409)
+    if project.contractor_id is not None:
+        raise AppError("project_has_contractor", "This project already has a contractor.", 409)
+    if contractor.role != Role.CONTRACTOR.value:
+        raise AppError("not_a_contractor", "Only a user with the contractor role can be set.", 422)
+    if contractor.status != UserStatus.ACTIVE.value:
+        raise AppError("contractor_suspended", "This contractor's account is suspended.", 409)
+
+    before = audit.snapshot(project)
+    project.contractor_id = contractor_id
+    await session.flush()
+    await session.refresh(project)
+    await audit.record(
+        session,
+        actor_id,
+        "project.contractor_set",
+        "project",
+        project.id,
+        before=before,
+        after=audit.snapshot(project),
+        request=request,
+    )
+    return project
+
+
 # --- Status ---------------------------------------------------------------------------------------
 
 

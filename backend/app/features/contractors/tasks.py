@@ -3,6 +3,8 @@
 - contractors.send_application_emails: queued after an application is saved and committed; emails ops and
   sends the applicant a receipt (applications.send_emails), retrying until both are out.
 - contractors.send_decision_email: queued after ops decide; tells the applicant the outcome.
+- contractors.send_match_request_email / send_match_notice: match requests (ADR 0007, phase 2): ops are
+  emailed the brief; the client and the contractor are told by notify(), once each.
 """
 
 import asyncio
@@ -14,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
-from app.features.contractors import applications
+from app.features.contractors import applications, match_notices
 from app.workers.celery_app import celery_app
 
 RETRY_MINUTES = 10
@@ -56,3 +58,28 @@ def send_decision_email_task(self, application_id: str) -> bool:  # type: ignore
     if asyncio.run(_send_decision_email(uuid.UUID(application_id))):
         return True
     raise self.retry(countdown=RETRY_MINUTES * 60)
+
+
+async def _send_match_request_email(request_id: uuid.UUID) -> bool:
+    async with _session() as session:
+        return await match_notices.send_ops_email(session, request_id)
+
+
+async def _send_match_notice(request_id: uuid.UUID, kind: str) -> None:
+    async with _session() as session:
+        await match_notices.send_notice(session, request_id, kind)
+        await session.commit()
+
+
+@celery_app.task(name="contractors.send_match_request_email", bind=True, max_retries=MAX_RETRIES)  # type: ignore[untyped-decorator]
+def send_match_request_email_task(self, request_id: str) -> bool:  # type: ignore[no-untyped-def]
+    """Email ops the brief of a new match request. Safe to run twice (marked when sent)."""
+    if asyncio.run(_send_match_request_email(uuid.UUID(request_id))):
+        return True
+    raise self.retry(countdown=RETRY_MINUTES * 60)
+
+
+@celery_app.task(name="contractors.send_match_notice")  # type: ignore[untyped-decorator]
+def send_match_notice_task(request_id: str, kind: str) -> None:
+    """Tell the client (shortlist ready) or the contractor (chosen). Safe to run twice: keyed sends."""
+    asyncio.run(_send_match_notice(uuid.UUID(request_id), kind))

@@ -63,3 +63,44 @@ APPLICATION_REJECTED = Template(
         "You are welcome to apply again once this is sorted out."
     ),
 )
+
+# Match requests (ADR 0007, phase 2). The ops email goes to OPS_NOTIFY_EMAIL; the other two go to people with
+# accounts, so they use notify() (WhatsApp, push, SMS, then email) and carry the project id for the app link.
+MATCH_REQUESTED_OPS = Template(
+    name="match_request.requested_ops",
+    title="A client asked for a contractor",
+    text=(
+        "A client asked us to find a contractor.\n\n"
+        "Project: {project_title}\n"
+        "Address: {address}\n"
+        "Budget: {budget}\n"
+        "Looking in: {city}, {state}\n"
+        "Kind of work: {work_type}\n"
+        "Timeline: {timeline}\n"
+        "Notes: {notes}\n"
+        "Client: {client}\n"
+        "Request id: {request_id}\n\n"
+        "What to do:\n"
+        "1. Open Contractors in the ops console and filter the directory by that state and kind of work.\n"
+        "2. Phone each contractor you would put forward and check they are free and interested.\n"
+        "3. Set a shortlist of 1 to 3 on the request. The client is told and chooses."
+    ),
+)
+
+MATCH_SHORTLIST_READY = Template(
+    name="match_request.shortlist_ready",
+    title="Your shortlist is ready",
+    text=(
+        "We have chosen {count} contractor(s) for {project}. Open iBackHome to read about them and "
+        "choose the one you want."
+    ),
+)
+
+MATCH_CONTRACTOR_CHOSEN = Template(
+    name="match_request.contractor_chosen",
+    title="A client chose you",
+    text=(
+        "A client chose you for a project: {project}. Sign in to iBackHome to see it and price the "
+        "work in a bill of quantities."
+    ),
+)

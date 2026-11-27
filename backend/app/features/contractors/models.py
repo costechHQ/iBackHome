@@ -13,7 +13,19 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, text
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -123,3 +135,80 @@ class ContractorProfile(TimestampedBase):
     vetted_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     vetted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     listed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+
+
+class MatchStatus(enum.StrEnum):
+    OPEN = "open"
+    SHORTLISTED = "shortlisted"
+    MATCHED = "matched"
+    CANCELLED = "cancelled"
+
+
+ACTIVE_MATCH_STATUSES = (MatchStatus.OPEN.value, MatchStatus.SHORTLISTED.value)
+
+
+class MatchRequest(TimestampedBase):
+    """A client asking ops to find them a contractor for a draft project (ADR 0007, phase 2).
+
+    The budget and currency are copied from the project when the request is made. One active (open or
+    shortlisted) request per project; the partial unique index backs the service's own check.
+    """
+
+    __tablename__ = "match_requests"
+    __table_args__ = (
+        CheckConstraint("status IN ('open', 'shortlisted', 'matched', 'cancelled')", name="status_valid"),
+        CheckConstraint(
+            "work_type IN ('buildings', 'roofing', 'finishing', 'civil_works', 'other')",
+            name="work_type_valid",
+        ),
+        CheckConstraint("budget_minor > 0", name="budget_positive"),
+        Index(
+            "uq_match_requests_one_active_per_project",
+            "project_id",
+            unique=True,
+            postgresql_where=text("status IN ('open', 'shortlisted')"),
+        ),
+        Index("ix_match_requests_status_created_at", "status", "created_at"),
+    )
+
+    project_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("projects.id"), nullable=False, index=True
+    )
+    client_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    state: Mapped[str] = mapped_column(String(60), nullable=False)
+    city: Mapped[str] = mapped_column(String(80), nullable=False)
+    work_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    timeline: Mapped[str] = mapped_column(String(200), nullable=False)
+    notes: Mapped[str | None] = mapped_column(Text)
+    budget_minor: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=MatchStatus.OPEN.value, server_default="open"
+    )
+    # Counts how many times ops set a shortlist, so each one is told to the client once.
+    shortlist_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    chosen_contractor_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancel_reason: Mapped[str | None] = mapped_column(Text)
+    ops_emailed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class MatchShortlist(TimestampedBase):
+    """One contractor ops put forward for a request (1 to 3 per request)."""
+
+    __tablename__ = "match_shortlist"
+    __table_args__ = (
+        CheckConstraint("position BETWEEN 1 AND 3", name="position_range"),
+        UniqueConstraint("request_id", "contractor_id", name="uq_match_shortlist_request_contractor"),
+        UniqueConstraint("request_id", "position", name="uq_match_shortlist_request_position"),
+    )
+
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("match_requests.id"), nullable=False, index=True
+    )
+    contractor_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("contractor_profiles.id"), nullable=False
+    )
+    position: Mapped[int] = mapped_column(Integer, nullable=False)
+    added_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    note: Mapped[str | None] = mapped_column(Text)  # for ops only: never shown to the client
