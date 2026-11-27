@@ -57,10 +57,10 @@ export function SupervisorHero({ ratePerVisit }: { ratePerVisit?: string }) {
           </dl>
           <div className="ibh-rise flex flex-wrap gap-3 [--ibh-delay:480ms]">
             <Button asChild size="lg">
-              <Link href="#apply">How to apply</Link>
+              <Link href="#apply">Apply now</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link href="/contact">Tell us you&apos;re interested</Link>
+              <Link href="/contact">Ask us a question</Link>
             </Button>
           </div>
         </div>
