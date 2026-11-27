@@ -5,6 +5,7 @@ the rules live in service.py, rotation.py and projects.set_supervisor(). Write e
 optional Idempotency-Key header.
 """
 
+import hashlib
 import uuid
 from typing import Annotated
 
@@ -16,7 +17,7 @@ from app.base.users.models import User
 from app.core.db import SessionDep
 from app.core.idempotency import IdempotencyKeyDep, remember, replay_or_none
 from app.features.projects import service as projects
-from app.features.supervision import rotation, service
+from app.features.supervision import applications, rotation, service
 from app.features.supervision.models import SpotCheck, SupervisorProfile, VettingStatus
 from app.features.supervision.schemas import (
     AssignSupervisor,
@@ -29,6 +30,8 @@ from app.features.supervision.schemas import (
     SupervisorListItem,
     SupervisorProfileOut,
     VettingDecision,
+    WebApplicationIn,
+    WebApplicationOut,
 )
 
 router = APIRouter(tags=["supervision"])
@@ -182,3 +185,23 @@ async def complete_spot_check(
     await remember(session, key, scope, 200, out)
     await session.commit()
     return JSONResponse(status_code=200, content=out)
+
+
+@router.post("/supervisor-applications", status_code=201, response_model=WebApplicationOut)
+async def apply_from_website(
+    payload: WebApplicationIn, request: Request, session: SessionDep, key: IdempotencyKeyDep
+) -> JSONResponse | WebApplicationOut:
+    """The form on /supervisors. Public (no login), so it is rate limited per IP and has a honeypot."""
+    if payload.website:  # a bot filled the hidden field: look like success, store nothing
+        return WebApplicationOut(id=uuid.uuid4(), status="pending")
+    # The scope holds a hash of the phone, never the number itself.
+    who = hashlib.sha256(payload.phone.strip().lower().encode()).hexdigest()[:32]
+    scope = f"POST /supervisor-applications {who}"
+    if (saved := await replay_or_none(session, key, scope)) is not None:
+        return saved
+    ip = request.client.host if request.client else "unknown"
+    row = await applications.submit(session, payload, ip)
+    body = WebApplicationOut(id=row.id, status="pending").model_dump(mode="json")
+    await remember(session, key, scope, 201, body)
+    await session.commit()
+    return JSONResponse(status_code=201, content=body)

@@ -144,3 +144,44 @@ class SpotCheckOut(BaseModel):
     scheduled_for: datetime
     completed_at: datetime | None
     findings: str | None
+
+
+# --- The public application form (ADR 0005, slice 1) ----------------------------------------------------
+
+
+class Relative(BaseModel):
+    """A relative who works as a contractor (declared, so they are never assigned or spot-checked)."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=2, max_length=200)
+    phone: str = Field(min_length=7, max_length=20, examples=["08031234567"])
+
+
+class WebApplicationIn(BaseModel):
+    """What the website form sends. `extra="forbid"`: a field we never ask for (a NIN, say) is a 422, so a
+    NIN sent by mistake is refused instead of stored."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    full_name: str = Field(min_length=2, max_length=200)
+    phone: str = Field(min_length=7, max_length=20, examples=["08031234567", "+447700900123"])
+    email: str = Field(min_length=5, max_length=254)
+    state: str = Field(min_length=2, max_length=60, examples=["Enugu"])
+    city: str = Field(min_length=2, max_length=80, examples=["Enugu"])
+    registration_body: Literal["COREN", "NIOB", "CORBON", "other"]
+    registration_no: str = Field(min_length=3, max_length=60, examples=["R.98765"])
+    years_experience: int = Field(ge=0, le=60)
+    guarantor_1_name: str = Field(min_length=2, max_length=200)
+    guarantor_1_phone: str = Field(min_length=7, max_length=20)
+    guarantor_2_name: str = Field(min_length=2, max_length=200)
+    guarantor_2_phone: str = Field(min_length=7, max_length=20)
+    relatives: list[Relative] = Field(default_factory=list, max_length=10)
+    consent: Literal[True]  # the applicant agrees to us contacting them and their guarantors
+    # A field real people never see. Bots fill it in; we answer 201 and store nothing.
+    website: str = Field(default="", max_length=200)
+
+
+class WebApplicationOut(BaseModel):
+    id: uuid.UUID
+    status: Literal["pending"]
