@@ -322,6 +322,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contractor-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Applications
+         * @description The queue: applications with this status (pending by default), oldest first.
+         */
+        get: operations["list_applications_api_v1_contractor_applications_get"];
+        put?: never;
+        /**
+         * Apply From Website
+         * @description The form on /contractors. Public (no login), so it is rate limited per IP and has a honeypot.
+         */
+        post: operations["apply_from_website_api_v1_contractor_applications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contractor-applications/{application_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Application
+         * @description One application in full, to check before deciding.
+         */
+        get: operations["get_application_api_v1_contractor_applications__application_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contractor-applications/{application_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decide
+         * @description Approve (the required checks ticked, with a profile summary) or reject (with a reason).
+         */
+        post: operations["decide_api_v1_contractor_applications__application_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contractors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Contractors
+         * @description The directory of approved contractors; filter by state, specialty and whether they are listed.
+         */
+        get: operations["list_contractors_api_v1_contractors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{project_id}/funding/quote": {
         parameters: {
             query?: never;
@@ -1557,6 +1641,261 @@ export interface components {
             consented_at: string | null;
             /** Consent Required */
             consent_required: boolean;
+        };
+        /** ContractorApplicationCreated */
+        ContractorApplicationCreated: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "pending";
+        };
+        /**
+         * ContractorApplicationIn
+         * @description What the website form sends. `extra="forbid"`: a field we never ask for (a NIN, say) is a 422, so one
+         *     sent by mistake is refused instead of stored.
+         */
+        ContractorApplicationIn: {
+            /** Business Name */
+            business_name: string;
+            /** Contact Name */
+            contact_name: string;
+            /**
+             * Phone
+             * @example 08031234567
+             * @example +447700900123
+             */
+            phone: string;
+            /** Email */
+            email: string;
+            /**
+             * States Served
+             * @example [
+             *       "Enugu",
+             *       "Anambra"
+             *     ]
+             */
+            states_served: string[];
+            /** Specialties */
+            specialties: ("buildings" | "roofing" | "finishing" | "civil_works" | "other")[];
+            /** Years In Business */
+            years_in_business: number;
+            /** Projects Completed */
+            projects_completed: number;
+            /**
+             * Cac Rc Number
+             * @example RC1234567
+             */
+            cac_rc_number?: string | null;
+            /** Corbon Number */
+            corbon_number?: string | null;
+            /** Reference 1 Name */
+            reference_1_name: string;
+            /** Reference 1 Phone */
+            reference_1_phone: string;
+            /** Reference 2 Name */
+            reference_2_name: string;
+            /** Reference 2 Phone */
+            reference_2_phone: string;
+            /**
+             * Consent
+             * @constant
+             */
+            consent: true;
+            /**
+             * Website
+             * @default
+             */
+            website: string;
+        };
+        /** ContractorApplicationListItem */
+        ContractorApplicationListItem: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Business Name */
+            business_name: string;
+            /** Contact Name */
+            contact_name: string;
+            /** States Served */
+            states_served: string[];
+            /** Specialties */
+            specialties: string[];
+            /** Status */
+            status: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * ContractorApplicationOut
+         * @description One application in full, for ops to check before deciding.
+         */
+        ContractorApplicationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Business Name */
+            business_name: string;
+            /** Contact Name */
+            contact_name: string;
+            /** States Served */
+            states_served: string[];
+            /** Specialties */
+            specialties: string[];
+            /** Status */
+            status: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Phone */
+            phone: string;
+            /** Email */
+            email: string;
+            /** Years In Business */
+            years_in_business: number;
+            /** Projects Completed */
+            projects_completed: number;
+            /** Cac Rc Number */
+            cac_rc_number: string | null;
+            /** Corbon Number */
+            corbon_number: string | null;
+            /** Reference 1 Name */
+            reference_1_name: string;
+            /** Reference 1 Phone */
+            reference_1_phone: string;
+            /** Reference 2 Name */
+            reference_2_name: string;
+            /** Reference 2 Phone */
+            reference_2_phone: string;
+            /** Registration Verified */
+            registration_verified: boolean;
+            /** Reference 1 Verified */
+            reference_1_verified: boolean;
+            /** Reference 2 Verified */
+            reference_2_verified: boolean;
+            /** Ops Notes */
+            ops_notes: string | null;
+            /** Rejection Reason */
+            rejection_reason: string | null;
+            /** Decided By */
+            decided_by: string | null;
+            /** Decided At */
+            decided_at: string | null;
+            /**
+             * Consented At
+             * Format: date-time
+             */
+            consented_at: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ContractorApplicationPage */
+        ContractorApplicationPage: {
+            /** Items */
+            items: components["schemas"]["ContractorApplicationListItem"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /**
+         * ContractorApplicationStatus
+         * @enum {string}
+         */
+        ContractorApplicationStatus: "pending" | "approved" | "rejected";
+        /**
+         * ContractorDecisionIn
+         * @description Ops' decision. Approval needs both references ticked (and the registration when a number was given) and
+         *     a profile summary ops write themselves; rejection needs a reason.
+         */
+        ContractorDecisionIn: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approved" | "rejected";
+            /**
+             * Registration Verified
+             * @default false
+             */
+            registration_verified: boolean;
+            /**
+             * Reference 1 Verified
+             * @default false
+             */
+            reference_1_verified: boolean;
+            /**
+             * Reference 2 Verified
+             * @default false
+             */
+            reference_2_verified: boolean;
+            /** Notes */
+            notes?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
+         * ContractorOut
+         * @description A directory entry (ops only in phase 1; phase 2 builds the client-safe card from it).
+         */
+        ContractorOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+            /** Business Name */
+            business_name: string;
+            /** Contact Name */
+            contact_name: string;
+            /** Summary */
+            summary: string;
+            /** States Served */
+            states_served: string[];
+            /** Specialties */
+            specialties: string[];
+            /** Years In Business */
+            years_in_business: number;
+            /** Projects Completed */
+            projects_completed: number;
+            /** Vetting Status */
+            vetting_status: string;
+            /** Listed */
+            listed: boolean;
+            /**
+             * Vetted At
+             * Format: date-time
+             */
+            vetted_at: string;
+        };
+        /** ContractorPage */
+        ContractorPage: {
+            /** Items */
+            items: components["schemas"]["ContractorOut"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /**
          * CurrentPrice
@@ -4153,6 +4492,177 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConsentOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_applications_api_v1_contractor_applications_get: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ContractorApplicationStatus"];
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractorApplicationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_from_website_api_v1_contractor_applications_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractorApplicationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractorApplicationCreated"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_application_api_v1_contractor_applications__application_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractorApplicationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_api_v1_contractor_applications__application_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+            };
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContractorDecisionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractorApplicationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_contractors_api_v1_contractors_get: {
+        parameters: {
+            query?: {
+                state?: string | null;
+                specialty?: string | null;
+                listed?: boolean | null;
+                cursor?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContractorPage"];
                 };
             };
             /** @description Validation Error */

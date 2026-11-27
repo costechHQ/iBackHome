@@ -8,6 +8,7 @@
 /backend/app/workers/                 @costechHQ
 /backend/app/base/users/              @costechHQ
 /backend/app/features/projects/       @costechHQ
+/backend/app/features/contractors/    @costechHQ
 /backend/tests/                       @costechHQ
 /backend/alembic/env.py               @costechHQ
 /docker-compose.yml                   @costechHQ
