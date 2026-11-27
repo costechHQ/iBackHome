@@ -18,11 +18,23 @@ A: iBackHome helps Nigerians abroad build at home. A verified supervisor visits 
 
 **construction-company**
 Q: Are you a construction company? Do you build for me? Can you find me a contractor?
-A: No. You keep your own contractor, and you invite them by phone number. We verify what they claim on site and control when money moves. *(Contractor matching is the next feature to plan and build, decided 2026-11-27. This entry does not promise it and will be updated when it ships.)*
+A: No. You work with a contractor you choose: bring your own and invite them by phone number, or ask us to find one for you (see the next entry). We verify what they claim on site and control when money moves.
+
+**find-a-contractor** (new: contractor matching is built, ADR 0007)
+Q: Can you find me a contractor? I don't have a contractor. How do you match contractors?
+A: Yes. Create your project and choose "I don't have a contractor yet", then tell us where you are building and what kind of work you need. Our team phones vetted contractors to check they are free and interested, and puts up to three forward. You read about them and choose one, and they are added to your project.
+
+**contractor-vetting** (new)
+Q: How do you choose contractors? Are the contractors checked?
+A: Contractors apply to us. We check their registration where they have one, call two references, and only then approve them. We only put forward approved contractors, and we phone each one first to check they are free. You never get a contractor's phone number from us until you have chosen them.
+
+**match-cost** (new, **DECIDE**)
+Q: Does it cost anything to be matched with a contractor?
+A: Finding a contractor through iBackHome does not cost anything extra. *(Needs your OK: matching is free in the design, and the "Find a contractor" page already says "It costs nothing". If you want this to be a handoff instead, change it to {handoff_contact}.)*
 
 **how-it-works**
 Q: How does it work step by step? How do I start?
-A: 1) Create your project with your site address and budget. 2) Invite your contractor by phone number. 3) Your contractor prices the work in milestones (a bill of quantities) and you approve it. 4) Pin your site on the map. 5) Fund the first milestone. A supervisor then captures evidence, verifies the work, and you approve before money is released.
+A: 1) Create your project with your site address and budget. 2) Invite your contractor by phone number, or ask us to find one. 3) Your contractor prices the work in milestones (a bill of quantities) and you approve it. 4) Pin your site on the map. 5) Fund the first milestone. A supervisor then captures evidence, verifies the work, and you approve before money is released.
 
 **where-we-work**
 Q: Where do you work? Which states or cities?
@@ -125,7 +137,11 @@ A: We will email you the reason, and you can apply again once it is fixed.
 
 **for-contractors**
 Q: I am a contractor. How do I join? How do I get paid?
-A: Contractors join when a client adds their phone number to a project. You then sign in with that number and a one-time code. Payment is in naira through the escrow partner after the supervisor verifies a milestone and the client approves it.
+A: Contractors join when a client adds their phone number to a project, or chooses them from a shortlist we put forward. You then sign in with that number and a one-time code. Payment is in naira through the escrow partner after the supervisor verifies a milestone and the client approves it.
+
+**contractor-apply** (new)
+Q: I am a contractor. How do I get clients? How do I get listed?
+A: Apply with the form on our Contractors page. We check your registration, if you have one, and call two references. If we approve you, we may put your business forward when a client asks us to find a contractor, and we phone you first to check you are free.
 
 **sign-in**
 Q: How do I sign in? I did not get a code.
@@ -156,10 +172,11 @@ A: That is outside what I can help with. I can answer questions about how iBackH
 ## Decisions (2026-11-27)
 
 1. **Escrow/pilot wording**: decided. Pilot wording stays, with "we are working with banks to become our licensed escrow partner". The public pages are a separate decision.
-3. **Contractor matching**: decided. It is the next feature to plan and build; until it ships the assistant does not promise it.
+3. **Contractor matching**: decided, and built (ADR 0007, phases 1 and 2). The answers above (`find-a-contractor`, `contractor-vetting`, `contractor-apply`) describe it. They go live only when the matching release is deployed; the assistant itself is not built yet.
 4. **Handoff-only topics** (contractor fee, cancellation and billing date, supervisor pay): decided. They go to the Contact page by call, text, WhatsApp or email.
 
 ## Still open before PR 2
 
+6. **`match-cost`**: confirm that matching is free (see the entry), or make it a handoff.
 2. **Currency** wording (`currency`): confirm (pricing page says USD; how-it-works says GBP, USD or EUR).
 5. Anything missing or wrong, and anything you want the assistant to refuse.

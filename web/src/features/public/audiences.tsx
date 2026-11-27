@@ -106,7 +106,7 @@ export function ForContractors() {
             {
               tag: "Phone",
               title: "Sign in",
-              body: "Your client adds your phone number to their project. Sign in with that number and a one-time code.",
+              body: "Your client adds your phone number to their project, or chooses you from a shortlist we put forward. Sign in with that number and a one-time code.",
             },
             {
               tag: "Web",
@@ -335,7 +335,7 @@ export function BecomeASupervisor() {
       </Section>
       <CtaBand
         title="Building from abroad?"
-        lead="Start with your site address and your contractor's phone number."
+        lead="Start with your site address, and your contractor's phone number if you have one. If not, we'll help you find one."
       />
     </>
   );
