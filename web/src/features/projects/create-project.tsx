@@ -55,6 +55,7 @@ export function CreateProject() {
     state: useId(),
     budget: useId(),
     phone: useId(),
+    findOne: useId(),
   };
   const [title, setTitle] = useState("");
   const [street, setStreet] = useState("");
@@ -63,6 +64,7 @@ export function CreateProject() {
   const [budget, setBudget] = useState("");
   const [iso, setIso] = useState("NG");
   const [phone, setPhone] = useState("");
+  const [findOne, setFindOne] = useState(false); // no contractor yet: we find one (ADR 0007)
   const [problems, setProblems] = useState<Problems>({});
   const create = useCreateProject();
 
@@ -74,7 +76,9 @@ export function CreateProject() {
     if (!state) next.state = "Choose the state.";
     const kobo = nairaToKobo(budget);
     if (kobo === null) next.budget = "Enter the budget in naira, for example 25,000,000.";
-    if (!phone.trim()) next.phone = "Enter your contractor's phone number.";
+    if (findOne) {
+      // No phone needed: our team finds the contractor after the project is created.
+    } else if (!phone.trim()) next.phone = "Enter your contractor's phone number.";
     else if (iso === "NG" && !phone.trim().startsWith("+")) {
       const length = nigerianLengthProblem(phone);
       if (length) next.phone = length;
@@ -87,9 +91,12 @@ export function CreateProject() {
         address: siteAddress(street, town, state),
         currency: "NGN",
         budget_minor: kobo,
-        contractor_phone: phoneIdentifier(countryByIso(iso)?.dial ?? "234", phone),
+        ...(findOne ? {} : { contractor_phone: phoneIdentifier(countryByIso(iso)?.dial ?? "234", phone) }),
       },
-      { onSuccess: (project) => router.push(`/projects/${project.id}/setup`) },
+      {
+        onSuccess: (project) =>
+          router.push(findOne ? `/projects/${project.id}/contractor` : `/projects/${project.id}/setup`),
+      },
     );
   };
 
@@ -228,34 +235,54 @@ export function CreateProject() {
                 "For your reference. Your contractor prices the work in naira, and the BoQ can be above it — we'll show both. You pay each milestone in your own currency."}
             </p>
           </div>
-          <div className="flex flex-col gap-1.5 border-t border-line pt-5">
-            <label
-              id={`${ids.phone}-label`}
-              htmlFor={ids.phone}
-              className="type-small font-semibold text-ink"
-            >
-              Contractor&apos;s phone
-            </label>
-            <div className="flex gap-2">
-              <CountryPicker value={iso} onChange={setIso} labelId={`${ids.phone}-label`} />
+          <div className="flex flex-col gap-4 border-t border-line pt-5">
+            <label htmlFor={ids.findOne} className="flex items-start gap-3 text-ink">
               <input
-                id={ids.phone}
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                aria-invalid={problems.phone ? true : undefined}
-                aria-describedby={described("phone", ids.phone)}
-                className={cn(field, problems.phone ? "border-bad-fg" : "border-line-strong")}
+                id={ids.findOne}
+                type="checkbox"
+                checked={findOne}
+                onChange={(e) => setFindOne(e.target.checked)}
+                className="mt-1 size-5 flex-none"
               />
-            </div>
-            {error("phone", ids.phone)}
+              <span>
+                I don&apos;t have a contractor yet.{" "}
+                <span className="text-slate">
+                  We&apos;ll help you find one: our team phones vetted contractors and you choose from a
+                  shortlist.
+                </span>
+              </span>
+            </label>
+            {!findOne ? (
+              <div className="flex flex-col gap-1.5">
+                <label
+                  id={`${ids.phone}-label`}
+                  htmlFor={ids.phone}
+                  className="type-small font-semibold text-ink"
+                >
+                  Contractor&apos;s phone
+                </label>
+                <div className="flex gap-2">
+                  <CountryPicker value={iso} onChange={setIso} labelId={`${ids.phone}-label`} />
+                  <input
+                    id={ids.phone}
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    aria-invalid={problems.phone ? true : undefined}
+                    aria-describedby={described("phone", ids.phone)}
+                    className={cn(field, problems.phone ? "border-bad-fg" : "border-line-strong")}
+                  />
+                </div>
+                {error("phone", ids.phone)}
+              </div>
+            ) : null}
           </div>
           <div className="flex flex-wrap justify-end gap-3">
             <Button asChild variant="outline" size="lg">
               <Link href="/projects">Cancel</Link>
             </Button>
             <Button type="submit" size="lg" loading={create.isPending}>
-              Create and invite
+              {findOne ? "Create and find a contractor" : "Create and invite"}
             </Button>
           </div>
         </form>

@@ -20,8 +20,8 @@ export const contractorKeys = {
   all: ["ops", "contractors"] as const,
   applications: (status: ApplicationStatus) => ["ops", "contractors", "applications", status] as const,
   application: (id: string) => ["ops", "contractors", "application", id] as const,
-  directory: (state: string, specialty: string) =>
-    ["ops", "contractors", "directory", state, specialty] as const,
+  directory: (state: string, specialty: string, listed: boolean | null) =>
+    ["ops", "contractors", "directory", state, specialty, listed] as const,
 };
 
 const PAGE = 100; // the first 100; a pilot queue is far smaller
@@ -46,13 +46,20 @@ export function useContractorApplication(id: string) {
   });
 }
 
-export function useContractorDirectory(state: string, specialty: string) {
+export function useContractorDirectory(state: string, specialty: string, listed: boolean | null = null) {
   return useQuery({
-    queryKey: contractorKeys.directory(state, specialty),
+    queryKey: contractorKeys.directory(state, specialty, listed),
     queryFn: () =>
       call(
         api().GET("/api/v1/contractors", {
-          params: { query: { state: state || undefined, specialty: specialty || undefined, limit: PAGE } },
+          params: {
+            query: {
+              state: state || undefined,
+              specialty: specialty || undefined,
+              listed: listed ?? undefined,
+              limit: PAGE,
+            },
+          },
         }),
       ),
   });

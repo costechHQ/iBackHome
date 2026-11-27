@@ -3,7 +3,7 @@
 import { Check, Clock } from "lucide-react";
 import Link from "next/link";
 
-import { useMilestones, useProject, type Milestone } from "@/common/api/queries";
+import { useMatchRequest, useMilestones, useProject, type Milestone } from "@/common/api/queries";
 import { useViewerTimeZone } from "@/common/layout/online";
 import { ServerErrorContent } from "@/common/layout/system-pages";
 import { fromGeoJson } from "@/common/map/geo";
@@ -29,6 +29,9 @@ export function SetupTracker({ projectId }: { projectId: string }) {
   const project = useProject(projectId);
   const milestones = useMilestones(projectId);
   const boq = useBoq(projectId);
+  // Only a project without a contractor can have a request (ADR 0007).
+  const noContractor = project.data ? !project.data.contractor_id && project.data.status === "draft" : false;
+  const match = useMatchRequest(projectId, noContractor);
 
   if (project.isPending || milestones.isPending) {
     return (
@@ -51,7 +54,13 @@ export function SetupTracker({ projectId }: { projectId: string }) {
 
   const detail: Record<SetupKey, string> = {
     created: `${formatDate(p.created_at, timeZone)} · budget ${formatMoney(p.budget_minor, p.currency)}`,
-    contractor: p.contractor_id ? "On the project" : "Not added",
+    contractor: p.contractor_id
+      ? "On the project"
+      : match.data?.status === "open"
+        ? "Not added yet · we are finding contractors for you"
+        : match.data?.status === "shortlisted"
+          ? "Not added yet · your shortlist is ready"
+          : "Not added",
     site: p.site
       ? `Boundary saved · ${corners} corners${editable ? " · you can change it until approval" : " · locked"}`
       : "Pin your plot and draw its boundary",
@@ -70,7 +79,19 @@ export function SetupTracker({ projectId }: { projectId: string }) {
   };
 
   const firstPending = [...ms].sort((a, b) => a.sequence - b.sequence).find((x) => x.status === "pending");
+  const matchStatus = match.data?.status;
   const action: Partial<Record<SetupKey, React.ReactNode>> = {
+    contractor: noContractor ? (
+      <Button asChild variant={matchStatus === "shortlisted" ? "primary" : "outline"}>
+        <Link href={`/projects/${p.id}/contractor`}>
+          {matchStatus === "shortlisted"
+            ? "See your shortlist"
+            : matchStatus === "open"
+              ? "View your request"
+              : "Find me a contractor"}
+        </Link>
+      </Button>
+    ) : null,
     funded:
       steps[4]!.done && !steps[5]!.done && firstPending ? (
         <Button asChild>
