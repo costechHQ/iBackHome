@@ -1,16 +1,25 @@
 "use client";
 
-import { CircleCheck, Lock, Plus, Trash2 } from "lucide-react";
-import { useId, useState, type ReactNode } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
 
 import { api, call } from "@/common/api/client";
 import { useWrite } from "@/common/api/use-write";
 import { NIGERIAN_STATES } from "@/common/nigeria";
 import { Alert } from "@/common/ui/alert";
 import { Button } from "@/common/ui/button";
-import { cn } from "@/common/ui/cn";
 import { ErrorSummary, SelectField, TextField } from "@/common/ui/field";
 
+import {
+  APPLY_CARD,
+  APPLY_GRID,
+  ApplyConsent,
+  ApplyGroup,
+  ApplyHoneypot,
+  ApplyIntro,
+  ApplySubmit,
+  ApplySuccess,
+} from "./apply-parts";
 import {
   describeError,
   EMPTY_VALUES,
@@ -27,47 +36,6 @@ import {
 // The application form on /supervisors#apply (ADR 0005, slice 1). It asks for the registration number, never
 // the NIN: ops check the registration first and ask for the NIN only after. The hidden "website" field is a
 // honeypot for bots (a person never sees it; the backend answers success and stores nothing).
-
-function Group({
-  step,
-  title,
-  hint,
-  first,
-  children,
-}: {
-  step: number;
-  title: string;
-  hint?: string;
-  first?: boolean;
-  children: ReactNode;
-}) {
-  const titleId = useId();
-  return (
-    <div
-      role="group"
-      aria-labelledby={titleId}
-      className={cn("flex flex-col gap-5", !first && "border-t border-line pt-8")}
-    >
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden
-          className="type-small flex size-8 flex-none items-center justify-center rounded-pill bg-navy-900 font-semibold text-white"
-        >
-          {step}
-        </span>
-        <div className="flex flex-col gap-1">
-          <h3 id={titleId} className="type-h3 text-ink">
-            {title}
-          </h3>
-          {hint ? <p className="type-small text-slate">{hint}</p> : null}
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-const GRID = "grid gap-x-5 gap-y-5 sm:grid-cols-2";
 
 export function SupervisorApplyForm() {
   const [values, setValues] = useState<ApplyValues>(EMPTY_VALUES);
@@ -109,14 +77,7 @@ export function SupervisorApplyForm() {
 
   if (write.isSuccess) {
     return (
-      <div
-        role="status"
-        className="flex flex-col items-center gap-4 rounded-card border border-line bg-white p-8 text-center shadow-raised sm:p-12"
-      >
-        <span className="flex size-14 items-center justify-center rounded-pill bg-ok-bg">
-          <CircleCheck aria-hidden strokeWidth={1.75} className="size-8 text-ok-fg" />
-        </span>
-        <h3 className="type-h2 text-ink">Application received</h3>
+      <ApplySuccess>
         <p className="max-w-md text-slate">
           Thank you. We check your registration number first, then call your guarantors, then contact you at{" "}
           <strong className="text-ink">{values.email.trim()}</strong> or on your phone. A receipt is on its
@@ -125,7 +86,7 @@ export function SupervisorApplyForm() {
         <p className="type-small max-w-md rounded-card bg-canvas px-4 py-3 text-slate">
           Please don’t send your NIN until we ask for it.
         </p>
-      </div>
+      </ApplySuccess>
     );
   }
 
@@ -144,16 +105,8 @@ export function SupervisorApplyForm() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h3 className="type-h2 text-ink">Your application</h3>
-        <p className="type-body-lg text-slate">About five minutes. Have your certificate to hand.</p>
-      </div>
-      <form
-        onSubmit={submit}
-        noValidate
-        aria-label="Supervisor application"
-        className="flex flex-col gap-8 rounded-card border border-line bg-white p-6 shadow-raised sm:p-10"
-      >
+      <ApplyIntro title="Your application" lead="About five minutes. Have your certificate to hand." />
+      <form onSubmit={submit} noValidate aria-label="Supervisor application" className={APPLY_CARD}>
         <ErrorSummary problems={summary} />
         {failure && !failure.field ? (
           <Alert tone="bad" title="We couldn’t send your application">
@@ -161,8 +114,8 @@ export function SupervisorApplyForm() {
           </Alert>
         ) : null}
 
-        <Group step={1} title="About you" first>
-          <div className={GRID}>
+        <ApplyGroup step={1} title="About you" first>
+          <div className={APPLY_GRID}>
             <TextField
               id={FIELD_IDS.fullName}
               label="Full name"
@@ -212,14 +165,14 @@ export function SupervisorApplyForm() {
               {...text("city")}
             />
           </div>
-        </Group>
+        </ApplyGroup>
 
-        <Group
+        <ApplyGroup
           step={2}
           title="Your professional registration"
           hint="We check this first, on the register of the body you name. We ask for your NIN later, only if it checks out."
         >
-          <div className={GRID}>
+          <div className={APPLY_GRID}>
             <SelectField
               id={FIELD_IDS.registrationBody}
               label="Registration body"
@@ -254,14 +207,14 @@ export function SupervisorApplyForm() {
               {...text("registrationNo")}
             />
           </div>
-        </Group>
+        </ApplyGroup>
 
-        <Group
+        <ApplyGroup
           step={3}
           title="Two guarantors"
           hint="People who know you and your work. We will call them, so tell them to expect it."
         >
-          <div className={GRID}>
+          <div className={APPLY_GRID}>
             <TextField
               id={FIELD_IDS.g1Name}
               label="Guarantor 1: name"
@@ -291,9 +244,9 @@ export function SupervisorApplyForm() {
               {...text("g2Phone")}
             />
           </div>
-        </Group>
+        </ApplyGroup>
 
-        <Group
+        <ApplyGroup
           step={4}
           title="Relatives who work as contractors"
           hint="Optional. Declaring them protects you: you’ll never be assigned to, or spot-check, their projects."
@@ -353,53 +306,23 @@ export function SupervisorApplyForm() {
               Add a relative
             </Button>
           ) : null}
-        </Group>
+        </ApplyGroup>
 
-        <div className="flex flex-col gap-2 border-t border-line pt-8">
-          <label
-            htmlFor={FIELD_IDS.consent}
-            className="flex items-start gap-3 rounded-card bg-canvas p-4 text-ink"
-          >
-            <input
-              id={FIELD_IDS.consent}
-              type="checkbox"
-              checked={values.consent}
-              onChange={(e) => set("consent", e.target.checked)}
-              aria-invalid={error("consent") ? true : undefined}
-              className="mt-1 size-5 flex-none"
-            />
-            <span>
-              I agree that iBackHome may contact me and my two guarantors to check this application.{" "}
-              <span className="text-muted">Required</span>
-            </span>
-          </label>
-          {error("consent") ? <p className="type-small text-bad-fg">{error("consent")}</p> : null}
-        </div>
+        <ApplyConsent
+          id={FIELD_IDS.consent}
+          checked={values.consent}
+          onChange={(v) => set("consent", v)}
+          error={error("consent")}
+        >
+          I agree that iBackHome may contact me and my two guarantors to check this application.
+        </ApplyConsent>
 
-        {/* Honeypot: off-screen, skipped by keyboards and screen readers. A bot that fills it is ignored. */}
-        <div aria-hidden className="sr-only">
-          <label>
-            Leave this empty
-            <input
-              type="text"
-              name="website"
-              tabIndex={-1}
-              autoComplete="off"
-              value={values.website}
-              onChange={(e) => set("website", e.target.value)}
-            />
-          </label>
-        </div>
+        <ApplyHoneypot value={values.website} onChange={(v) => set("website", v)} />
 
-        <div className="flex flex-col items-center gap-3">
-          <Button type="submit" size="lg" block loading={write.isPending}>
-            {write.isPending ? "Sending…" : "Send my application"}
-          </Button>
-          <p className="type-small flex items-start gap-1.5 text-center text-muted">
-            <Lock aria-hidden strokeWidth={1.75} className="size-4" />
-            Used only to check your application. No NIN is asked for here.
-          </p>
-        </div>
+        <ApplySubmit
+          pending={write.isPending}
+          note="Used only to check your application. No NIN is asked for here."
+        />
       </form>
     </div>
   );

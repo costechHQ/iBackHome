@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/common/ui/button";
 
 import { CheckList, CtaBand, Faq, FeatureCards, Section, SectionHead, Steps } from "./blocks";
+import { ContractorApplyForm } from "./contractor-apply-form";
 import { ContractorHero, HomesMarquee } from "./contractors-visuals";
 import { PHOTOS } from "./photos";
 import { Reveal } from "./reveal";
@@ -14,7 +15,7 @@ import { SitesMarquee, SupervisorHero } from "./supervisors-visuals";
 
 // WEB-PUBLIC-004 For contractors and WEB-PUBLIC-005 Become a supervisor. Contractors join when a client adds
 // their phone number to a project (no invitation link is sent yet, and no email invite exists), so the steps
-// say to sign in with that number. Supervisors apply with the form on this page (ADR 0005, slice 1), which
+// say to sign in with that number; they can also apply to be listed with the form on the page (ADR 0007). Supervisors apply with the form on this page (ADR 0005, slice 1), which
 // the backend emails to ops; rates and timings appear once site.ts has them (PACKAGE-REPORT W-37).
 
 export function ForContractors() {
@@ -25,6 +26,10 @@ export function ForContractors() {
       a: `By the licensed escrow partner, in naira, after the supervisor verifies the milestone and your client approves it.${c.payout ? ` ${c.payout}` : ""}`,
     },
     ...(c.fee ? [{ q: "Is there a fee for contractors?", a: c.fee }] : []),
+    {
+      q: "How do I get clients through iBackHome?",
+      a: "Apply with the form on this page. We check your registration and your references, and if we approve you, we may put your business forward when a client asks us to find them a contractor. We phone you first.",
+    },
     {
       q: "What if the supervisor rejects my claim?",
       a: "You’ll see the reason. Fix what’s needed and claim again. If you think the rejection is wrong, raise it with our team and we’ll review the evidence.",
@@ -159,6 +164,21 @@ export function ForContractors() {
             </div>
           </div>
         </div>
+      </Section>
+      <Section tone="mist" labelledBy="get-listed">
+        <Reveal>
+          <SectionHead
+            id="get-listed"
+            centered
+            title="Want clients to find you?"
+            lead="Apply to be listed. We check your registration and your references first. If we approve you, we may put your business forward when a client asks us to find them a contractor."
+          />
+        </Reveal>
+        <Reveal>
+          <div id="application" className="mx-auto w-full max-w-2xl scroll-mt-24">
+            <ContractorApplyForm />
+          </div>
+        </Reveal>
       </Section>
       <Section tone="mist" labelledBy="contractor-faq" className="max-w-3xl">
         <h2 id="contractor-faq" className="type-h1 text-ink">

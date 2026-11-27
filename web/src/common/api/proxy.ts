@@ -21,8 +21,10 @@ import { errorResponse, isSameOrigin, NO_STORE } from "./http";
 const BLOCKED = new Set(["auth/otp/verify", "auth/refresh"]);
 // No session needed (and a stale session must not get in the way of signing in again).
 const PUBLIC_PREFIX = "auth/";
-// Public form posts (no login): the supervisor application on /supervisors. Never send a session with them.
-const PUBLIC_PATHS = new Set(["supervisor-applications"]);
+// Public form posts (no login): the supervisor application on /supervisors and the contractor application on
+// /contractors. Never send a session with them. Only the POST is public: the ops queue is a GET on
+// /contractor-applications and needs its session.
+const PUBLIC_POSTS = new Set(["supervisor-applications", "contractor-applications"]);
 const SAFE_METHODS = new Set(["GET", "HEAD"]);
 const MAX_BODY_BYTES = 1_000_000;
 const REQUEST_HEADERS = ["accept", "content-type", "idempotency-key", "x-request-id"];
@@ -45,7 +47,7 @@ export async function proxyToApi(req: NextRequest, segments: string[]): Promise<
     }
   }
 
-  const isPublic = path.startsWith(PUBLIC_PREFIX) || PUBLIC_PATHS.has(path);
+  const isPublic = path.startsWith(PUBLIC_PREFIX) || (method === "POST" && PUBLIC_POSTS.has(path));
   const refreshToken = isPublic ? undefined : req.cookies.get(REFRESH_COOKIE)?.value;
   let accessToken = isPublic ? undefined : req.cookies.get(ACCESS_COOKIE)?.value;
   let rotated: TokenPair | null = null;

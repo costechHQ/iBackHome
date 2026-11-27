@@ -1,5 +1,6 @@
-import { ApiError, NetworkError } from "@/common/api/errors";
 import type { components } from "@/common/api/schema";
+
+import { describeApplyError, emailProblem, nameProblem, phoneProblem } from "./apply-shared";
 
 // The supervisor application form on /supervisors (ADR 0005, slice 1): the values, the checks we make before
 // sending (the backend repeats them, and decides), and what to say when the backend refuses. There is no NIN
@@ -91,19 +92,6 @@ export const FIELD_IDS: Record<Field, string> = {
   consent: "apply-consent",
 };
 
-const PHONE_CHARS = /^\+?[0-9()\s-]+$/;
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function phoneProblem(raw: string, whose: string): string | null {
-  const value = raw.trim();
-  if (!value) return `Enter ${whose}`;
-  const digits = value.replace(/\D/g, "");
-  if (!PHONE_CHARS.test(value) || digits.length < 7 || digits.length > 15) {
-    return `Enter a valid ${whose}, such as 0803 123 4567`;
-  }
-  return null;
-}
-
 /** Relatives with nothing typed are ignored; a half-filled one is a mistake we point out. */
 export function filledRelatives(rows: readonly RelativeRow[]): RelativeRow[] {
   return rows
@@ -116,11 +104,11 @@ export function validate(v: ApplyValues): Problem[] {
   const add = (field: Field, message: string | null) => {
     if (message) problems.push({ field, message });
   };
-  const name = (value: string, what: string) => (value.trim().length < 2 ? `Enter ${what}` : null);
+  const name = nameProblem;
 
   add("fullName", name(v.fullName, "your full name"));
   add("phone", phoneProblem(v.phone, "your phone number"));
-  add("email", EMAIL.test(v.email.trim()) ? null : "Enter a valid email address");
+  add("email", emailProblem(v.email));
   add("state", v.state ? null : "Choose your state");
   add("city", name(v.city, "your city or town"));
   add("registrationBody", v.registrationBody ? null : "Choose your registration body");
@@ -170,33 +158,12 @@ export type SubmitProblem = { message: string; field?: Field };
 
 /** What to tell the person when the backend (or the network) said no. Never shows a raw backend message. */
 export function describeError(error: unknown): SubmitProblem {
-  if (error instanceof NetworkError) {
-    return { message: "You seem to be offline. Check your connection and try again; nothing was sent." };
-  }
-  if (error instanceof ApiError) {
-    if (error.status === 429) {
-      const minutes = error.retryAfterSeconds ? Math.ceil(error.retryAfterSeconds / 60) : null;
-      return {
-        message: `Too many applications from this connection. Try again ${minutes ? `in about ${minutes} minute${minutes === 1 ? "" : "s"}` : "later"}.`,
-      };
-    }
-    switch (error.code) {
-      case "application_exists":
-        return {
-          message:
-            "We already have an application for this phone number or email. We’ll be in touch; there is no need to apply again.",
-        };
-      case "guarantors_must_differ":
-        return { message: "Give two different guarantors.", field: "g2Phone" };
-      case "guarantor_is_applicant":
-        return { message: "A guarantor can’t be you. Give someone else’s number.", field: "g1Phone" };
-      case "invalid_phone":
-        return { message: "One of the phone numbers isn’t valid. Check them and try again." };
-      case "invalid_email":
-        return { message: "That email address isn’t valid.", field: "email" };
-    }
-    if (error.status === 422)
-      return { message: "Some answers weren’t accepted. Check the form and try again." };
-  }
-  return { message: "Something went wrong on our side and nothing was sent. Please try again in a moment." };
+  return describeApplyError<Field>(error, {
+    guarantors_must_differ: { message: "Give two different guarantors.", field: "g2Phone" },
+    guarantor_is_applicant: {
+      message: "A guarantor can’t be you. Give someone else’s number.",
+      field: "g1Phone",
+    },
+    invalid_email: { message: "That email address isn’t valid.", field: "email" },
+  });
 }
