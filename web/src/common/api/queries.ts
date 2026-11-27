@@ -4,6 +4,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { readLedger, type LedgerEntry } from "../ledger";
 import { api, call } from "./client";
+import { ApiError } from "./errors";
 import type { components, paths } from "./schema";
 
 // Reads shared by the milestones and dashboard features, through the generated client and the same-origin
@@ -12,6 +13,8 @@ import type { components, paths } from "./schema";
 export type Project = components["schemas"]["ProjectDetail"];
 export type Milestone = components["schemas"]["ProjectMilestoneOut"];
 export type Evidence = components["schemas"]["GalleryItem"];
+export type MatchRequest = components["schemas"]["MatchRequestOut"];
+export type ContractorCard = components["schemas"]["ContractorCard"];
 
 export const keys = {
   projects: () => ["projects"] as const,
@@ -19,6 +22,7 @@ export const keys = {
   milestones: (id: string) => ["project", id, "milestones"] as const,
   ledger: (id: string) => ["project", id, "ledger"] as const,
   evidence: (id: string, filters: EvidenceFilters) => ["project", id, "evidence", filters] as const,
+  matchRequest: (id: string) => ["project", id, "match-request"] as const,
 };
 
 /** The viewer's projects (a client's own, a contractor's, every project for ops); the first 200 is plenty. */
@@ -138,4 +142,27 @@ export function useEvidence(projectId: string, filters: EvidenceFilters = {}) {
 /** A short, stable label for an id the design shows as a reference (EV-…, R-…): the backend has none yet. */
 export function shortId(id: string): string {
   return id.slice(0, 8);
+}
+
+/**
+ * The project's latest contractor request (ADR 0007), or null when there is none (the backend answers 404
+ * match_request_not_found). The project's client and ops can read it; a shortlist comes as client-safe cards.
+ */
+export function useMatchRequest(projectId: string, enabled = true) {
+  return useQuery({
+    queryKey: keys.matchRequest(projectId),
+    enabled,
+    queryFn: async (): Promise<MatchRequest | null> => {
+      try {
+        return await call(
+          api().GET("/api/v1/projects/{project_id}/match-request", {
+            params: { path: { project_id: projectId } },
+          }),
+        );
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null;
+        throw error;
+      }
+    },
+  });
 }

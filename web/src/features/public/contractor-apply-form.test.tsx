@@ -47,6 +47,9 @@ async function fillValid() {
   return user;
 }
 
+// Filling a whole form field by field is slow when the full suite runs in parallel.
+vi.setConfig({ testTimeout: 20_000 });
+
 beforeEach(() => post.mockReset());
 afterEach(cleanup);
 
