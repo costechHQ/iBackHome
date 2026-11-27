@@ -18,7 +18,7 @@ A: iBackHome helps Nigerians abroad build at home. A verified supervisor visits 
 
 **construction-company**
 Q: Are you a construction company? Do you build for me? Can you find me a contractor?
-A: No. You keep your own contractor. We verify what they claim on site and control when money moves. *(Contractor matching: **DECIDE**. The site says you invite your contractor by phone; the pitch deck mentions matching, and no matching feature exists in the code. This entry does not promise it.)*
+A: No. You keep your own contractor, and you invite them by phone number. We verify what they claim on site and control when money moves. *(Contractor matching is the next feature to plan and build, decided 2026-11-27. This entry does not promise it and will be updated when it ships.)*
 
 **how-it-works**
 Q: How does it work step by step? How do I start?
@@ -30,14 +30,14 @@ A: Anywhere in Nigeria. When you set up your project, we match a vetted supervis
 
 ## B. Money and escrow
 
-**pilot-status** — **DECIDE (honesty)**
+**pilot-status** (wording confirmed 2026-11-27: banks as escrow partner, still in view)
 Q: Is it live? Is my money safe? Is this real money? Are you licensed?
-A: We are in a pilot. During the pilot, payments run in test mode and no real money is held yet. We are in final talks with a licensed escrow partner, and real money will only be switched on once that partner is signed and live. For questions about the pilot, contact us at {contact_email}.
-*(The public pages currently say a licensed escrow partner already holds your money. This answer uses the pilot wording. Decide whether the pages should change too.)*
+A: We are in a pilot. During the pilot, payments run in test mode and no real money is held yet. We are working with banks to become our licensed escrow partner, and real money will only be switched on once that partner is in place and live. For questions about the pilot, call, text or WhatsApp {contact_whatsapp}, or email {contact_email}.
+*(The public pages currently say a licensed escrow partner already holds your money; they are a separate decision. The assistant never says a partner is already signed.)*
 
-**who-holds-money** — **DECIDE (same issue)**
+**who-holds-money**
 Q: Who holds my money? Does iBackHome hold my money?
-A: iBackHome never holds client funds. The design is that funds sit with a licensed escrow partner and are released only after the supervisor verifies the work and you approve it. During our pilot this runs in test mode: no real money is held yet.
+A: iBackHome never holds client funds. The design is that funds sit with a licensed escrow partner, and we are working with banks for this. Funds are released only after the supervisor verifies the work and you approve it. During our pilot this runs in test mode: no real money is held yet.
 
 **release-process**
 Q: When is money released? How do payments to my contractor work?
@@ -69,13 +69,13 @@ A: Yes. Paying for 6 months costs 5 months, and paying for 12 months costs 10 mo
 Q: What is the fee when I fund a milestone?
 A: A {funding_fee} fee on each milestone you fund. It is shown as its own line before you pay, and it is not taken from your contractor's payment.
 
-**contractor-fee**
+**contractor-fee** (handoff to the Contact page, decided 2026-11-27)
 Q: Do contractors pay a fee? Is it free for contractors?
-A: Handoff. *(**DECIDE**: the site has no stated contractor fee. The assistant should not guess.)*
+A: {handoff_contact}
 
-**cancel-billing**
+**cancel-billing** (handoff to the Contact page, decided 2026-11-27)
 Q: Can I cancel? When is the monthly fee charged?
-A: Handoff. *(The site leaves billing date and cancellation wording empty until supplied. Provide the wording, or keep as handoff.)*
+A: {handoff_contact}
 
 ## D. Supervisors and evidence
 
@@ -113,9 +113,9 @@ A: Apply with the form on our Supervisors page. We check your professional regis
 Q: What do I need to be a supervisor?
 A: A registered engineer (COREN) or builder (NIOB or CORBON), a valid NIN, two guarantors we can contact, an Android phone (Android 8 or later) with a working camera and GPS, and the ability to reach sites near where you live. You also declare any relatives who work as contractors, so you are never assigned to their projects.
 
-**supervisor-pay**
+**supervisor-pay** (handoff to the Contact page, decided 2026-11-27)
 Q: How much are supervisors paid? What is the rate?
-A: Handoff. *(**DECIDE**: no rate or payment wording exists on the site; the page leaves it blank. Do not guess.)*
+A: {handoff_contact}
 
 **supervisor-turned-down**
 Q: What if my application is turned down?
@@ -138,21 +138,28 @@ A: Supervisors use an Android app (Android 8 or later). It is not on a public st
 ## G. Contact and limits
 
 **contact**
-Q: How do I contact you? What is your email or WhatsApp? Can I speak to a person?
-A: Email {contact_email} or WhatsApp {contact_whatsapp}.
+Q: How do I contact you? What is your email, phone or WhatsApp? Can I speak to a person?
+A: Call, text or WhatsApp {contact_whatsapp}, or email {contact_email}. You can also use our Contact page.
 
 **account-help** (handoff)
 Q: Something is wrong with my account, payment, project, milestone or dispute. Where is my money? Why was I rejected?
-A: I can't see anyone's account, so I can't help with that here. Please contact us at {contact_email} or on WhatsApp {contact_whatsapp} and we will look into it.
+A: I can't see anyone's account, so I can't help with that here. {handoff_contact}
 
 **out-of-scope** (handoff)
 Q: Legal advice, tax, investment, planning permission, structural or engineering advice, anything unrelated.
-A: That is outside what I can help with. I can answer questions about how iBackHome works. For anything else, please contact us at {contact_email}.
+A: That is outside what I can help with. I can answer questions about how iBackHome works. For anything else: {handoff_contact}
 
-## Needs your decision before PR 2
+## Shared text
 
-1. **Escrow/pilot wording** (`pilot-status`, `who-holds-money`): approve the pilot wording above, and decide whether the public pages must change.
-2. **Currency** wording (`currency`): confirm.
-3. **Contractor matching** (`construction-company`): leave unpromised, or confirm it exists.
-4. **Handoff-only topics**: contractor fee, cancellation and billing date, supervisor pay. Supply wording, or keep as handoff.
+`{handoff_contact}` = "Please call, text or WhatsApp {contact_whatsapp}, or email {contact_email}, or use our Contact page, and our team will help." The panel also shows a **Talk to a person** button that opens the Contact page. *(Please confirm that {contact_whatsapp} takes calls and texts as well as WhatsApp, because the site lists only one number.)*
+
+## Decisions (2026-11-27)
+
+1. **Escrow/pilot wording**: decided. Pilot wording stays, with "we are working with banks to become our licensed escrow partner". The public pages are a separate decision.
+3. **Contractor matching**: decided. It is the next feature to plan and build; until it ships the assistant does not promise it.
+4. **Handoff-only topics** (contractor fee, cancellation and billing date, supervisor pay): decided. They go to the Contact page by call, text, WhatsApp or email.
+
+## Still open before PR 2
+
+2. **Currency** wording (`currency`): confirm (pricing page says USD; how-it-works says GBP, USD or EUR).
 5. Anything missing or wrong, and anything you want the assistant to refuse.
