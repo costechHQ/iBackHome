@@ -1,5 +1,7 @@
 # Draft answers for the website assistant (ADR 0006)
 
+**Built 2026-11-27**: these are now `backend/app/features/assistant/knowledge.py`, which is the source of truth; edit the answers there. `match-cost` ships as a handoff to a person (matching is not described as free in the assistant until you confirm it).
+
 **For Christopher to review. Nothing here ships until you approve it.** Each entry becomes a public statement made on
 iBackHome's behalf. How to read this:
 
