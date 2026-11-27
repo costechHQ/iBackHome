@@ -1014,6 +1014,383 @@
         }
       }
     },
+    "/api/v1/contractor-applications": {
+      "post": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Apply From Website",
+        "description": "The form on /contractors. Public (no login), so it is rate limited per IP and has a honeypot.",
+        "operationId": "apply_from_website_api_v1_contractor_applications_post",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractorApplicationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractorApplicationCreated"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "List Applications",
+        "description": "The queue: applications with this status (pending by default), oldest first.",
+        "operationId": "list_applications_api_v1_contractor_applications_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/ContractorApplicationStatus",
+              "default": "pending"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractorApplicationPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contractor-applications/{application_id}": {
+      "get": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Get Application",
+        "description": "One application in full, to check before deciding.",
+        "operationId": "get_application_api_v1_contractor_applications__application_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractorApplicationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contractor-applications/{application_id}/decision": {
+      "post": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "Decide",
+        "description": "Approve (the required checks ticked, with a profile summary) or reject (with a reason).",
+        "operationId": "decide_api_v1_contractor_applications__application_id__decision_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContractorDecisionIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractorApplicationOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/contractors": {
+      "get": {
+        "tags": [
+          "contractors"
+        ],
+        "summary": "List Contractors",
+        "description": "The directory of approved contractors; filter by state, specialty and whether they are listed.",
+        "operationId": "list_contractors_api_v1_contractors_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "name": "specialty",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 30
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Specialty"
+            }
+          },
+          {
+            "name": "listed",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Listed"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractorPage"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{project_id}/funding/quote": {
       "get": {
         "tags": [
@@ -5061,6 +5438,641 @@
         ],
         "title": "ConsentOut",
         "description": "The current documents to agree to, and what this person agreed to."
+      },
+      "ContractorApplicationCreated": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "const": "pending",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "ContractorApplicationCreated"
+      },
+      "ContractorApplicationIn": {
+        "properties": {
+          "business_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Business Name"
+          },
+          "contact_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Contact Name"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Phone",
+            "examples": [
+              "08031234567",
+              "+447700900123"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "minLength": 5,
+            "title": "Email"
+          },
+          "states_served": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "States Served",
+            "examples": [
+              [
+                "Enugu",
+                "Anambra"
+              ]
+            ]
+          },
+          "specialties": {
+            "items": {
+              "type": "string",
+              "enum": [
+                "buildings",
+                "roofing",
+                "finishing",
+                "civil_works",
+                "other"
+              ]
+            },
+            "type": "array",
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Specialties"
+          },
+          "years_in_business": {
+            "type": "integer",
+            "maximum": 80.0,
+            "minimum": 0.0,
+            "title": "Years In Business"
+          },
+          "projects_completed": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Projects Completed"
+          },
+          "cac_rc_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 30,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cac Rc Number",
+            "examples": [
+              "RC1234567"
+            ]
+          },
+          "corbon_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 40,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corbon Number"
+          },
+          "reference_1_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Reference 1 Name"
+          },
+          "reference_1_phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Reference 1 Phone"
+          },
+          "reference_2_name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Reference 2 Name"
+          },
+          "reference_2_phone": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 7,
+            "title": "Reference 2 Phone"
+          },
+          "consent": {
+            "type": "boolean",
+            "const": true,
+            "title": "Consent"
+          },
+          "website": {
+            "type": "string",
+            "maxLength": 200,
+            "title": "Website",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "business_name",
+          "contact_name",
+          "phone",
+          "email",
+          "states_served",
+          "specialties",
+          "years_in_business",
+          "projects_completed",
+          "reference_1_name",
+          "reference_1_phone",
+          "reference_2_name",
+          "reference_2_phone",
+          "consent"
+        ],
+        "title": "ContractorApplicationIn",
+        "description": "What the website form sends. `extra=\"forbid\"`: a field we never ask for (a NIN, say) is a 422, so one\nsent by mistake is refused instead of stored."
+      },
+      "ContractorApplicationListItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "business_name": {
+            "type": "string",
+            "title": "Business Name"
+          },
+          "contact_name": {
+            "type": "string",
+            "title": "Contact Name"
+          },
+          "states_served": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "States Served"
+          },
+          "specialties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Specialties"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "business_name",
+          "contact_name",
+          "states_served",
+          "specialties",
+          "status",
+          "created_at"
+        ],
+        "title": "ContractorApplicationListItem"
+      },
+      "ContractorApplicationOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "business_name": {
+            "type": "string",
+            "title": "Business Name"
+          },
+          "contact_name": {
+            "type": "string",
+            "title": "Contact Name"
+          },
+          "states_served": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "States Served"
+          },
+          "specialties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Specialties"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "phone": {
+            "type": "string",
+            "title": "Phone"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "years_in_business": {
+            "type": "integer",
+            "title": "Years In Business"
+          },
+          "projects_completed": {
+            "type": "integer",
+            "title": "Projects Completed"
+          },
+          "cac_rc_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cac Rc Number"
+          },
+          "corbon_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corbon Number"
+          },
+          "reference_1_name": {
+            "type": "string",
+            "title": "Reference 1 Name"
+          },
+          "reference_1_phone": {
+            "type": "string",
+            "title": "Reference 1 Phone"
+          },
+          "reference_2_name": {
+            "type": "string",
+            "title": "Reference 2 Name"
+          },
+          "reference_2_phone": {
+            "type": "string",
+            "title": "Reference 2 Phone"
+          },
+          "registration_verified": {
+            "type": "boolean",
+            "title": "Registration Verified"
+          },
+          "reference_1_verified": {
+            "type": "boolean",
+            "title": "Reference 1 Verified"
+          },
+          "reference_2_verified": {
+            "type": "boolean",
+            "title": "Reference 2 Verified"
+          },
+          "ops_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ops Notes"
+          },
+          "rejection_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejection Reason"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "consented_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Consented At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "business_name",
+          "contact_name",
+          "states_served",
+          "specialties",
+          "status",
+          "created_at",
+          "phone",
+          "email",
+          "years_in_business",
+          "projects_completed",
+          "cac_rc_number",
+          "corbon_number",
+          "reference_1_name",
+          "reference_1_phone",
+          "reference_2_name",
+          "reference_2_phone",
+          "registration_verified",
+          "reference_1_verified",
+          "reference_2_verified",
+          "ops_notes",
+          "rejection_reason",
+          "decided_by",
+          "decided_at",
+          "consented_at",
+          "updated_at"
+        ],
+        "title": "ContractorApplicationOut",
+        "description": "One application in full, for ops to check before deciding."
+      },
+      "ContractorApplicationPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContractorApplicationListItem"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ContractorApplicationPage"
+      },
+      "ContractorApplicationStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "title": "ContractorApplicationStatus"
+      },
+      "ContractorDecisionIn": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "rejected"
+            ],
+            "title": "Decision"
+          },
+          "registration_verified": {
+            "type": "boolean",
+            "title": "Registration Verified",
+            "default": false
+          },
+          "reference_1_verified": {
+            "type": "boolean",
+            "title": "Reference 1 Verified",
+            "default": false
+          },
+          "reference_2_verified": {
+            "type": "boolean",
+            "title": "Reference 2 Verified",
+            "default": false
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "title": "ContractorDecisionIn",
+        "description": "Ops' decision. Approval needs both references ticked (and the registration when a number was given) and\na profile summary ops write themselves; rejection needs a reason."
+      },
+      "ContractorOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "business_name": {
+            "type": "string",
+            "title": "Business Name"
+          },
+          "contact_name": {
+            "type": "string",
+            "title": "Contact Name"
+          },
+          "summary": {
+            "type": "string",
+            "title": "Summary"
+          },
+          "states_served": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "States Served"
+          },
+          "specialties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Specialties"
+          },
+          "years_in_business": {
+            "type": "integer",
+            "title": "Years In Business"
+          },
+          "projects_completed": {
+            "type": "integer",
+            "title": "Projects Completed"
+          },
+          "vetting_status": {
+            "type": "string",
+            "title": "Vetting Status"
+          },
+          "listed": {
+            "type": "boolean",
+            "title": "Listed"
+          },
+          "vetted_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Vetted At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "business_name",
+          "contact_name",
+          "summary",
+          "states_served",
+          "specialties",
+          "years_in_business",
+          "projects_completed",
+          "vetting_status",
+          "listed",
+          "vetted_at"
+        ],
+        "title": "ContractorOut",
+        "description": "A directory entry (ops only in phase 1; phase 2 builds the client-safe card from it)."
+      },
+      "ContractorPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ContractorOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ContractorPage"
       },
       "CurrentPrice": {
         "properties": {
