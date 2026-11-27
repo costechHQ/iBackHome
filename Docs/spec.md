@@ -119,6 +119,10 @@ All tables have `id` (UUID), `created_at` and `updated_at` (UTC). Money columns 
 | `supervisor_profiles` | supervision | user → users, registration_body, registration_no, guarantor_1, guarantor_2, registration_verified, nin_verified, guarantor_1_verified, guarantor_2_verified, vetting_status (`pending`, `approved`, `rejected`), vetted_by → users, vetted_at, rejection_reason, rating, nin_encrypted (the full NIN, encrypted with `NIN_ENCRYPTION_KEY` only while the application is pending, then wiped; kept out of the audit log), nin_last4 (all that remains once ops decide) |
 | `supervisor_relations` | supervision | supervisor → users, contractor_phone (E.164), relationship (declared relatives: a related supervisor can't be assigned to, or spot-check, that contractor's projects) |
 | `supervisor_applications` | supervision | full_name, phone (E.164), email (lower-case), state, city, registration_body (`COREN`, `NIOB`, `CORBON`, `other`), registration_no, years_experience, guarantor_1_name, guarantor_1_phone, guarantor_2_name, guarantor_2_phone, relatives (declared relatives who are contractors: name and phone; may be empty), status (`pending`; ADR 0005 later slices add the decided states), consented_at, requested_ip (for the per-IP rate limit). Public sign-up form on `/supervisors`; it has no user yet. **No NIN is ever stored here**: it is asked only after ops have checked the registration number (ADR 0005) |
+| `contractor_applications` | contractors | business_name, contact_name, phone (E.164), email (lower-case), states_served (list), specialties (list), years_in_business, projects_completed (declared), cac_rc_number (optional), corbon_number (optional), reference_1_name, reference_1_phone, reference_2_name, reference_2_phone, status (`pending`, `approved`, `rejected`), ticked checks (registration, reference 1, reference 2), decided_by → users, decided_at, rejection_reason, consented_at, requested_ip, ops_emailed_at, receipt_sent_at. Public form on `/contractors` (ADR 0007); one pending application per phone and per email; **no NIN** |
+| `contractor_profiles` | contractors | user → users (unique), business_name, summary (written by ops), states_served, specialties, years_in_business, projects_completed, vetting_status (`approved`, `suspended`), vetted_by → users, vetted_at, listed. Created when an application is approved; only `listed` approved contractors can be shortlisted |
+| `match_requests` | contractors | project → projects (one open request per project), client → users, state, city, budget_minor, currency, work_type, timeline, notes, status (`open`, `shortlisted`, `matched`, `cancelled`), chosen_contractor → users, decided_at |
+| `match_shortlist` | contractors | request → match_requests, contractor → contractor_profiles, position (1 to 3), added_by → users, note (for ops only); unique (request, contractor) |
 | `suppliers` | suppliers | name, owner → users, address, location (POINT), verified, paystack_recipient_code |
 | `projects` | projects | client → users, contractor → users, supervisor → users, title, address, status (`draft`, `boq_review`, `active`, `paused`, `completed`), currency, budget_minor |
 | `sites` | projects | project → projects, location (POINT), geofence (POLYGON, SRID 4326) |
@@ -423,6 +427,29 @@ stateDiagram-v2
 The site pin set with `PUT /projects/{id}/site` must lie inside the geofence polygon (422 `pin_outside_geofence`). The client can set or change the site only while the project is `draft` or `boq_review` (409 `site_locked` after that); ops can change it at any time. Every change is audited.
 **BoQ rules**: each line's `total_minor` is computed by the server as quantity × unit_price_minor, rounded half-up to a whole minor unit (a sent `total_minor` must match, else 422 `boq_total_mismatch`). A milestone's amount is the sum of its lines; at most 20 milestones and 500 lines. A BoQ above the project's `budget_minor` is allowed and both figures are shown. The final approval needs a saved site (409 `site_not_set`); it creates the milestones (`milestones.create_for_project`), links each line to its milestone and makes the project `active`, in one transaction.
 
+**Match requests (ADR 0007)**
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> open: client asks for a match
+    open --> shortlisted: ops set a shortlist (1 to 3)
+    shortlisted --> open: ops reopen to replace the list
+    shortlisted --> matched: client chooses one
+    open --> cancelled: client or ops
+    shortlisted --> cancelled: client or ops
+    matched --> [*]
+    cancelled --> [*]
+```
+
+| From | To | Who | Condition |
+| --- | --- | --- | --- |
+| (new) | `open` | client | Draft project with no contractor, owned by this client, no other open request |
+| `open` | `shortlisted` | ops | 1 to 3 approved, listed, active contractors |
+| `shortlisted` | `open` | ops | To replace the shortlist |
+| `shortlisted` | `matched` | client | The chosen contractor is on the shortlist and still approved, listed and active; the project is still a draft with no contractor |
+| `open`, `shortlisted` | `cancelled` | client, ops | A reason is optional |
+
 ## API endpoints
 
 REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors follow one shape: `{"error": {"code": "milestone_not_verified", "message": "..."}}`. Every write endpoint accepts an `Idempotency-Key` header. Lists are paginated with `?cursor=&limit=`.
@@ -441,6 +468,15 @@ REST over HTTPS, JSON, versioned under `/api/v1`. Auth with a bearer JWT. Errors
 | POST | `/me/push-tokens` | supervisor, contractor | Save this phone's Firebase token `{device_pk, token}` (a new token for the same device replaces the old one; 403 `not_device_owner`, 409 `device_revoked`). Push reaches only these two roles |
 | DELETE | `/me/push-tokens/{device_pk}` | the device's owner | Forget this phone's token (sign-out); twice is fine |
 | POST | `/projects` | client | Create project, invite contractor |
+| POST | `/contractor-applications` | public (no login) | Apply to be listed as a contractor from the website form (ADR 0007): business and contact details, states served, specialties, years, projects completed, optional CAC and CORBON numbers, two references, `consent: true`, honeypot. Accepts `Idempotency-Key`. 201 `{id, status}`; a NIN is refused (422); a pending application for the same phone or email: 409 `application_exists`; too many from one IP: 429 `rate_limited`. After commit ops are emailed and the applicant gets a receipt |
+| GET | `/contractor-applications`, `/contractor-applications/{id}` | ops | The queue (oldest first, `?cursor=&limit=`) and one application in full |
+| POST | `/contractor-applications/{id}/decision` | ops | Approve (needs the required checks ticked, else 422 `vetting_checks_incomplete`) or reject (needs a written reason). Approval creates or finds the contractor's user by phone (409 `role_conflict` if the number belongs to another role) and the `contractor_profiles` row in one transaction, then emails them; every decision is audited |
+| GET | `/contractors` | ops | The directory of approved contractors; filters `state`, `specialty`, `listed` |
+| POST, GET | `/projects/{id}/match-request` | client (owner), ops | Ask for a match on a draft project that has no contractor (brief: state, city, budget, work type, timeline, notes); 409 `match_request_exists`, 409 `project_not_draft`. GET shows the request and, once shortlisted, the shortlist as client-safe cards (business name, states, specialties, years, projects completed; never a phone or email) |
+| POST | `/match-requests/{id}/choose` | client (owner) | Choose one shortlisted contractor: invites them, sets the project's contractor (`projects.set_contractor`), notifies them; request becomes `matched` |
+| POST | `/match-requests/{id}/cancel` | client (owner), ops | Cancel an open or shortlisted request |
+| GET | `/ops/match-requests` | ops | Open requests, oldest first |
+| POST | `/match-requests/{id}/shortlist` | ops | Set the shortlist: 1 to 3 approved, listed, active contractors; request becomes `shortlisted` and the client is notified; sending again replaces the list (`shortlisted` to `open` to `shortlisted`) |
 | GET | `/projects`, `/projects/{id}` | parties, ops | List and view projects. `GET /projects/{id}` also returns `contractor` and `supervisor` as `{id, full_name, phone}` (phone only for an active account, never to non-members; MX-26) |
 | PUT | `/projects/{id}/site` | client, ops | Set pin and geofence polygon (GeoJSON) |
 | GET | `/projects/{id}/boq` | parties, ops | BoQ grouped by milestone, with totals, budget and approvals |
