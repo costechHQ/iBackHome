@@ -53,6 +53,14 @@ describe("validate", () => {
     ]);
   });
 
+  it("says which phone number is wrong", () => {
+    const messages = validate({ ...EMPTY_VALUES }).map((p) => p.message);
+    expect(messages).toContain("Enter your phone number");
+    expect(messages).toContain("Enter the first guarantor’s phone number");
+    expect(messages).toContain("Enter the second guarantor’s phone number");
+    expect(validate({ ...VALID, g2Phone: "abc" })[0]?.message).toContain("second guarantor’s phone number");
+  });
+
   it("takes Nigerian local numbers and international ones, and refuses text", () => {
     expect(fields({ ...VALID, phone: "+44 7700 900123" })).toEqual([]);
     expect(fields({ ...VALID, phone: "abc" })).toEqual(["phone"]);

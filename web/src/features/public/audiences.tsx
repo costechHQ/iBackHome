@@ -275,6 +275,7 @@ export function BecomeASupervisor() {
         <Reveal>
           <SectionHead
             id="apply"
+            centered
             title="How to apply"
             lead="Fill in the form below. We check your professional registration first, then your guarantors, and only then ask for your NIN."
           />
@@ -301,7 +302,7 @@ export function BecomeASupervisor() {
           ]}
         />
         <Reveal>
-          <div className="max-w-3xl rounded-card border border-line bg-white p-5 sm:p-8">
+          <div id="application" className="mx-auto flex w-full max-w-2xl scroll-mt-24 flex-col gap-8">
             <SupervisorApplyForm />
           </div>
         </Reveal>
